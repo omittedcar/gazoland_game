@@ -1,7 +1,8 @@
 ## Prerequisites
 
-Run from the terminal prompt: `sudo apt install libgles2 libglfw3`
+Run from the terminal prompt: `sudo apt install libgles2-mesa-dev libglfw3-dev`
 
 ## Building
 
-`make all`
+To build the regular (optimized) version: `make`
+To build the debuggable version: `make debug`
