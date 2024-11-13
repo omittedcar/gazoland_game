@@ -250,7 +250,7 @@ void gazo::add_thing_to_other_thing_into_another_thing(
 void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
   for(int i = 0; i < n_verts; i++) {
     acc_out[i * 2] = 0.0;
-    acc_out[i * 2 + 1] = gravity;
+    acc_out[i * 2 + 1] = -gravity;
   }
 
   double polygon_area = 0.0;
@@ -350,6 +350,8 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
     acc[j * 2 + 2] += v[0] * force_quotient / outer_vertex_mass;
     acc[j * 2 + 3] += v[1] * force_quotient / outer_vertex_mass;
   }
+
+  //there is a bug somewhere between this line..
   for(int i = 0; i < n_sides; i++) {
     int j = (i + 1) % n_sides;
     double v[2] = {
@@ -382,4 +384,6 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
     acc[j * 2 + 2] -= v[1] * (kinematic_pressures[1] + total_pressure) * pressure_acc_factor;
     acc[j * 2 + 3] += v[0] * (kinematic_pressures[1] + total_pressure) * pressure_acc_factor;
   }
+
+  //..and this line
 }
