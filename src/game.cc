@@ -128,7 +128,7 @@ void game::stop() {
 }
 
 void game::the_monitor_has_refreshed_again() {
-
+  //if(frame_counter % 30 == 0) {
   for (int i = 0; i < 7; i++) {
     function_which_is_called_420hz();
   }

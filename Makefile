@@ -11,14 +11,14 @@ DEBUGFLAGS := -O0 -g
 OBJECTS := game.o gazo.o main.o shader.o
 LIBS := -lglfw -lGLESv2 -lEGL
 
-default : bin/gazoland
+default : bin/gazoland_for_linux.exe
 
-debug : bin/gazoland-dbg
+debug : bin/gazoland_for_linux_debug.exe
 
-bin/gazoland : $(OBJECTS:%.o=obj/%.o)
+bin/gazoland_for_linux.exe : $(OBJECTS:%.o=obj/%.o)
 	mkdir -p bin && $(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 
-bin/gazoland-dbg : $(OBJECTS:%.o=obj/%-dbg.o)
+bin/gazoland_for_linux_debug.exe : $(OBJECTS:%.o=obj/%-dbg.o)
 	mkdir -p bin && $(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 obj/%.o : src/%.cc
@@ -28,4 +28,4 @@ obj/%-dbg.o : src/%.cc
 	mkdir -p obj && $(CXX) -c -o $@ $(CFLAGS) $(DEBUGFLAGS) $<
 
 clean :
-	rm -f obj/*.o bin/gazoland bin/gazoland-dbg
+	rm -f obj/*.o bin/gazoland_for_linux.exe bin/gazoland_for_linux_debug.exe

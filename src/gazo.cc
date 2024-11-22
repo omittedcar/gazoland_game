@@ -41,7 +41,7 @@ double inner_mass = 0x8;
 double outer_mass = 0xA;
 
 //the stiffness of the gazo's outer edges. (N/m)
-double outer_stiffness = 0x1000; //0x1000
+double outer_stiffness = 0x1000;
 
 //the damping of the gazo's outer edges. (㎏/s)
 double outer_damping = 0x20;
@@ -49,8 +49,8 @@ double outer_damping = 0x20;
 //the power of each of the gazo's muscles. (W)
 double muscle_power = 0x200;
 
-double inner_stiffness = 0x60; //0x600
-double inner_damping = 0xA; //0xA
+double inner_stiffness = 0x600; //0x600
+double inner_damping = 0xA;
 
 //N
 double internal_pressure_area = 0x3400;
@@ -102,8 +102,8 @@ void gazo::init() {
     }
   }
   for(uint i = 0u; i < n_verts; i++) {
-    vel[i * 2] = 1.0;
-    vel[i * 2 + 1] = -0x10;
+    vel[i * 2] = 0.0;
+    vel[i * 2 + 1] = 0.0;
   }
 }
 
@@ -118,7 +118,7 @@ bool gazo::advance_forward(double time_step) {
     sample_vel[i] = 0;
   }
   calculate_acc(pos, vel, acc);
-  add_thing_to_other_thing(acc, delta_pos, timestep_divided_by_sixe);
+  add_thing_to_other_thing(vel, delta_pos, timestep_divided_by_sixe);
   add_thing_to_other_thing(acc, delta_vel, timestep_divided_by_sixe);
 
   add_thing_to_other_thing_into_another_thing(vel, pos, time_step * 0.5, sample_pos);
@@ -138,7 +138,7 @@ bool gazo::advance_forward(double time_step) {
   add_thing_to_other_thing_into_another_thing(sample_vel, pos, time_step, sample_pos);
   add_thing_to_other_thing_into_another_thing(acc, vel, time_step, sample_vel);
   calculate_acc(sample_pos, sample_vel, acc);
-  add_thing_to_other_thing(acc, delta_pos, timestep_divided_by_sixe);
+  add_thing_to_other_thing(sample_vel, delta_pos, timestep_divided_by_sixe);
   add_thing_to_other_thing(acc, delta_vel, timestep_divided_by_sixe);
 
   add_thing_to_other_thing(delta_pos, pos, 1.0);
@@ -256,11 +256,13 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
   double polygon_area = 0.0;
   for(int i = 0; i < n_sides; i++) {
     int j = (i + 1) % n_sides;
-    polygon_area += (pos[i * 2 + 2] - pos[j * 2 + 2])
-    * (pos[i * 2 + 3] + pos[j * 2 + 3]) * 0.5;
+    polygon_area +=
+      pos[i * 2 + 2] * pos[j * 2 + 3] -
+      pos[i * 2 + 3] * pos[j * 2 + 2]
+    ;
   }
-
-  double total_pressure = (internal_pressure_area / polygon_area - air_pressure) / (signbit(polygon_area) ? -1 : 1);
+  polygon_area *= 0.5;
+  double total_pressure = internal_pressure_area / polygon_area - air_pressure;
 
   double glaggle_rotation[2] = {0, 0}; //as like a complex number.
   //for example {0, 1} means rotated counterclokwise 90 degress
@@ -351,7 +353,6 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
     acc[j * 2 + 3] += v[1] * force_quotient / outer_vertex_mass;
   }
 
-  //there is a bug somewhere between this line..
   for(int i = 0; i < n_sides; i++) {
     int j = (i + 1) % n_sides;
     double v[2] = {
@@ -378,12 +379,10 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
 
     double pressure_acc_factor = 1 / outer_vertex_mass * fluid_interaction_width;
 
-    acc[i * 2 + 2] -= v[1] * (kinematic_pressures[0] + total_pressure) * pressure_acc_factor;
-    acc[i * 2 + 3] += v[0] * (kinematic_pressures[0] + total_pressure) * pressure_acc_factor;
+    acc[i * 2 + 2] += v[1] * (total_pressure) * pressure_acc_factor;
+    acc[i * 2 + 3] -= v[0] * (total_pressure) * pressure_acc_factor;
 
-    acc[j * 2 + 2] -= v[1] * (kinematic_pressures[1] + total_pressure) * pressure_acc_factor;
-    acc[j * 2 + 3] += v[0] * (kinematic_pressures[1] + total_pressure) * pressure_acc_factor;
+    acc[j * 2 + 2] += v[1] * (total_pressure) * pressure_acc_factor;
+    acc[j * 2 + 3] -= v[0] * (total_pressure) * pressure_acc_factor;
   }
-
-  //..and this line
 }
