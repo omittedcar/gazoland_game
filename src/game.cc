@@ -39,17 +39,13 @@ bool collision_has_occurred = false;
 bool should_single_step = false;
 
 void key_handler(
-  GLFWwindow *window,
-  int key,
-  int scancode,
-  int action,
-  int mods
-) {
+    GLFWwindow *window,
+    int key,
+    int scancode,
+    int action,
+    int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
-  }
-  if (key == GLFW_KEY_SPACE && collision_has_occurred) {
-    should_single_step = true;
   }
 }
 
@@ -63,8 +59,6 @@ struct joystick_event {
 } // namespace {
 
 void game::run() {
-
-
   is_playing = true;
 
   joystick_file_descriptor = open("/dev/input/js0", O_RDONLY);
@@ -95,8 +89,10 @@ void game::run() {
     (const void*) &rumbleinator,
     sizeof(rumbleinator)
   );
+
   the_gazo.init();
   glfwInit();
+  glfwSwapInterval(1);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -133,7 +129,6 @@ void game::the_monitor_has_refreshed_again() {
     function_which_is_called_420hz();
   }
 
-
   glUseProgram(the_shader.get_shader_program());
   glDisable(GL_CULL_FACE);
   glClearColor(
@@ -164,8 +159,7 @@ void game::the_monitor_has_refreshed_again() {
   glEnableVertexAttribArray(the_shader.get_pos_loc());
   glDrawArrays(GL_TRIANGLE_FAN, 0, 020);
 
-
-  rumble_effect.u.periodic.magnitude = 0x4777;
+  rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x100;
   ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
   rumbleinator.code = rumble_effect.id;
   write(rumbly_file_descriptor, (const void*) &rumbleinator, sizeof(rumbleinator));

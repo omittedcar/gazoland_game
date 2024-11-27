@@ -1,7 +1,6 @@
 #include "gazo.h"
 #include "shader.h"
 
-#include <GLES3/gl3.h>
 #include <linux/input.h>
 
 class GLFWwindow;
@@ -16,6 +15,7 @@ class game {
  private:
   void the_monitor_has_refreshed_again();
   void function_which_is_called_420hz();
+
   input_event rumbleinator;
 	input_event derumbleinator;
 	ff_effect rumble_effect;
@@ -38,5 +38,5 @@ class game {
   int window_width = 0;
   int window_height = 0;
   shader the_shader;
-  GLchar* info_log = nullptr;
+  char* info_log = nullptr;
 };

@@ -32,7 +32,7 @@ double air_pressure = 0x18BCD;
 //the gazo experiences pressure and pressure is force over area
 //but because the gazo is a flat polygon, it has no surface area, only perimeter.
 //this is the amount that it is extruded for the purpose of pressure
-double fluid_interaction_width = 0.1;
+double fluid_interaction_width = 0.2;
 
 //the mass of the gazo's inner node (㎏)
 double inner_mass = 0x8;
@@ -55,7 +55,7 @@ double inner_damping = 0xA;
 //N
 double internal_pressure_area = 0x3400;
 
-double friction_coefficient = 1.0;
+double friction_coefficient = 0.5;
 
 double drag_factor = 0x3;
 
@@ -99,10 +99,12 @@ void gazo::init() {
     pos[i] = mapping[i] * radius;
     if(i % 2 == 1) {
       pos[i]++;
+    } else {
+      pos[i] -= 9;
     }
   }
   for(uint i = 0u; i < n_verts; i++) {
-    vel[i * 2] = 0.0;
+    vel[i * 2] = 8.0;
     vel[i * 2 + 1] = 0.0;
   }
 }
@@ -226,7 +228,7 @@ void gazo::push_out_from_wall(double time_since_not_in_wall) {
       double impact = depth_in_wall * wall_push_factor;
       pos[i * 2 + 1] = -2;
       vel[i * 2 + 1] += impact;
-      double delta_sliding = fmin(impact, fmax(-vx, -impact));
+      double delta_sliding = fmin(impact * friction_coefficient, fmax(-vx, -impact * friction_coefficient));
       pos[i * 2] += delta_sliding * time_since_not_in_wall;
       vel[i * 2] += delta_sliding;
     }
@@ -257,8 +259,8 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
   for(int i = 0; i < n_sides; i++) {
     int j = (i + 1) % n_sides;
     polygon_area +=
-      pos[i * 2 + 2] * pos[j * 2 + 3] -
-      pos[i * 2 + 3] * pos[j * 2 + 2]
+      pos_in[i * 2 + 2] * pos_in[j * 2 + 3] -
+      pos_in[i * 2 + 3] * pos_in[j * 2 + 2]
     ;
   }
   polygon_area *= 0.5;
@@ -266,16 +268,16 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
 
   double glaggle_rotation[2] = {0, 0}; //as like a complex number.
   //for example {0, 1} means rotated counterclokwise 90 degress
-  double glaggle_center[2] = {pos[0], pos[1]};
+  double glaggle_center[2] = {pos_in[0], pos_in[1]};
 
   for(int i = 0; i < n_sides; i++) {
     glaggle_rotation[0] +=
-      +(pos[i * 2 + 2] - glaggle_center[0]) * mapping[i * 2 + 2]
-      +(pos[i * 2 + 3] - glaggle_center[1]) * mapping[i * 2 + 3]
+      +(pos_in[i * 2 + 2] - glaggle_center[0]) * mapping[i * 2 + 2]
+      +(pos_in[i * 2 + 3] - glaggle_center[1]) * mapping[i * 2 + 3]
     ;
     glaggle_rotation[1] +=
-      -(pos[i * 2 + 2] - glaggle_center[0]) * mapping[i * 2 + 3]
-      +(pos[i * 2 + 3] - glaggle_center[1]) * mapping[i * 2 + 2]
+      -(pos_in[i * 2 + 2] - glaggle_center[0]) * mapping[i * 2 + 3]
+      +(pos_in[i * 2 + 3] - glaggle_center[1]) * mapping[i * 2 + 2]
     ;
   }
 
@@ -297,13 +299,13 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
 
   for(int i = 0; i < n_sides; i++) {
     double v[2] = {
-      pos[i * 2 + 2] - pos[0],
-      pos[i * 2 + 3] - pos[1]
+      pos_in[i * 2 + 2] - pos_in[0],
+      pos_in[i * 2 + 3] - pos_in[1]
     };
     double current_length = hypot(v[0], v[1]);
     double deformation_rate = (
-      (vel[i * 2 + 2] - vel[0]) * v[0] +
-      (vel[i * 2 + 3] - vel[1]) * v[1]
+      (vel_in[i * 2 + 2] - vel_in[0]) * v[0] +
+      (vel_in[i * 2 + 3] - vel_in[1]) * v[1]
     ) / current_length;
 
 
@@ -319,10 +321,98 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
       - deformation_rate * inner_damping// + target_muscle_force
     ) / (current_length);
 
-    acc[0] -= v[0] * force_quotient / inner_mass;
-    acc[1] -= v[1] * force_quotient / inner_mass;
-    acc[i * 2 + 2] += v[0] * force_quotient / outer_vertex_mass;
-    acc[i * 2 + 3] += v[1] * force_quotient / outer_vertex_mass;
+    acc_out[0] -= v[0] * force_quotient / inner_mass;
+    acc_out[1] -= v[1] * force_quotient / inner_mass;
+    acc_out[i * 2 + 2] += v[0] * force_quotient / outer_vertex_mass;
+    acc_out[i * 2 + 3] += v[1] * force_quotient / outer_vertex_mass;
+  }
+
+
+
+  for(int i = 0; i < n_sides; i++) {
+    int j = (i + 1) % n_sides;
+    double v[2] = {
+      pos_in[j * 2 + 2] - pos_in[i * 2 + 2],
+      pos_in[j * 2 + 3] - pos_in[i * 2 + 3]
+    };
+    double current_length = hypot(v[0], v[1]);
+    double deformation_rate = (
+      (vel_in[j * 2 + 2] - vel_in[i * 2 + 2]) * v[0] +
+      (vel_in[j * 2 + 3] - vel_in[i * 2 + 3]) * v[1]
+    ) / current_length;
+
+
+    double length_difference = current_length - arc_distance * radius;
+    double force_quotient = (
+      - length_difference * outer_stiffness
+      - deformation_rate * outer_damping
+    ) / (current_length);
+
+    acc_out[i * 2 + 2] -= v[0] * force_quotient / outer_vertex_mass;
+    acc_out[i * 2 + 3] -= v[1] * force_quotient / outer_vertex_mass;
+
+    acc_out[j * 2 + 2] += v[0] * force_quotient / outer_vertex_mass;
+    acc_out[j * 2 + 3] += v[1] * force_quotient / outer_vertex_mass;
+  }
+
+  for(int i = 0; i < n_sides; i++) {
+    int j = (i + 1) % n_sides;
+    double v[2] = {
+      pos_in[j * 2 + 2] - pos_in[i * 2 + 2],
+      pos_in[j * 2 + 3] - pos_in[i * 2 + 3],
+    };
+
+    double edge_length = hypot(v[0], v[1]);
+    double normal_direction[2] = {
+      v[1] / edge_length,
+      -v[0] / edge_length
+    };
+
+    double endpoint_velocities[4] = {
+      vel_in[i * 2 + 2], vel_in[i * 2 + 3],
+      vel_in[j * 2 + 2], vel_in[j * 2 + 3],
+    };
+
+    double kinematic_pressures[2] = {
+      (endpoint_velocities[0] * normal_direction[0] + endpoint_velocities[1] * normal_direction[1]) * hypot(endpoint_velocities[0], endpoint_velocities[1]) * drag_factor,
+      (endpoint_velocities[2] * normal_direction[0] + endpoint_velocities[3] * normal_direction[1]) * hypot(endpoint_velocities[2], endpoint_velocities[3]) * drag_factor//i couldnt find the formuila for kinematic pressure so I made one up :)
+    };
+
+
+    double pressure_acc_factor = 0.5 / outer_vertex_mass * fluid_interaction_width;
+
+    acc_out[i * 2 + 2] += v[1] * (total_pressure) * pressure_acc_factor;
+    acc_out[i * 2 + 3] -= v[0] * (total_pressure) * pressure_acc_factor;
+
+    acc_out[j * 2 + 2] += v[1] * (total_pressure) * pressure_acc_factor;
+    acc_out[j * 2 + 3] -= v[0] * (total_pressure) * pressure_acc_factor;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+float gazo::get_rumble() {
+  float rumble_out = 0.0;
+  for(int i = 0; i < n_sides; i++) {
+    double v[2] = {
+      pos[i * 2 + 2] - pos[0],
+      pos[i * 2 + 3] - pos[1]
+    };
+    double current_length = hypot(v[0], v[1]);
+    double deformation_rate = (
+      (vel[i * 2 + 2] - vel[0]) * v[0] +
+      (vel[i * 2 + 3] - vel[1]) * v[1]
+    ) / current_length;
+    rumble_out += deformation_rate * deformation_rate;
   }
 
 
@@ -338,51 +428,6 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
       (vel[j * 2 + 2] - vel[i * 2 + 2]) * v[0] +
       (vel[j * 2 + 3] - vel[i * 2 + 3]) * v[1]
     ) / current_length;
-
-
-    double length_difference = current_length - arc_distance * radius;
-    double force_quotient = (
-      - length_difference * outer_stiffness
-      - deformation_rate * outer_damping
-    ) / (current_length);
-
-    acc[i * 2 + 2] -= v[0] * force_quotient / outer_vertex_mass;
-    acc[i * 2 + 3] -= v[1] * force_quotient / outer_vertex_mass;
-
-    acc[j * 2 + 2] += v[0] * force_quotient / outer_vertex_mass;
-    acc[j * 2 + 3] += v[1] * force_quotient / outer_vertex_mass;
   }
-
-  for(int i = 0; i < n_sides; i++) {
-    int j = (i + 1) % n_sides;
-    double v[2] = {
-      pos[j * 2 + 2] - pos[i * 2 + 2],
-      pos[j * 2 + 3] - pos[i * 2 + 3],
-    };
-
-    double edge_length = hypot(v[0], v[1]);
-    double normal_direction[2] = {
-      v[1] / edge_length,
-      -v[0] / edge_length
-    };
-
-    double endpoint_velocities[4] = {
-      vel[i * 2 + 2], vel[i * 2 + 3],
-      vel[j * 2 + 2], vel[j * 2 + 3],
-    };
-
-    double kinematic_pressures[2] = {
-      (endpoint_velocities[0] * normal_direction[0] + endpoint_velocities[1] * normal_direction[1]) * hypot(endpoint_velocities[0], endpoint_velocities[1]) * drag_factor,
-      (endpoint_velocities[2] * normal_direction[0] + endpoint_velocities[3] * normal_direction[1]) * hypot(endpoint_velocities[2], endpoint_velocities[3]) * drag_factor//i couldnt find the formuila for kinematic pressure so I made one up :)
-    };
-
-
-    double pressure_acc_factor = 1 / outer_vertex_mass * fluid_interaction_width;
-
-    acc[i * 2 + 2] += v[1] * (total_pressure) * pressure_acc_factor;
-    acc[i * 2 + 3] -= v[0] * (total_pressure) * pressure_acc_factor;
-
-    acc[j * 2 + 2] += v[1] * (total_pressure) * pressure_acc_factor;
-    acc[j * 2 + 3] -= v[0] * (total_pressure) * pressure_acc_factor;
-  }
+  return rumble_out;
 }

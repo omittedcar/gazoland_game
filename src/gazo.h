@@ -11,6 +11,7 @@ class gazo {
   double* get_mapping_pointer();
   int get_vertex_buffer_size();
   void kill_to_death();
+  float get_rumble();
 
  private:
 
