@@ -12,6 +12,11 @@
 #include <fcntl.h>
 
 #include "game.h"
+#include "./resources.h"
+
+//const char sample_text[] = {
+//#embed "./sample_text.txt"
+//};
 
 namespace {
 
@@ -58,7 +63,20 @@ struct joystick_event {
 
 } // namespace {
 
+void dump(uint8_t* data, int size) {
+  for(int i = 0; i < size; i++) {
+    if(i % 8 == 0) {
+      printf("\n");
+    }
+    printf("%02X ", data[i]);
+  }
+  printf("\n");
+} 
+
 void game::run() {
+
+  printf("%s\n",gazo_spritesheet_png);
+
   is_playing = true;
 
   joystick_file_descriptor = open("/dev/input/js0", O_RDONLY);

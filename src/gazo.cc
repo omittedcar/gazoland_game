@@ -105,7 +105,7 @@ void gazo::init() {
   }
   for(uint i = 0u; i < n_verts; i++) {
     vel[i * 2] = 8.0;
-    vel[i * 2 + 1] = 0.0;
+    vel[i * 2 + 1] = 2.0;
   }
 }
 

@@ -16,7 +16,7 @@ void shader::init(const char* vertex_shader_source_code, const char* fragment_sh
   );
   glCompileShader(vertex_shader);
   glGetShaderInfoLog(vertex_shader, 01000, nullptr, info_log);
-  printf("\n%s\n%s\n", vertex_shader_source_code, info_log);
+  //printf("\n%s\n%s\n", vertex_shader_source_code, info_log);
   fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(
     fragment_shader,
@@ -26,7 +26,7 @@ void shader::init(const char* vertex_shader_source_code, const char* fragment_sh
   );
   glCompileShader(fragment_shader);
   glGetShaderInfoLog(fragment_shader, 01000, nullptr, info_log);
-  printf("%s\n%s\n", fragment_shader_source_code, info_log);
+  //printf("%s\n%s\n", fragment_shader_source_code, info_log);
   shader_program = glCreateProgram();
   glAttachShader(shader_program, vertex_shader);
   glAttachShader(shader_program, fragment_shader);

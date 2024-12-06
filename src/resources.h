@@ -1,0 +1,1 @@
+extern const char gazo_spritesheet_png[];
