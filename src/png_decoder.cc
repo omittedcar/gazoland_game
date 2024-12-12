@@ -24,6 +24,7 @@ void decode_png(const unsigned char png_data[], int png_size) {
     image_data
   );
   stbi_image_free(image_data);
+  
 }
 /*
 static int png_pos;
