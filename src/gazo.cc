@@ -6,7 +6,7 @@
 
 
 #include "./gazo.h"
-
+#include "./shader.h"
 
 //esta es el caunto de lados del gazo
 //por ejemplo, si fuera seis, el gazo es un hexagono
@@ -41,21 +41,21 @@ double inner_mass = 0x8;
 double outer_mass = 0xA;
 
 //the stiffness of the gazo's outer edges. (N/m)
-double outer_stiffness = 0x1000;
+double outer_stiffness = 0x1800;
 
 //the damping of the gazo's outer edges. (㎏/s)
-double outer_damping = 0x20;
+double outer_damping = 0x30;
 
 //the power of each of the gazo's muscles. (W)
 double muscle_power = 0x200;
 
-double inner_stiffness = 0x600; //0x600
-double inner_damping = 0xA;
+double inner_stiffness = 0x900; //0x600
+double inner_damping = 0xF;
 
 //N
 double internal_pressure_area = 0x3400;
 
-double friction_coefficient = 0.5;
+double friction_coefficient = 1.0;
 
 double drag_factor = 0x3;
 
@@ -69,9 +69,11 @@ double arc_distance = hypot(cos(angle) - 1, sin(angle));
 
 void gazo::init() {
   glGenBuffers(1, &gl_vertex_buffer);
+  glGenBuffers(1, &gl_element_index_buffer);
+  glGenBuffers(1, &gl_uv_buffer);
+
   mapping = (double*) malloc(n_verts * 2u * sizeof(double));
   pos20 = (float*) malloc(n_verts * 2u * sizeof(float));
-
 
   pos                           = (double*) malloc(n_verts * 2u * sizeof(double));
   vel                           = (double*) malloc(n_verts * 2u * sizeof(double));
@@ -82,30 +84,48 @@ void gazo::init() {
   delta_pos                     = (double*) malloc(n_verts * 2u * sizeof(double));
   delta_vel                     = (double*) malloc(n_verts * 2u * sizeof(double));
 
-  muscle_forces = (double*) malloc(n_sides * sizeof(double));
 
-  elements = (ushort*) malloc(n_verts * 3 * sizeof(ushort));
+
+  ushort elements[45] = {
+    0, 1, 2,
+    0, 2, 3,
+    0, 3, 4,
+    0, 4, 5,
+    0, 5, 6,
+    0, 6, 7,
+    0, 7, 8,
+    0, 8, 9,
+    0, 9, 10,
+    0, 10, 11,
+    0, 11, 12,
+    0, 12, 13,
+    0, 13, 14,
+    0, 14, 15,
+    0, 15, 1
+  };
 
   mapping[0] = 0.0;
   mapping[1] = 0.0;
+
   for(uint i = 0u; i < n_sides; i++) {
     mapping[i*2u+2u] = cos(angle * double(i));
     mapping[i*2u+3u] = sin(angle * double(i));
-    elements[i*3] = 0;
-    elements[(i*3+1)] = i;
-    elements[(i*3+2)] = (i+1) % n_sides;
   }
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, n_sides * 3 * sizeof(ushort), elements, GL_STATIC_DRAW);
+
   for(uint i = 0u; i < n_verts * 2u; i++) {
     pos[i] = mapping[i] * radius;
     if(i % 2 == 1) {
       pos[i]++;
     } else {
-      pos[i] -= 9;
+      pos[i] += 0;
     }
   }
   for(uint i = 0u; i < n_verts; i++) {
-    vel[i * 2] = 8.0;
-    vel[i * 2 + 1] = 2.0;
+    vel[i * 2] = 0.0;
+    vel[i * 2 + 1] = 0.0;
   }
 }
 
@@ -155,19 +175,24 @@ bool gazo::advance_forward(double time_step) {
 
 void gazo::update_gl_vertex_buffer()  {
   for(uint i = 0u; i < n_verts; i++) {
-    pos20[i*2u] = float(pos[i*2u]);
-    pos20[i*2u+1u] = float(pos[i*2u+1]);
+    pos20[i*2u] = float(pos[i*2u] * 1.25 - pos[0] * .25);
+    pos20[i*2u+1u] = float(pos[i*2u+1] * 1.25 - pos[1] * .25);
   }
   glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, n_verts * 2 * sizeof(float), pos20, GL_DYNAMIC_DRAW);
 }
 
-GLuint gazo::get_gl_vertex_buffer() {
-  return gl_vertex_buffer;
+void gazo::update_gl_uv_buffer()  {
+  for(uint i = 0u; i < n_verts; i++) {
+    pos20[i*2u] = float(mapping[i*2u] * .5 + .5);
+    pos20[i*2u+1u] = float(mapping[i*2u+1] * -.5 + .5);
+  }
+  glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
+  glBufferData(GL_ARRAY_BUFFER, n_verts * 2 * sizeof(float), pos20, GL_DYNAMIC_DRAW);
 }
 
-ushort* gazo::get_element_pointer() {
-  return elements;
+GLuint gazo::get_gl_vertex_buffer() {
+  return gl_vertex_buffer;
 }
 
 double* gazo::get_mapping_pointer() {
@@ -179,17 +204,19 @@ int gazo::get_vertex_buffer_size()  {
 }
 
 void gazo::kill_to_death() {
+  glDeleteBuffers(1, &gl_vertex_buffer);
+  glDeleteBuffers(1, &gl_uv_buffer);
+  glDeleteBuffers(1, &gl_element_index_buffer);
   free(mapping);
   free(pos);
   free(pos20);
-  free(elements);
   free(vel);
   free(delta_pos);
   free(delta_vel);
   free(sample_pos);
   free(sample_vel);
   free(acc);
-  free(muscle_forces);
+
 }
 
 void gazo::add_thing_to_other_thing(
@@ -290,12 +317,6 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
     pointing[1] * glaggle_rotation[0] - pointing[0] * glaggle_rotation[1]
   };
 
-  for(int i = 0; i < n_sides; i++) {
-    muscle_forces[i] = (hypot(
-      mapping[i * 2 + 2] - rotated_joystick[0] * 0.625,
-      mapping[i * 2 + 3] - rotated_joystick[1] * 0.625
-    ) - 1) * inner_stiffness * radius * 1;
-  }
 
   for(int i = 0; i < n_sides; i++) {
     double v[2] = {
@@ -309,7 +330,11 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
     ) / current_length;
 
 
-    double target_muscle_force = muscle_forces[i];
+    double target_muscle_force = (hypot(
+      mapping[i * 2 + 2] - rotated_joystick[0] * 0.625,
+      mapping[i * 2 + 3] - rotated_joystick[1] * 0.625
+    ) - 1) * inner_stiffness * radius * 1;
+
     if(target_muscle_force * deformation_rate > muscle_power) {
       target_muscle_force = (muscle_power / deformation_rate) || 0;
     }
@@ -335,7 +360,7 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
       pos_in[j * 2 + 2] - pos_in[i * 2 + 2],
       pos_in[j * 2 + 3] - pos_in[i * 2 + 3]
     };
-    double current_length = hypot(v[0], v[1]);
+    double current_length = hypot(v[0], v[1]); 
     double deformation_rate = (
       (vel_in[j * 2 + 2] - vel_in[i * 2 + 2]) * v[0] +
       (vel_in[j * 2 + 3] - vel_in[i * 2 + 3]) * v[1]
@@ -430,4 +455,50 @@ float gazo::get_rumble() {
     ) / current_length;
   }
   return rumble_out;
+}
+
+void gazo::render(
+  shader rendering_shader,
+  float projection_matrix[20],
+  float view[3],
+  GLuint texture
+) {
+  glUseProgram(rendering_shader.get_shader_program());
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glUniformMatrix4fv(
+    rendering_shader.get_projection_loc(),
+    1,
+    GL_FALSE,
+    projection_matrix
+  );
+
+  glUniform3f(
+    rendering_shader.get_view_loc(),
+    view[0],
+    view[1],
+    view[2]
+  );
+
+  glUniform1i(
+    rendering_shader.get_texture_loc(),
+    0
+  );
+  glBindTexture(GL_TEXTURE_2D, texture);
+  
+
+  update_gl_vertex_buffer();
+  update_gl_uv_buffer();
+
+  glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
+  glVertexAttribPointer(rendering_shader.get_pos_loc(), 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(rendering_shader.get_pos_loc());
+
+  glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
+  glVertexAttribPointer(rendering_shader.get_uv_loc(), 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(rendering_shader.get_uv_loc());
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
+  glDrawElements(GL_TRIANGLES, n_sides * 3, GL_UNSIGNED_SHORT, nullptr);
 }

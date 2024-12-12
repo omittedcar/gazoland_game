@@ -11,8 +11,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+
 #include "game.h"
 #include "./resources.h"
+#include "png_decoder.h"
 
 //const char sample_text[] = {
 //#embed "./sample_text.txt"
@@ -23,19 +25,40 @@ namespace {
 const char* vertex_shader_source_code = R"(#version 300 es
 precision highp float;
 in vec2 pos;
+in vec2 vertex_uv;
 uniform vec3 view_pos;
 uniform mat4 projection_matrix;
-
+out vec2 uv;
 void main() {
+  uv = vertex_uv;
   vec3 displeysmant = vec3(pos, 0.) - view_pos;
   gl_Position = projection_matrix * vec4(displeysmant, 1.);
 })";
 
 const char* fragment_shader_source_code = R"(#version 300 es
+
 precision highp float;
+in vec2 uv;
 out vec4 color;
+uniform sampler2D the_texture;
+
 void main() {
-  color = vec4(0.375, 0.5, 0.75, 1.0);
+
+  mat4 pallete = mat4(
+    0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 1.0,
+    .125, .125, .375, 1.0,
+    .25, .25, .75, 1.0
+  );
+  vec2 pixel_coord = uv * vec2(textureSize(the_texture, 0));
+  int bit_offset = (int(pixel_coord.x * 4.0) % 4) * 2;
+  int multipixel_byte = int(
+    texelFetch(the_texture, ivec2(pixel_coord),0)
+    * 255.0
+  );
+  int color_index = (multipixel_byte >> bit_offset) % 4;
+  color = pallete[color_index];
+
 })";
 
 double time_step = 1.0 / 420.0;
@@ -108,7 +131,7 @@ void game::run() {
     sizeof(rumbleinator)
   );
 
-  the_gazo.init();
+  
   glfwInit();
   glfwSwapInterval(1);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -128,6 +151,15 @@ void game::run() {
     vertex_shader_source_code,
     fragment_shader_source_code
   );
+  the_gazo.init();
+  glGenTextures(1, &gazo_spritesheet_texture);
+  glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+  decode_png(gazo_spritesheet_png,gazo_spritesheet_png_len);
 
   while (is_playing && !glfwWindowShouldClose(window)) {
     the_monitor_has_refreshed_again();
@@ -147,8 +179,7 @@ void game::the_monitor_has_refreshed_again() {
     function_which_is_called_420hz();
   }
 
-  glUseProgram(the_shader.get_shader_program());
-  glDisable(GL_CULL_FACE);
+
   glClearColor(
     0.75,
     0.75,
@@ -156,26 +187,8 @@ void game::the_monitor_has_refreshed_again() {
     0
   );
   glClear(GL_COLOR_BUFFER_BIT);
-  glUniformMatrix4fv(
-    the_shader.get_projection_loc(),
-    1,
-    GL_FALSE,
-    projection_matrix
-  );
-  int joystick_axis_count;
-  const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &joystick_axis_count);
-  glUniform3f(
-    the_shader.get_view_loc(),
-    0.0,
-    0.0,
-    -4.0
-  );
 
-  the_gazo.update_gl_vertex_buffer();
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, the_gazo.get_gl_vertex_buffer());
-  glVertexAttribPointer(the_shader.get_pos_loc(), 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(the_shader.get_pos_loc());
-  glDrawArrays(GL_TRIANGLE_FAN, 0, 020);
+  the_gazo.render(the_shader,projection_matrix,view,gazo_spritesheet_texture);
 
   rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x100;
   ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);

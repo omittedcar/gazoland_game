@@ -26,18 +26,24 @@ void shader::init(const char* vertex_shader_source_code, const char* fragment_sh
   );
   glCompileShader(fragment_shader);
   glGetShaderInfoLog(fragment_shader, 01000, nullptr, info_log);
-  //printf("%s\n%s\n", fragment_shader_source_code, info_log);
+  printf("%s\n%s\n", fragment_shader_source_code, info_log);
   shader_program = glCreateProgram();
   glAttachShader(shader_program, vertex_shader);
   glAttachShader(shader_program, fragment_shader);
   glLinkProgram(shader_program);
   pos_loc = glGetAttribLocation(shader_program, "pos");
+  uv_loc = glGetAttribLocation(shader_program, "vertex_uv");
   projection_loc = glGetUniformLocation(shader_program, "projection_matrix");
   view_loc = glGetUniformLocation(shader_program, "view_pos");
+  texture_loc = glGetUniformLocation(shader_program, "the_texture");
 }
 
 GLuint shader::get_pos_loc() {
   return pos_loc;
+}
+
+GLuint shader::get_uv_loc() {
+  return uv_loc;
 }
 
 GLuint shader::get_projection_loc() {
@@ -46,6 +52,10 @@ GLuint shader::get_projection_loc() {
 
 GLuint shader::get_view_loc() {
   return view_loc;
+}
+
+GLuint shader::get_texture_loc() {
+  return texture_loc;
 }
 
 GLuint shader::get_shader_program() {

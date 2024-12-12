@@ -1,5 +1,6 @@
 #include "stdlib.h"
 #include <GLES3/gl3.h>
+class shader;
 
 class gazo {
  public:
@@ -7,14 +8,17 @@ class gazo {
   bool advance_forward(double time_step);
   void update_gl_vertex_buffer();
   GLuint get_gl_vertex_buffer();
-  ushort* get_element_pointer();
   double* get_mapping_pointer();
   int get_vertex_buffer_size();
   void kill_to_death();
   float get_rumble();
-
+  void render(
+    shader rendering_shader,
+    float projection_matrix[20],
+    float view[3],
+    GLuint texture
+  );
  private:
-
   double pointing[2] = {
     0.0f,
     0.0f
@@ -30,13 +34,12 @@ class gazo {
   double* sample_pos;
   double* acc;
 
-  double* muscle_forces;
 
   float* pos20;
-  ushort* elements;
+
   GLuint gl_vertex_buffer;
-
-
+  GLuint gl_uv_buffer;
+  GLuint gl_element_index_buffer;
 
   void add_thing_to_other_thing(
     double* thing,
@@ -50,6 +53,8 @@ class gazo {
     double coefficient,
     double* another_thing
   );
+
+  void update_gl_uv_buffer();
 
   void calculate_acc(
     double* pos_in,

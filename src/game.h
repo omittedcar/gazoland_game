@@ -30,7 +30,7 @@ class game {
     0, 0, 1, 1,
     0, 0, -1, 0
   };
-  float view[3] = {0};
+  float view[3] = {0, -1.5, -0.5};
   int frame_counter = 0;
   gazo the_gazo;
   bool is_playing = false;
@@ -39,4 +39,5 @@ class game {
   int window_height = 0;
   shader the_shader;
   char* info_log = nullptr;
+  GLuint gazo_spritesheet_texture;
 };
