@@ -30,7 +30,7 @@ class game {
     0, 0, 1, 1,
     0, 0, -1, 0
   };
-  float view[3] = {0, -1.5, -0.5};
+  float view[3] = {0, 2.0, -4.0};
   int frame_counter = 0;
   gazo the_gazo;
   bool is_playing = false;

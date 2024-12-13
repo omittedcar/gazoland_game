@@ -41,16 +41,16 @@ double inner_mass = 0x8;
 double outer_mass = 0xA;
 
 //the stiffness of the gazo's outer edges. (N/m)
-double outer_stiffness = 0x1800;
+double outer_stiffness = 0xC00;
 
 //the damping of the gazo's outer edges. (㎏/s)
-double outer_damping = 0x30;
+double outer_damping = 0x18;
 
 //the power of each of the gazo's muscles. (W)
 double muscle_power = 0x200;
 
-double inner_stiffness = 0x900; //0x600
-double inner_damping = 0xF;
+double inner_stiffness = 0x800; //0x600
+double inner_damping = 0x10;
 
 //N
 double internal_pressure_area = 0x3400;
@@ -184,8 +184,8 @@ void gazo::update_gl_vertex_buffer()  {
 
 void gazo::update_gl_uv_buffer()  {
   for(uint i = 0u; i < n_verts; i++) {
-    pos20[i*2u] = float(mapping[i*2u] * .5 + .5);
-    pos20[i*2u+1u] = float(mapping[i*2u+1] * -.5 + .5);
+    pos20[i*2u] = float(mapping[i*2u] * .125 + .125);
+    pos20[i*2u+1u] = float(mapping[i*2u+1] * -.125 + .375);
   }
   glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
   glBufferData(GL_ARRAY_BUFFER, n_verts * 2 * sizeof(float), pos20, GL_DYNAMIC_DRAW);
@@ -251,13 +251,17 @@ void gazo::push_out_from_wall(double time_since_not_in_wall) {
     if(y < -2) {
       double vx = vel[i * 2];
       double vy = vel[i * 2 + 1];
-      double depth_in_wall = -y - 2;
+      double depth_in_wall = -y - 2.0;
       double impact = depth_in_wall * wall_push_factor;
-      pos[i * 2 + 1] = -2;
+      pos[i * 2 + 1] += impact * time_since_not_in_wall;
       vel[i * 2 + 1] += impact;
-      double delta_sliding = fmin(impact * friction_coefficient, fmax(-vx, -impact * friction_coefficient));
-      pos[i * 2] += delta_sliding * time_since_not_in_wall;
-      vel[i * 2] += delta_sliding;
+      if(abs(vel[i * 2]) <= impact * friction_coefficient) {
+        vel[i * 2] = 0.0;
+      } else {
+        vel[i * 2] -= impact * friction_coefficient * (signbit(vel[i*2]) ? -1.0 : 1.0);
+      }
+      pos[i*2] += (vel[i*2] - vx) * time_since_not_in_wall / 2.0;
+      
     }
   }
 }

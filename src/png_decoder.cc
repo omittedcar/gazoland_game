@@ -9,14 +9,14 @@
 void decode_png(const unsigned char png_data[], int png_size) {
   int width, height, channels;
   unsigned char* image_data = stbi_load_from_memory(
-    png_data, png_size, &width, &height, &channels, 0
+    png_data, png_size, &width, &height, &channels, 1
   );
   printf("channel: %i\n",channels);
   glTexImage2D(
     GL_TEXTURE_2D,
     0,
     GL_R8,
-    width/4,
+    width,
     height,
     0,
     GL_RED,

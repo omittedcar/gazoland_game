@@ -50,15 +50,17 @@ void main() {
     .125, .125, .375, 1.0,
     .25, .25, .75, 1.0
   );
+  
   vec2 pixel_coord = uv * vec2(textureSize(the_texture, 0));
-  int bit_offset = (int(pixel_coord.x * 4.0) % 4) * 2;
+  int bit_offset = (3 - int(pixel_coord.x * 4.0) % 4) * 2;
   int multipixel_byte = int(
     texelFetch(the_texture, ivec2(pixel_coord),0)
     * 255.0
   );
   int color_index = (multipixel_byte >> bit_offset) % 4;
   color = pallete[color_index];
-
+  
+  //color = vec4(texture(the_texture,uv).x,0.0,0.0,1.0);
 })";
 
 double time_step = 1.0 / 420.0;
