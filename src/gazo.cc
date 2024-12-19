@@ -50,7 +50,7 @@ double outer_damping = 0x18;
 double muscle_power = 0x200;
 
 double inner_stiffness = 0x800; //0x600
-double inner_damping = 0x10;
+double inner_damping = 0x18;
 
 //N
 double internal_pressure_area = 0x3400;
@@ -61,7 +61,7 @@ double drag_factor = 0x3;
 
 double outer_vertex_mass = outer_mass / n_sides;
 
-double dash_speed = 3.5;
+double dash_speed = 2.25;
 
 double radius = 0.2;
 
@@ -173,6 +173,24 @@ bool gazo::advance_forward(double time_step) {
   return false;
 }
 
+void gazo::point_joystick(float x, float y) {
+  pointing[0] = x;
+  pointing[1] = y;
+}
+
+void gazo::point_other_joystick(float x, float y) {
+  double dashing[2] = {
+    x - previous_joystick[0],
+    y - previous_joystick[1]
+  };
+  for(int i = 0; i < n_verts; i++) {
+    vel[i * 2] += dashing[0] * dash_speed;
+    vel[i * 2 + 1] += dashing[1] * dash_speed;
+  }
+  previous_joystick[0] = x;
+  previous_joystick[1] = y;
+}
+
 void gazo::update_gl_vertex_buffer()  {
   for(uint i = 0u; i < n_verts; i++) {
     pos20[i*2u] = float(pos[i*2u] * 1.25 - pos[0] * .25);
@@ -184,8 +202,8 @@ void gazo::update_gl_vertex_buffer()  {
 
 void gazo::update_gl_uv_buffer()  {
   for(uint i = 0u; i < n_verts; i++) {
-    pos20[i*2u] = float(mapping[i*2u] * .125 + .125);
-    pos20[i*2u+1u] = float(mapping[i*2u+1] * -.125 + .375);
+    pos20[i*2u] = float(mapping[i*2u] /*.125 + .125*/ * 0.5 + 0.5);
+    pos20[i*2u+1u] = float(mapping[i*2u+1] * /*-.125 + .375*/ -0.5 + 0.5);
   }
   glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
   glBufferData(GL_ARRAY_BUFFER, n_verts * 2 * sizeof(float), pos20, GL_DYNAMIC_DRAW);
@@ -347,7 +365,7 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
     double length_difference = current_length - radius;
     double force_quotient = (
       - length_difference * inner_stiffness
-      - deformation_rate * inner_damping// + target_muscle_force
+      - deformation_rate * inner_damping + target_muscle_force
     ) / (current_length);
 
     acc_out[0] -= v[0] * force_quotient / inner_mass;
@@ -432,14 +450,15 @@ void gazo::calculate_acc(double* pos_in, double* vel_in, double* acc_out) {
 float gazo::get_rumble() {
   float rumble_out = 0.0;
   for(int i = 0; i < n_sides; i++) {
+    int j = (i+1)%n_sides;
     double v[2] = {
-      pos[i * 2 + 2] - pos[0],
-      pos[i * 2 + 3] - pos[1]
+      pos[i * 2 + 2] - pos[j*2+2],
+      pos[i * 2 + 3] - pos[j*2+3]
     };
     double current_length = hypot(v[0], v[1]);
     double deformation_rate = (
-      (vel[i * 2 + 2] - vel[0]) * v[0] +
-      (vel[i * 2 + 3] - vel[1]) * v[1]
+      (vel[i * 2 + 2] - vel[j*2+2]) * v[0] +
+      (vel[i * 2 + 3] - vel[j*2+3]) * v[1]
     ) / current_length;
     rumble_out += deformation_rate * deformation_rate;
   }
@@ -469,6 +488,7 @@ void gazo::render(
 ) {
   glUseProgram(rendering_shader.get_shader_program());
   glDisable(GL_CULL_FACE);
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glUniformMatrix4fv(

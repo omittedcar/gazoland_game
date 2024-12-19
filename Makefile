@@ -1,3 +1,4 @@
+
 # Modify for your local system
 
 LLVM := /usr/lib/llvm-19
@@ -11,7 +12,7 @@ LDFLAGS := -L/lib/x86_64-linux-gnu
 
 DEBUGFLAGS := -O0 -g
 OBJECTS := resources.o png_decoder.o game.o gazo.o main.o shader.o
-LIBS := -lglfw -lGLESv2 -lEGL
+LIBS := -lglfw -lGLESv2 -lEGL 
 
 default : bin/gazoland_for_linux.exe
 

@@ -6,6 +6,8 @@ class gazo {
  public:
   void init();
   bool advance_forward(double time_step);
+  void point_joystick(float x, float y);
+  void point_other_joystick(float x, float y);
   void update_gl_vertex_buffer();
   GLuint get_gl_vertex_buffer();
   double* get_mapping_pointer();
@@ -20,8 +22,12 @@ class gazo {
   );
  private:
   double pointing[2] = {
-    0.0f,
-    0.0f
+    0.2f,
+    0.2f
+  };
+  double previous_joystick[2] = {
+    0.0,
+    0.0
   };
 
   double* mapping;

@@ -44,21 +44,27 @@ uniform sampler2D the_texture;
 
 void main() {
 
-  mat4 pallete = mat4(
-    0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 1.0,
-    .125, .125, .375, 1.0,
-    .25, .25, .75, 1.0
+  ivec4 pallete[8] = ivec4[](
+  //  R    G    B    A
+    ivec4(0x00,0x00,0x00,0x00), //transparent background
+    ivec4(0x00,0x00,0x00,0xFF), //dark outline + eyes
+    ivec4(0x1A,0x02,0x14,0xFF), //mouth
+    ivec4(0x39,0x1F,0x5A,0xFF), //transition from mouth
+    ivec4(0x19,0x19,0x5E,0xFF), //transition from darkness
+    ivec4(0x35,0x35,0x7F,0xFF), //more transition from darkness
+    ivec4(0x41,0x41,0x98,0xFF), //base color
+    ivec4(0x4A,0x4A,0xA2,0xFF)  //light gradient
   );
+
   
   vec2 pixel_coord = uv * vec2(textureSize(the_texture, 0));
-  int bit_offset = (3 - int(pixel_coord.x * 4.0) % 4) * 2;
+  int bit_offset = (int(pixel_coord.x * 2.0) % 2)*3+2;
   int multipixel_byte = int(
     texelFetch(the_texture, ivec2(pixel_coord),0)
     * 255.0
   );
-  int color_index = (multipixel_byte >> bit_offset) % 4;
-  color = pallete[color_index];
+  int color_index = (multipixel_byte >> bit_offset) % 8;
+  color = vec4(pallete[color_index]) / 255.0;
   
   //color = vec4(texture(the_texture,uv).x,0.0,0.0,1.0);
 })";
@@ -122,7 +128,7 @@ void game::run() {
 	rumble_effect.trigger.interval = 0;
 	rumble_effect.replay.length = 0x100;
 	rumble_effect.replay.delay = 0;
-  rumbly_file_descriptor = open("/dev/input/event7", O_RDWR);  //  ǁ📂ǁ
+  rumbly_file_descriptor = open("/dev/input/event24", O_RDWR);  //  ǁ📂ǁ
   ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
   rumbleinator.type = EV_FF;
 	rumbleinator.code = rumble_effect.id;
@@ -140,6 +146,8 @@ void game::run() {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+  
+
   window = glfwCreateWindow(
     0x300,
     0x200,
@@ -177,10 +185,13 @@ void game::stop() {
 
 void game::the_monitor_has_refreshed_again() {
   //if(frame_counter % 30 == 0) {
+  int joystick_axis_count;
+  const float* joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
+  the_gazo.point_joystick(joystick_axes[0], -joystick_axes[1]);
+  the_gazo.point_other_joystick(joystick_axes[5], -joystick_axes[2]);
   for (int i = 0; i < 7; i++) {
     function_which_is_called_420hz();
   }
-
 
   glClearColor(
     0.75,
@@ -192,7 +203,7 @@ void game::the_monitor_has_refreshed_again() {
 
   the_gazo.render(the_shader,projection_matrix,view,gazo_spritesheet_texture);
 
-  rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x100;
+  rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
   ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
   rumbleinator.code = rumble_effect.id;
   write(rumbly_file_descriptor, (const void*) &rumbleinator, sizeof(rumbleinator));
