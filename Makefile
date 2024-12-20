@@ -11,7 +11,7 @@ LDFLAGS := -L/lib/x86_64-linux-gnu
 # Do not modify below this line
 
 DEBUGFLAGS := -O0 -g
-OBJECTS := resources.o png_decoder.o game.o gazo.o main.o shader.o
+OBJECTS := resources.o png_decoder.o game.o gazo.o main.o shader.o level.o
 LIBS := -lglfw -lGLESv2 -lEGL 
 
 default : bin/gazoland_for_linux.exe

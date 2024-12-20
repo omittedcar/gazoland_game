@@ -106,12 +106,9 @@ void dump(uint8_t* data, int size) {
 
 void game::run() {
 
-  printf("%s\n",gazo_spritesheet_png);
-
   is_playing = true;
 
-  joystick_file_descriptor = open("/dev/input/js0", O_RDONLY);
-
+  /* 
   rumble_effect.type = FF_PERIODIC;
   rumble_effect.id = -1;
   rumble_effect.u.periodic.waveform = FF_SQUARE;
@@ -138,7 +135,7 @@ void game::run() {
     (const void*) &rumbleinator,
     sizeof(rumbleinator)
   );
-
+  */
   
   glfwInit();
   glfwSwapInterval(1);
@@ -161,7 +158,7 @@ void game::run() {
     vertex_shader_source_code,
     fragment_shader_source_code
   );
-  the_gazo.init();
+  the_level.construct();
   glGenTextures(1, &gazo_spritesheet_texture);
   glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -177,7 +174,7 @@ void game::run() {
 }
 
 void game::stop() {
-  the_gazo.kill_to_death();
+  the_level.demolish();
   the_shader.put_away();
   glfwDestroyWindow(window);
   glfwTerminate();
@@ -185,12 +182,12 @@ void game::stop() {
 
 void game::the_monitor_has_refreshed_again() {
   //if(frame_counter % 30 == 0) {
-  int joystick_axis_count;
-  const float* joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
-  the_gazo.point_joystick(joystick_axes[0], -joystick_axes[1]);
-  the_gazo.point_other_joystick(joystick_axes[5], -joystick_axes[2]);
-  for (int i = 0; i < 7; i++) {
-    function_which_is_called_420hz();
+  //int joystick_axis_count;
+  //const float* joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
+  //the_gazo.point_joystick(joystick_axes[0], -joystick_axes[1]);
+  //the_gazo.point_other_joystick(joystick_axes[5], -joystick_axes[2]);
+  for (int i = 0; i < 8; i++) {
+    function_which_is_called_480hz();
   }
 
   glClearColor(
@@ -200,18 +197,17 @@ void game::the_monitor_has_refreshed_again() {
     0
   );
   glClear(GL_COLOR_BUFFER_BIT);
+  the_level.time_step();
+  the_level.draw(&the_shader,gazo_spritesheet_texture);
 
-  the_gazo.render(the_shader,projection_matrix,view,gazo_spritesheet_texture);
-
-  rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
-  ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
-  rumbleinator.code = rumble_effect.id;
-  write(rumbly_file_descriptor, (const void*) &rumbleinator, sizeof(rumbleinator));
+  //rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
+  //ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
+  //rumbleinator.code = rumble_effect.id;
+  //write(rumbly_file_descriptor, (const void*) &rumbleinator, sizeof(rumbleinator));
   glfwSwapBuffers(window);
   glfwPollEvents();
   frame_counter++;
 }
 
-void game::function_which_is_called_420hz() {
-  the_gazo.advance_forward(time_step);
+void game::function_which_is_called_480hz() {
 }

@@ -41,16 +41,16 @@ double inner_mass = 0x8;
 double outer_mass = 0xA;
 
 //the stiffness of the gazo's outer edges. (N/m)
-double outer_stiffness = 0xC00;
+double outer_stiffness = 0x1000;
 
 //the damping of the gazo's outer edges. (㎏/s)
-double outer_damping = 0x18;
+double outer_damping = 0x20;
 
 //the power of each of the gazo's muscles. (W)
-double muscle_power = 0x200;
+double muscle_power = 0x180;
 
-double inner_stiffness = 0x800; //0x600
-double inner_damping = 0x18;
+double inner_stiffness = 0x1000; //0x600
+double inner_damping = 0x20;
 
 //N
 double internal_pressure_area = 0x3400;
@@ -481,32 +481,32 @@ float gazo::get_rumble() {
 }
 
 void gazo::render(
-  shader rendering_shader,
+  shader* rendering_shader,
   float projection_matrix[20],
   float view[3],
   GLuint texture
 ) {
-  glUseProgram(rendering_shader.get_shader_program());
+  glUseProgram((*rendering_shader).get_shader_program());
   glDisable(GL_CULL_FACE);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glUniformMatrix4fv(
-    rendering_shader.get_projection_loc(),
+    rendering_shader->get_projection_loc(),
     1,
     GL_FALSE,
     projection_matrix
   );
 
   glUniform3f(
-    rendering_shader.get_view_loc(),
+    rendering_shader->get_view_loc(),
     view[0],
     view[1],
     view[2]
   );
 
   glUniform1i(
-    rendering_shader.get_texture_loc(),
+    rendering_shader->get_texture_loc(),
     0
   );
   glBindTexture(GL_TEXTURE_2D, texture);
@@ -516,12 +516,12 @@ void gazo::render(
   update_gl_uv_buffer();
 
   glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
-  glVertexAttribPointer(rendering_shader.get_pos_loc(), 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(rendering_shader.get_pos_loc());
+  glVertexAttribPointer(rendering_shader->get_pos_loc(), 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(rendering_shader->get_pos_loc());
 
   glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
-  glVertexAttribPointer(rendering_shader.get_uv_loc(), 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(rendering_shader.get_uv_loc());
+  glVertexAttribPointer(rendering_shader->get_uv_loc(), 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(rendering_shader->get_uv_loc());
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
   glDrawElements(GL_TRIANGLES, n_sides * 3, GL_UNSIGNED_SHORT, nullptr);

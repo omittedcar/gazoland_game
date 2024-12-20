@@ -1,6 +1,6 @@
-#include "gazo.h"
-#include "shader.h"
 
+#include "shader.h"
+#include "level.h"
 #include <linux/input.h>
 
 class GLFWwindow;
@@ -13,26 +13,17 @@ class game {
   void stop();
 
  private:
+  
   void the_monitor_has_refreshed_again();
-  void function_which_is_called_420hz();
+  void function_which_is_called_480hz();
 
   input_event rumbleinator;
 	input_event derumbleinator;
 	ff_effect rumble_effect;
   int rumbly_file_descriptor;
   int joystick_file_descriptor;
-  float aspect = 1.5;
-  float fov = 1.0;
-  float near = 0.01; // I love z-fighting :)
-  float projection_matrix[020] = {
-    1/aspect/fov, 0, 0, 0,
-    0, 1/fov, 0, 0,
-    0, 0, 1, 1,
-    0, 0, -1, 0
-  };
-  float view[3] = {0, 0.0, -2.0};
   int frame_counter = 0;
-  gazo the_gazo;
+  level the_level;
   bool is_playing = false;
   GLFWwindow *window = nullptr;
   int window_width = 0;

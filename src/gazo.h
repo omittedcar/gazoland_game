@@ -15,7 +15,7 @@ class gazo {
   void kill_to_death();
   float get_rumble();
   void render(
-    shader rendering_shader,
+    shader* rendering_shader,
     float projection_matrix[20],
     float view[3],
     GLuint texture
