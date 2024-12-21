@@ -182,10 +182,17 @@ void game::stop() {
 
 void game::the_monitor_has_refreshed_again() {
   //if(frame_counter % 30 == 0) {
-  //int joystick_axis_count;
-  //const float* joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
-  //the_gazo.point_joystick(joystick_axes[0], -joystick_axes[1]);
-  //the_gazo.point_other_joystick(joystick_axes[5], -joystick_axes[2]);
+
+  int joystick_axis_count;
+  const float* joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
+  if(joystick_axis_count >= 6) {
+    the_level.control_gazo(
+      joystick_axes[0],
+      -joystick_axes[1],
+      joystick_axes[5],
+      -joystick_axes[2]
+    );
+  }
   for (int i = 0; i < 8; i++) {
     function_which_is_called_480hz();
   }
@@ -197,7 +204,7 @@ void game::the_monitor_has_refreshed_again() {
     0
   );
   glClear(GL_COLOR_BUFFER_BIT);
-  the_level.time_step();
+  
   the_level.draw(&the_shader,gazo_spritesheet_texture);
 
   //rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
@@ -210,4 +217,5 @@ void game::the_monitor_has_refreshed_again() {
 }
 
 void game::function_which_is_called_480hz() {
+  the_level.time_step();
 }

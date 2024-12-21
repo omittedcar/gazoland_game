@@ -10,6 +10,11 @@ void level::time_step() {
   the_gazo.advance_forward(1.0/480.0);
 }
 
+void level::control_gazo(float left_stick_x, float left_stick_y, float right_stick_x, float right_stick_y) {
+  the_gazo.point_joystick(left_stick_x, left_stick_y);
+  the_gazo.point_other_joystick(right_stick_x,right_stick_y);
+}
+
 void level::draw(shader* gazo_shader, GLuint gazo_texture) {
   float aspect = 1.5;
   float fov = 1.0;

@@ -41,16 +41,16 @@ double inner_mass = 0x8;
 double outer_mass = 0xA;
 
 //the stiffness of the gazo's outer edges. (N/m)
-double outer_stiffness = 0x1000;
+double outer_stiffness = 0x1800;
 
 //the damping of the gazo's outer edges. (㎏/s)
-double outer_damping = 0x20;
+double outer_damping = 0x60;
 
 //the power of each of the gazo's muscles. (W)
 double muscle_power = 0x180;
 
-double inner_stiffness = 0x1000; //0x600
-double inner_damping = 0x20;
+double inner_stiffness = 0x800; //0x600
+double inner_damping = 0x10;
 
 //N
 double internal_pressure_area = 0x3400;
