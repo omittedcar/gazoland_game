@@ -1,4 +1,5 @@
 #include "png_decoder.h"
+#include "gl_or_gles.h"
 #include <cstring>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,11 +16,32 @@ void decode_png(const unsigned char png_data[], int png_size) {
   glTexImage2D(
     GL_TEXTURE_2D,
     0,
-    GL_R8,
+    GL_RGBA4,
+    width / 4,
+    height,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
+    image_data
+  );
+  stbi_image_free(image_data);
+  
+}
+
+void decode_png_truecolor(const unsigned char png_data[], int png_size) {
+  int width, height, channels;
+  unsigned char* image_data = stbi_load_from_memory(
+    png_data, png_size, &width, &height, &channels, 4
+  );
+  printf("channel: %i\n",channels);
+  glTexImage2D(
+    GL_TEXTURE_2D,
+    0,
+    GL_SRGB8_ALPHA8,
     width,
     height,
     0,
-    GL_RED,
+    GL_RGBA,
     GL_UNSIGNED_BYTE,
     image_data
   );

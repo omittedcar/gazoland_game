@@ -1,6 +1,7 @@
 #include "stdlib.h"
-#include <GLES3/gl3.h>
-class shader;
+#include "gl_or_gles.h"
+#include "platform.h"
+#include "vec2.h"
 
 class gazo {
  public:
@@ -14,31 +15,34 @@ class gazo {
   int get_vertex_buffer_size();
   void kill_to_death();
   float get_rumble();
+  fvec2 get_center_of_mass_medium_precision();
   void render(
-    shader* rendering_shader,
+    GLuint rendering_shader,
     float projection_matrix[20],
-    float view[3],
+    const fvec2& view,
     GLuint texture
   );
+  void push_out_from_platform(double interval, platform* p);
  private:
-  double pointing[2] = {
-    0.2f,
-    0.2f
+  vec2 pointing = {
+    0.0f,
+    0.0f
   };
-  double previous_joystick[2] = {
+  vec2 previous_joystick = {
     0.0,
     0.0
   };
+  int blink_timer = 0.0;
 
-  double* mapping;
-  double* pos;
-  double* vel;
+  vec2* mapping;
+  vec2* pos;
+  vec2* vel;
 
-  double* delta_pos;
-  double* delta_vel;
-  double* sample_vel;
-  double* sample_pos;
-  double* acc;
+  vec2* delta_pos;
+  vec2* delta_vel;
+  vec2* sample_vel;
+  vec2* sample_pos;
+  vec2* acc;
 
 
   float* pos20;
@@ -63,11 +67,8 @@ class gazo {
   void update_gl_uv_buffer();
 
   void calculate_acc(
-    double* pos_in,
-    double* vel_in,
-    double* acc_out
+    vec2* pos_in,
+    vec2* vel_in,
+    vec2* acc_out
   );
-
-  bool is_in_wall();
-  void push_out_from_wall(double time_since_not_in_wall);
 };

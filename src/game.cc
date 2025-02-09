@@ -1,73 +1,21 @@
-#include <GLES3/gl3.h>
+#include <GL/gl.h>
 #include <GLFW/glfw3.h>
-
-
+#include <cassert>
 #include <cstdio>
 #include <stdlib.h>
 #include <math.h>
-
 #include <linux/input.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
-
-
+#include "gl_or_gles.h"
 #include "game.h"
 #include "./resources.h"
 #include "png_decoder.h"
 
-//const char sample_text[] = {
-//#embed "./sample_text.txt"
-//};
+#
 
 namespace {
-
-const char* vertex_shader_source_code = R"(#version 300 es
-precision highp float;
-in vec2 pos;
-in vec2 vertex_uv;
-uniform vec3 view_pos;
-uniform mat4 projection_matrix;
-out vec2 uv;
-void main() {
-  uv = vertex_uv;
-  vec3 displeysmant = vec3(pos, 0.) - view_pos;
-  gl_Position = projection_matrix * vec4(displeysmant, 1.);
-})";
-
-const char* fragment_shader_source_code = R"(#version 300 es
-
-precision highp float;
-in vec2 uv;
-out vec4 color;
-uniform sampler2D the_texture;
-
-void main() {
-
-  ivec4 pallete[8] = ivec4[](
-  //  R    G    B    A
-    ivec4(0x00,0x00,0x00,0x00), //transparent background
-    ivec4(0x00,0x00,0x00,0xFF), //dark outline + eyes
-    ivec4(0x1A,0x02,0x14,0xFF), //mouth
-    ivec4(0x39,0x1F,0x5A,0xFF), //transition from mouth
-    ivec4(0x19,0x19,0x5E,0xFF), //transition from darkness
-    ivec4(0x35,0x35,0x7F,0xFF), //more transition from darkness
-    ivec4(0x41,0x41,0x98,0xFF), //base color
-    ivec4(0x4A,0x4A,0xA2,0xFF)  //light gradient
-  );
-
-  
-  vec2 pixel_coord = uv * vec2(textureSize(the_texture, 0));
-  int bit_offset = (int(pixel_coord.x * 2.0) % 2)*3+2;
-  int multipixel_byte = int(
-    texelFetch(the_texture, ivec2(pixel_coord),0)
-    * 255.0
-  );
-  int color_index = (multipixel_byte >> bit_offset) % 8;
-  color = vec4(pallete[color_index]) / 255.0;
-  
-  //color = vec4(texture(the_texture,uv).x,0.0,0.0,1.0);
-})";
 
 double time_step = 1.0 / 420.0;
 
@@ -83,6 +31,9 @@ void key_handler(
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
+  if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+    printf("bro you just preessed the space bar bgro that doesn't do anything \n");
+  }
 }
 
 struct joystick_event {
@@ -92,6 +43,12 @@ struct joystick_event {
     uint8_t number;
 };
 
+void maybe_print_error(size_t line) {
+  GLenum err;
+  while((err = glGetError()) != GL_NO_ERROR) {
+    printf("GL error code 0x%x prior to line %zu\n", err, line);
+  }
+}
 } // namespace {
 
 void dump(uint8_t* data, int size) {
@@ -139,11 +96,11 @@ void game::run() {
   
   glfwInit();
   glfwSwapInterval(1);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  
+  glfwWindowHint(GLFW_SAMPLES, 0);
 
   window = glfwCreateWindow(
     0x300,
@@ -154,28 +111,210 @@ void game::run() {
   );
   glfwSetKeyCallback(window, key_handler);
   glfwMakeContextCurrent(window);
-  the_shader.init(
-    vertex_shader_source_code,
-    fragment_shader_source_code
-  );
+  vertshader_basic = glCreateShader(GL_VERTEX_SHADER);
+  maybe_print_error(__LINE__);
+  vertshader_gazo = glCreateShader(GL_VERTEX_SHADER);
+  maybe_print_error(__LINE__);
+  vertshader_3d = glCreateShader(GL_VERTEX_SHADER);
+  maybe_print_error(__LINE__);
+  fragshader_basic = glCreateShader(GL_FRAGMENT_SHADER);
+  maybe_print_error(__LINE__);
+  fragshader_gamma = glCreateShader(GL_FRAGMENT_SHADER);
+  maybe_print_error(__LINE__);
+  printf("bouta shader source\n");
+  {
+    void* some_pointers[] = {
+      (void*) vert_basic_glsl,
+      nullptr
+    };
+    glShaderSource(
+      vertshader_basic,
+      1,
+      (const char* const *) (some_pointers),
+      nullptr
+    );
+    maybe_print_error(__LINE__);
+    some_pointers[0] = (void*) vert_gazo_glsl;
+    glShaderSource(
+      vertshader_gazo,
+      1,
+      (const char* const *) (some_pointers),
+      nullptr
+    );
+    maybe_print_error(__LINE__);
+    some_pointers[0] = (void*) vert_3d_glsl;
+    glShaderSource(
+      vertshader_3d,
+      1,
+      (const char* const*) some_pointers,
+      nullptr
+    );
+    maybe_print_error(__LINE__);
+    some_pointers[0] = (void*) frag_basic_glsl;
+    glShaderSource(
+      fragshader_basic,
+      1,
+      (const char* const*) some_pointers,
+      nullptr
+    );
+    maybe_print_error(__LINE__);
+    some_pointers[0] = (void*) frag_gamma_glsl;
+    glShaderSource(
+      fragshader_gamma,
+      1,
+      (const char* const*) some_pointers,
+      nullptr
+    );
+    maybe_print_error(__LINE__);
+  };
+  printf("finna shader source\n");
+  glCompileShader(vertshader_basic);
+  maybe_print_error(__LINE__);
+  glCompileShader(vertshader_gazo);
+  maybe_print_error(__LINE__);
+  glCompileShader(vertshader_3d);
+  maybe_print_error(__LINE__);
+  glCompileShader(fragshader_basic);
+  maybe_print_error(__LINE__);
+  glCompileShader(fragshader_gamma);
+  maybe_print_error(__LINE__);
+  gazo_shader = glCreateProgram();
+  maybe_print_error(__LINE__);
+  terrain_shader = glCreateProgram();
+  maybe_print_error(__LINE__);
+  gamma_shader = glCreateProgram();
+  maybe_print_error(__LINE__);
+  glAttachShader(gazo_shader, vertshader_gazo);
+  maybe_print_error(__LINE__);
+  glAttachShader(gazo_shader, fragshader_basic);
+  maybe_print_error(__LINE__);
+  glAttachShader(terrain_shader, vertshader_3d);
+  maybe_print_error(__LINE__);
+  glAttachShader(terrain_shader, fragshader_basic);
+  maybe_print_error(__LINE__);
+  glAttachShader(gamma_shader, vertshader_basic);
+  maybe_print_error(__LINE__);
+  glAttachShader(gamma_shader, fragshader_gamma);
+  maybe_print_error(__LINE__);
+  glLinkProgram(gazo_shader);
+  maybe_print_error(__LINE__);
+  glLinkProgram(terrain_shader);
+  maybe_print_error(__LINE__);
+  glLinkProgram(gamma_shader);
+  maybe_print_error(__LINE__);
+
+  {
+    float the_square[] = {
+      -1.0, -1.0,
+      -1.0, 1.0,
+      1.0, 1.0,
+      -1.0, -1.0,
+      1.0, -1.0,
+      1.0, 1.0
+    };
+    glGenBuffers(1, &square_buffer);
+  maybe_print_error(__LINE__);
+    glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+  maybe_print_error(__LINE__);
+    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), the_square, GL_STATIC_DRAW);
+  maybe_print_error(__LINE__);
+  };
+
+  glGenFramebuffers(1, &framebuffer);
+  maybe_print_error(__LINE__);
+  glGenTextures(1, &framebuffer_texture);
+  maybe_print_error(__LINE__);
+  glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+  maybe_print_error(__LINE__);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0x240, 0x180, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  maybe_print_error(__LINE__);
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+  maybe_print_error(__LINE__);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebuffer_texture, 0);
+  maybe_print_error(__LINE__);
+
+  glGenTextures(1, &depth_texture);
+  maybe_print_error(__LINE__);
+  glBindTexture(GL_TEXTURE_2D, depth_texture);
+  maybe_print_error(__LINE__);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 0x240, 0x180, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
+  maybe_print_error(__LINE__);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, framebuffer_texture, 0);
+
   the_level.construct();
   glGenTextures(1, &gazo_spritesheet_texture);
-  glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  maybe_print_error(__LINE__);
+  glGenTextures(1, &stone_tile_texture);
+  maybe_print_error(__LINE__);
 
-  decode_png(gazo_spritesheet_png,gazo_spritesheet_png_len);
+  glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  maybe_print_error(__LINE__);
+  decode_png_truecolor(gazo_spritesheet_png,gazo_spritesheet_png_len);
+  
+  glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  maybe_print_error(__LINE__);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  maybe_print_error(__LINE__);
+  decode_png_truecolor(stone_tile_png,stone_tile_png_len);
+  
 
   while (is_playing && !glfwWindowShouldClose(window)) {
     the_monitor_has_refreshed_again();
+    
   }
+
 }
 
 void game::stop() {
   the_level.demolish();
-  the_shader.put_away();
+  glDeleteFramebuffers(1, &framebuffer);
+  maybe_print_error(__LINE__);
+  glDeleteBuffers(1, &square_buffer);
+  maybe_print_error(__LINE__);
+  glDeleteShader(vertshader_basic);
+  maybe_print_error(__LINE__);
+  glDeleteShader(vertshader_gazo);
+  maybe_print_error(__LINE__);
+  glDeleteShader(vertshader_3d);
+  maybe_print_error(__LINE__);
+  glDeleteShader(fragshader_basic);
+  maybe_print_error(__LINE__);
+  glDeleteShader(fragshader_gamma);
+  maybe_print_error(__LINE__);
+  glDeleteShader(gazo_shader);
+  maybe_print_error(__LINE__);
+  glDeleteShader(terrain_shader);
+  maybe_print_error(__LINE__);
+  glDeleteShader(gamma_shader);
+  maybe_print_error(__LINE__);
+  glDeleteTextures(1, &gazo_spritesheet_texture);
+  maybe_print_error(__LINE__);
+  glDeleteTextures(1, &stone_tile_texture);
+  maybe_print_error(__LINE__);
+  glDeleteTextures(1, &framebuffer_texture);
+  maybe_print_error(__LINE__);
+  glDeleteTextures(1, &depth_texture);
+  maybe_print_error(__LINE__);
   glfwDestroyWindow(window);
   glfwTerminate();
 }
@@ -193,19 +332,39 @@ void game::the_monitor_has_refreshed_again() {
       -joystick_axes[2]
     );
   }
-  for (int i = 0; i < 8; i++) {
-    function_which_is_called_480hz();
-  }
-
-  glClearColor(
-    0.75,
-    0.75,
-    0.75,
-    0
-  );
-  glClear(GL_COLOR_BUFFER_BIT);
   
-  the_level.draw(&the_shader,gazo_spritesheet_texture);
+  for (int i = 0; i < 8; i++) {
+   function_which_is_called_480hz();
+  }
+  glDisable(GL_DEPTH_TEST);
+  maybe_print_error(__LINE__);
+  //glDepthFunc(GL_LEQUAL);
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+  maybe_print_error(__LINE__);
+  glViewport(0, 0, 0x240, 0x180);
+  maybe_print_error(__LINE__);
+  the_level.draw(gazo_shader,terrain_shader,gazo_spritesheet_texture,stone_tile_texture);
+  {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    printf("width=%d height=%d\n", width, height);
+    glViewport(0, 0, width, height);
+  maybe_print_error(__LINE__);
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  maybe_print_error(__LINE__);
+  glUseProgram(gamma_shader);
+  maybe_print_error(__LINE__);
+  glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+  maybe_print_error(__LINE__);
+  glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
+  maybe_print_error(__LINE__);
+  glEnableVertexAttribArray(0);
+  maybe_print_error(__LINE__);
+  glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+  maybe_print_error(__LINE__);
+  glDrawArrays(GL_TRIANGLES, 0, 6);
+  maybe_print_error(__LINE__);
 
   //rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
   //ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);

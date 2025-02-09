@@ -1,5 +1,4 @@
 
-#include "shader.h"
 #include "level.h"
 #include <linux/input.h>
 
@@ -28,7 +27,19 @@ class game {
   GLFWwindow *window = nullptr;
   int window_width = 0;
   int window_height = 0;
-  shader the_shader;
   char* info_log = nullptr;
+  GLuint vertshader_basic;
+  GLuint vertshader_gazo;
+  GLuint vertshader_3d;
+  GLuint fragshader_basic;
+  GLuint fragshader_gamma;
+  GLuint gamma_shader;
+  GLuint gazo_shader;
+  GLuint terrain_shader;
+  GLuint square_buffer;
   GLuint gazo_spritesheet_texture;
+  GLuint stone_tile_texture;
+  GLuint framebuffer;
+  GLuint framebuffer_texture;
+  GLuint depth_texture;
 };
