@@ -43,12 +43,16 @@ struct joystick_event {
     uint8_t number;
 };
 
-void maybe_print_error(size_t line) {
+bool maybe_print_error(const char* file, size_t line) {
   GLenum err;
+  bool result = false;
   while((err = glGetError()) != GL_NO_ERROR) {
-    printf("GL error code 0x%x prior to line %zu\n", err, line);
+    result = true;
+    printf("GL error code 0x%x prior to %s:%zu\n", err, file, line);
   }
+  return result;
 }
+
 } // namespace {
 
 void dump(uint8_t* data, int size) {
@@ -112,16 +116,11 @@ void game::run() {
   glfwSetKeyCallback(window, key_handler);
   glfwMakeContextCurrent(window);
   vertshader_basic = glCreateShader(GL_VERTEX_SHADER);
-  maybe_print_error(__LINE__);
-  vertshader_gazo = glCreateShader(GL_VERTEX_SHADER);
-  maybe_print_error(__LINE__);
-  vertshader_3d = glCreateShader(GL_VERTEX_SHADER);
-  maybe_print_error(__LINE__);
-  fragshader_basic = glCreateShader(GL_FRAGMENT_SHADER);
-  maybe_print_error(__LINE__);
-  fragshader_gamma = glCreateShader(GL_FRAGMENT_SHADER);
-  maybe_print_error(__LINE__);
-  printf("bouta shader source\n");
+    vertshader_gazo = glCreateShader(GL_VERTEX_SHADER);
+    vertshader_3d = glCreateShader(GL_VERTEX_SHADER);
+    fragshader_basic = glCreateShader(GL_FRAGMENT_SHADER);
+    fragshader_gamma = glCreateShader(GL_FRAGMENT_SHADER);
+    printf("bouta shader source\n");
   {
     void* some_pointers[] = {
       (void*) vert_basic_glsl,
@@ -133,76 +132,54 @@ void game::run() {
       (const char* const *) (some_pointers),
       nullptr
     );
-    maybe_print_error(__LINE__);
-    some_pointers[0] = (void*) vert_gazo_glsl;
+        some_pointers[0] = (void*) vert_gazo_glsl;
     glShaderSource(
       vertshader_gazo,
       1,
       (const char* const *) (some_pointers),
       nullptr
     );
-    maybe_print_error(__LINE__);
-    some_pointers[0] = (void*) vert_3d_glsl;
+        some_pointers[0] = (void*) vert_3d_glsl;
     glShaderSource(
       vertshader_3d,
       1,
       (const char* const*) some_pointers,
       nullptr
     );
-    maybe_print_error(__LINE__);
-    some_pointers[0] = (void*) frag_basic_glsl;
+        some_pointers[0] = (void*) frag_basic_glsl;
     glShaderSource(
       fragshader_basic,
       1,
       (const char* const*) some_pointers,
       nullptr
     );
-    maybe_print_error(__LINE__);
-    some_pointers[0] = (void*) frag_gamma_glsl;
+        some_pointers[0] = (void*) frag_gamma_glsl;
     glShaderSource(
       fragshader_gamma,
       1,
       (const char* const*) some_pointers,
       nullptr
     );
-    maybe_print_error(__LINE__);
-  };
+      };
   printf("finna shader source\n");
   glCompileShader(vertshader_basic);
-  maybe_print_error(__LINE__);
-  glCompileShader(vertshader_gazo);
-  maybe_print_error(__LINE__);
-  glCompileShader(vertshader_3d);
-  maybe_print_error(__LINE__);
-  glCompileShader(fragshader_basic);
-  maybe_print_error(__LINE__);
-  glCompileShader(fragshader_gamma);
-  maybe_print_error(__LINE__);
-  gazo_shader = glCreateProgram();
-  maybe_print_error(__LINE__);
-  terrain_shader = glCreateProgram();
-  maybe_print_error(__LINE__);
-  gamma_shader = glCreateProgram();
-  maybe_print_error(__LINE__);
-  glAttachShader(gazo_shader, vertshader_gazo);
-  maybe_print_error(__LINE__);
-  glAttachShader(gazo_shader, fragshader_basic);
-  maybe_print_error(__LINE__);
-  glAttachShader(terrain_shader, vertshader_3d);
-  maybe_print_error(__LINE__);
-  glAttachShader(terrain_shader, fragshader_basic);
-  maybe_print_error(__LINE__);
-  glAttachShader(gamma_shader, vertshader_basic);
-  maybe_print_error(__LINE__);
-  glAttachShader(gamma_shader, fragshader_gamma);
-  maybe_print_error(__LINE__);
-  glLinkProgram(gazo_shader);
-  maybe_print_error(__LINE__);
-  glLinkProgram(terrain_shader);
-  maybe_print_error(__LINE__);
-  glLinkProgram(gamma_shader);
-  maybe_print_error(__LINE__);
-
+    glCompileShader(vertshader_gazo);
+    glCompileShader(vertshader_3d);
+    glCompileShader(fragshader_basic);
+    glCompileShader(fragshader_gamma);
+    gazo_shader = glCreateProgram();
+    terrain_shader = glCreateProgram();
+    gamma_shader = glCreateProgram();
+    glAttachShader(gazo_shader, vertshader_gazo);
+    glAttachShader(gazo_shader, fragshader_basic);
+    glAttachShader(terrain_shader, vertshader_3d);
+    glAttachShader(terrain_shader, fragshader_basic);
+    glAttachShader(gamma_shader, vertshader_basic);
+    glAttachShader(gamma_shader, fragshader_gamma);
+    glLinkProgram(gazo_shader);
+    glLinkProgram(terrain_shader);
+    glLinkProgram(gamma_shader);
+  
   {
     float the_square[] = {
       -1.0, -1.0,
@@ -213,69 +190,43 @@ void game::run() {
       1.0, 1.0
     };
     glGenBuffers(1, &square_buffer);
-  maybe_print_error(__LINE__);
-    glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
-  maybe_print_error(__LINE__);
-    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), the_square, GL_STATIC_DRAW);
-  maybe_print_error(__LINE__);
-  };
+      glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+      glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), the_square, GL_STATIC_DRAW);
+    };
 
   glGenFramebuffers(1, &framebuffer);
-  maybe_print_error(__LINE__);
-  glGenTextures(1, &framebuffer_texture);
-  maybe_print_error(__LINE__);
-  glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  maybe_print_error(__LINE__);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0x240, 0x180, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  maybe_print_error(__LINE__);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  maybe_print_error(__LINE__);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebuffer_texture, 0);
-  maybe_print_error(__LINE__);
-
+    glGenTextures(1, &framebuffer_texture);
+    glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0x240, 0x180, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebuffer_texture, 0);
+  
   glGenTextures(1, &depth_texture);
-  maybe_print_error(__LINE__);
-  glBindTexture(GL_TEXTURE_2D, depth_texture);
-  maybe_print_error(__LINE__);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 0x240, 0x180, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
-  maybe_print_error(__LINE__);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, depth_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 0x240, 0x180, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, framebuffer_texture, 0);
 
   the_level.construct();
   glGenTextures(1, &gazo_spritesheet_texture);
-  maybe_print_error(__LINE__);
-  glGenTextures(1, &stone_tile_texture);
-  maybe_print_error(__LINE__);
-
+    glGenTextures(1, &stone_tile_texture);
+  
   glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  maybe_print_error(__LINE__);
-  decode_png_truecolor(gazo_spritesheet_png,gazo_spritesheet_png_len);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    decode_png_truecolor(gazo_spritesheet_png,gazo_spritesheet_png_len);
   
   glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  maybe_print_error(__LINE__);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  maybe_print_error(__LINE__);
-  decode_png_truecolor(stone_tile_png,stone_tile_png_len);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    decode_png_truecolor(stone_tile_png,stone_tile_png_len);
   
 
   while (is_playing && !glfwWindowShouldClose(window)) {
@@ -288,34 +239,20 @@ void game::run() {
 void game::stop() {
   the_level.demolish();
   glDeleteFramebuffers(1, &framebuffer);
-  maybe_print_error(__LINE__);
-  glDeleteBuffers(1, &square_buffer);
-  maybe_print_error(__LINE__);
-  glDeleteShader(vertshader_basic);
-  maybe_print_error(__LINE__);
-  glDeleteShader(vertshader_gazo);
-  maybe_print_error(__LINE__);
-  glDeleteShader(vertshader_3d);
-  maybe_print_error(__LINE__);
-  glDeleteShader(fragshader_basic);
-  maybe_print_error(__LINE__);
-  glDeleteShader(fragshader_gamma);
-  maybe_print_error(__LINE__);
-  glDeleteShader(gazo_shader);
-  maybe_print_error(__LINE__);
-  glDeleteShader(terrain_shader);
-  maybe_print_error(__LINE__);
-  glDeleteShader(gamma_shader);
-  maybe_print_error(__LINE__);
-  glDeleteTextures(1, &gazo_spritesheet_texture);
-  maybe_print_error(__LINE__);
-  glDeleteTextures(1, &stone_tile_texture);
-  maybe_print_error(__LINE__);
-  glDeleteTextures(1, &framebuffer_texture);
-  maybe_print_error(__LINE__);
-  glDeleteTextures(1, &depth_texture);
-  maybe_print_error(__LINE__);
-  glfwDestroyWindow(window);
+    glDeleteBuffers(1, &square_buffer);
+    glDeleteShader(vertshader_basic);
+    glDeleteShader(vertshader_gazo);
+    glDeleteShader(vertshader_3d);
+    glDeleteShader(fragshader_basic);
+    glDeleteShader(fragshader_gamma);
+    glDeleteShader(gazo_shader);
+    glDeleteShader(terrain_shader);
+    glDeleteShader(gamma_shader);
+    glDeleteTextures(1, &gazo_spritesheet_texture);
+    glDeleteTextures(1, &stone_tile_texture);
+    glDeleteTextures(1, &framebuffer_texture);
+    glDeleteTextures(1, &depth_texture);
+    glfwDestroyWindow(window);
   glfwTerminate();
 }
 
@@ -337,35 +274,24 @@ void game::the_monitor_has_refreshed_again() {
    function_which_is_called_480hz();
   }
   glDisable(GL_DEPTH_TEST);
-  maybe_print_error(__LINE__);
-  //glDepthFunc(GL_LEQUAL);
+    //glDepthFunc(GL_LEQUAL);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  maybe_print_error(__LINE__);
-  glViewport(0, 0, 0x240, 0x180);
-  maybe_print_error(__LINE__);
-  the_level.draw(gazo_shader,terrain_shader,gazo_spritesheet_texture,stone_tile_texture);
+    glViewport(0, 0, 0x240, 0x180);
+    the_level.draw(gazo_shader,terrain_shader,gazo_spritesheet_texture,stone_tile_texture);
   {
     int width, height;
     glfwGetWindowSize(window, &width, &height);
     printf("width=%d height=%d\n", width, height);
     glViewport(0, 0, width, height);
-  maybe_print_error(__LINE__);
-  }
+    }
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  maybe_print_error(__LINE__);
-  glUseProgram(gamma_shader);
-  maybe_print_error(__LINE__);
-  glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
-  maybe_print_error(__LINE__);
-  glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
-  maybe_print_error(__LINE__);
-  glEnableVertexAttribArray(0);
-  maybe_print_error(__LINE__);
-  glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  maybe_print_error(__LINE__);
-  glDrawArrays(GL_TRIANGLES, 0, 6);
-  maybe_print_error(__LINE__);
-
+    glUseProgram(gamma_shader);
+    glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+    glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
+    glEnableVertexAttribArray(0);
+    glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+  
   //rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
   //ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
   //rumbleinator.code = rumble_effect.id;
