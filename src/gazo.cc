@@ -1,5 +1,6 @@
 
 #include "gl_or_gles.h"
+#include "weird_gl_stuff.h"
 #include <cstdio>
 #include <cstring>
 #include <stdlib.h>
@@ -511,37 +512,12 @@ float gazo::get_rumble() {
   return 0;
 }
 
-void gazo::render(
-  GLuint rendering_shader,
-  float projection_matrix[20],
-  const fvec2& view,
-  GLuint texture
-) {
+void gazo::render() {
   blink_timer++;
-  glUseProgram(rendering_shader);
   glDisable(GL_CULL_FACE);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glUniformMatrix4fv(
-    1,
-    1,
-    GL_FALSE,
-    projection_matrix
-  );
-
-  glUniform2f(
-    0,
-    view.x,
-    view.y
-  );
-
-  glUniform1i(
-    2,
-    0
-  );
-  glBindTexture(GL_TEXTURE_2D, texture);
-  
 
   update_gl_vertex_buffer();
   update_gl_uv_buffer();

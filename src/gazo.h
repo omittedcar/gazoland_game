@@ -16,12 +16,7 @@ class gazo {
   void kill_to_death();
   float get_rumble();
   fvec2 get_center_of_mass_medium_precision();
-  void render(
-    GLuint rendering_shader,
-    float projection_matrix[20],
-    const fvec2& view,
-    GLuint texture
-  );
+  void render();
   void push_out_from_platform(double interval, platform* p);
  private:
   vec2 pointing = {

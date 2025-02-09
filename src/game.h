@@ -35,7 +35,13 @@ class game {
   GLuint fragshader_gamma;
   GLuint gamma_shader;
   GLuint gazo_shader;
+  GLuint gazo_shader_u_view;
+  GLuint gazo_shader_u_projection;
+  GLuint gazo_shader_u_texture;
   GLuint terrain_shader;
+  GLuint terrain_shader_;
+  GLuint terrain_shader_u_view_pos;
+  GLuint terrain_shader_u_projection_matrix;
   GLuint square_buffer;
   GLuint gazo_spritesheet_texture;
   GLuint stone_tile_texture;

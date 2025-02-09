@@ -1,5 +1,6 @@
 #include "platform.h"
 #include "gl_or_gles.h"
+#include "weird_gl_stuff.h"
 #include <cmath>
 #include <stdlib.h>
 #include <math.h>
@@ -39,20 +40,20 @@ void platform::draw(
   
   glUseProgram(rendering_shader);
   glUniformMatrix4fv(
-    1,
+    matrix_location,
     1,
     GL_FALSE,
     projection_matrix
   );
 
   glUniform2f(
-    0,
+    view_location,
     view.x,
     view.y
   );
 
   glUniform1i(
-    2,
+    0,
     0
   );
   glBindTexture(GL_TEXTURE_2D, texture);
