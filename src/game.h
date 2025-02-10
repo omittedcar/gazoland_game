@@ -1,6 +1,7 @@
 
 #include "level.h"
 #include <linux/input.h>
+#include "gl_program_info.h"
 
 class GLFWwindow;
 
@@ -28,20 +29,17 @@ class game {
   int window_width = 0;
   int window_height = 0;
   char* info_log = nullptr;
+
   GLuint vertshader_basic;
   GLuint vertshader_gazo;
   GLuint vertshader_3d;
   GLuint fragshader_basic;
   GLuint fragshader_gamma;
+
   GLuint gamma_shader;
-  GLuint gazo_shader;
-  GLuint gazo_shader_u_view;
-  GLuint gazo_shader_u_projection;
-  GLuint gazo_shader_u_texture;
-  GLuint terrain_shader;
-  GLuint terrain_shader_;
-  GLuint terrain_shader_u_view_pos;
-  GLuint terrain_shader_u_projection_matrix;
+  gl_program_info gazo_shader_info;
+  gl_program_info terrain_shader_info;
+
   GLuint square_buffer;
   GLuint gazo_spritesheet_texture;
   GLuint stone_tile_texture;

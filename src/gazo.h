@@ -2,6 +2,7 @@
 #include "gl_or_gles.h"
 #include "platform.h"
 #include "vec2.h"
+#include "gl_program_info.h"
 
 class gazo {
  public:
@@ -16,7 +17,9 @@ class gazo {
   void kill_to_death();
   float get_rumble();
   fvec2 get_center_of_mass_medium_precision();
-  void render();
+  void render(
+    gl_program_info* shader
+  );
   void push_out_from_platform(double interval, platform* p);
  private:
   vec2 pointing = {

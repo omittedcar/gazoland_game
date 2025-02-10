@@ -1,6 +1,5 @@
 
 #include "gl_or_gles.h"
-#include "weird_gl_stuff.h"
 #include <cstdio>
 #include <cstring>
 #include <stdlib.h>
@@ -512,23 +511,23 @@ float gazo::get_rumble() {
   return 0;
 }
 
-void gazo::render() {
+void gazo::render(
+  gl_program_info* shader
+) {
   blink_timer++;
   glDisable(GL_CULL_FACE);
 
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
   update_gl_vertex_buffer();
   update_gl_uv_buffer();
+  glUseProgram(shader->shader);
 
   glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
-  glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(shader->v_pos, 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(shader->v_pos);
 
   glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
-  glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(shader->v_uv);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
   glDrawElements(GL_TRIANGLES, n_sides * 3, GL_UNSIGNED_SHORT, nullptr);

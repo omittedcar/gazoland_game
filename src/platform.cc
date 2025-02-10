@@ -1,6 +1,5 @@
 #include "platform.h"
 #include "gl_or_gles.h"
-#include "weird_gl_stuff.h"
 #include <cmath>
 #include <stdlib.h>
 #include <math.h>
@@ -32,38 +31,18 @@ void platform::demolish() {
 }
 
 void platform::draw(
-  GLuint rendering_shader,
-  float projection_matrix[20],
-  const fvec2& view,
-  GLuint texture
+  gl_program_info* rendering_shader
 ) {
   
-  glUseProgram(rendering_shader);
-  glUniformMatrix4fv(
-    matrix_location,
-    1,
-    GL_FALSE,
-    projection_matrix
-  );
+  glUseProgram(rendering_shader->shader);
 
-  glUniform2f(
-    view_location,
-    view.x,
-    view.y
-  );
-
-  glUniform1i(
-    0,
-    0
-  );
-  glBindTexture(GL_TEXTURE_2D, texture);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(rendering_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(rendering_shader->v_pos);
 
   glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
-  glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(rendering_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(rendering_shader->v_uv);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer);
   glDrawElements(GL_TRIANGLES, side_count * 18, GL_UNSIGNED_SHORT, nullptr);

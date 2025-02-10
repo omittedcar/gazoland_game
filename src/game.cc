@@ -117,7 +117,11 @@ void game::run()
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   glfwWindowHint(GLFW_SAMPLES, 0);
 
-  window = glfwCreateWindow(0x300, 0x200, "dorito", nullptr, nullptr);
+  window = glfwCreateWindow(
+    0x240, 0x180,
+    "Daught, the first glaggle to ride the mechanism 2 electric boogaloo",
+    nullptr, nullptr
+  );
   glfwSetKeyCallback(window, key_handler);
   glfwMakeContextCurrent(window);
   vertshader_basic = glCreateShader(GL_VERTEX_SHADER);
@@ -153,29 +157,32 @@ void game::run()
   CHECK_GL();
   glCompileShader(fragshader_gamma);
   CHECK_GL();
-  gazo_shader = glCreateProgram();
-  terrain_shader = glCreateProgram();
+  gazo_shader_info.shader = glCreateProgram();
+  terrain_shader_info.shader = glCreateProgram();
   gamma_shader = glCreateProgram();
-  glAttachShader(gazo_shader, vertshader_gazo);
-  glAttachShader(gazo_shader, fragshader_basic);
-  glAttachShader(terrain_shader, vertshader_3d);
-  glAttachShader(terrain_shader, fragshader_basic);
+  glAttachShader(gazo_shader_info.shader, vertshader_gazo);
+  glAttachShader(gazo_shader_info.shader, fragshader_basic);
+  glAttachShader(terrain_shader_info.shader, vertshader_3d);
+  glAttachShader(terrain_shader_info.shader, fragshader_basic);
   glAttachShader(gamma_shader, vertshader_basic);
   glAttachShader(gamma_shader, fragshader_gamma);
-  glLinkProgram(gazo_shader);
+  glLinkProgram(gazo_shader_info.shader);
   CHECK_GL();
-  gazo_shader_u_view = glGetUniformLocation(gazo_shader, "view");
-  CHECK_GL();
-  gazo_shader_u_projection = glGetUniformLocation(gazo_shader, "projection");
-  CHECK_GL();
-  gazo_shader_u_texture = glGetUniformLocation(gazo_shader, "the_texture");
-  CHECK_GL();
-  glLinkProgram(terrain_shader);
-  CHECK_GL();
-  terrain_shader_u_view_pos = glGetUniformLocation(terrain_shader, "view_pos");
-  CHECK_GL();
-  terrain_shader_u_projection_matrix = glGetUniformLocation(terrain_shader, "projection_matrix");
-  CHECK_GL();
+
+  gazo_shader_info.u_panning = glGetUniformLocation(gazo_shader_info.shader, "view");
+  gazo_shader_info.u_projection = glGetUniformLocation(gazo_shader_info.shader, "projection");
+  gazo_shader_info.u_texture = glGetUniformLocation(gazo_shader_info.shader, "the_texture");
+  gazo_shader_info.v_pos = glGetAttribLocation(gazo_shader_info.shader, "pos");
+  gazo_shader_info.v_uv = glGetAttribLocation(gazo_shader_info.shader, "vert_uv");
+
+  
+  glLinkProgram(terrain_shader_info.shader);
+  
+  terrain_shader_info.u_panning = glGetUniformLocation(terrain_shader_info.shader, "view_pos");
+  terrain_shader_info.u_projection = glGetUniformLocation(terrain_shader_info.shader, "projection_matrix");
+  terrain_shader_info.u_texture = glGetUniformLocation(terrain_shader_info.shader, "the_texture");
+  terrain_shader_info.v_pos = glGetAttribLocation(terrain_shader_info.shader, "pos");
+  terrain_shader_info.v_uv = glGetAttribLocation(terrain_shader_info.shader, "vertex_uv");
   glLinkProgram(gamma_shader);
   CHECK_GL();
 
@@ -203,16 +210,12 @@ void game::run()
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 0x240, 0x180, 0,
                GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-  // framebuffer_texture, 0);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+  depth_texture, 0);
 
-  the_level.construct(gazo_shader_u_view,
-                      gazo_shader_u_projection,
-                      gazo_shader_u_texture,
-                      terrain_shader_u_view_pos,
-                      terrain_shader_u_projection_matrix);
+  the_level.construct();
   glGenTextures(1, &gazo_spritesheet_texture);
   glGenTextures(1, &stone_tile_texture);
 
@@ -246,8 +249,8 @@ void game::stop()
   glDeleteShader(vertshader_3d);
   glDeleteShader(fragshader_basic);
   glDeleteShader(fragshader_gamma);
-  glDeleteShader(gazo_shader);
-  glDeleteShader(terrain_shader);
+  glDeleteShader(gazo_shader_info.shader);
+  glDeleteShader(terrain_shader_info.shader);
   glDeleteShader(gamma_shader);
   glDeleteTextures(1, &gazo_spritesheet_texture);
   glDeleteTextures(1, &stone_tile_texture);
@@ -269,23 +272,23 @@ void game::the_monitor_has_refreshed_again()
                            joystick_axes[5], -joystick_axes[2]);
   }
 
-  for (int i = 0; i < 8; i++)
-  {
-    function_which_is_called_480hz();
-  }
-  glDisable(GL_DEPTH_TEST);
-  // glDepthFunc(GL_LEQUAL);
+
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
   glViewport(0, 0, 0x240, 0x180);
-  the_level.draw(gazo_shader, terrain_shader, gazo_spritesheet_texture,
-                 stone_tile_texture);
+  the_level.draw(
+    &gazo_shader_info, &terrain_shader_info,
+    gazo_spritesheet_texture, stone_tile_texture
+  );
   {
     int width, height;
     glfwGetWindowSize(window, &width, &height);
-    printf("width=%d height=%d\n", width, height);
     glViewport(0, 0, width, height);
   }
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClearDepthf(1.0f);
+  glClear(GL_DEPTH_BUFFER_BIT);
   glUseProgram(gamma_shader);
   glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
   glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
@@ -298,8 +301,12 @@ void game::the_monitor_has_refreshed_again()
   // rumbleinator.code = rumble_effect.id;
   // write(rumbly_file_descriptor, (const void*) &rumbleinator,
   // sizeof(rumbleinator));
-  glfwSwapBuffers(window);
+    for (int i = 0; i < 8; i++)
+  {
+    function_which_is_called_480hz();
+  }
   glfwPollEvents();
+  glfwSwapBuffers(window);
   frame_counter++;
 }
 
