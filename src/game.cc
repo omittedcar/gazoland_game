@@ -16,48 +16,58 @@
 
 #
 
-namespace {
+namespace
+{
 
-double time_step = 1.0 / 420.0;
+  double time_step = 1.0 / 420.0;
 
-bool collision_has_occurred = false;
-bool should_single_step = false;
+  bool collision_has_occurred = false;
+  bool should_single_step = false;
 
-void key_handler(GLFWwindow *window, int key, int scancode, int action,
-                 int mods) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
+  void key_handler(GLFWwindow *window, int key, int scancode, int action,
+                   int mods)
+  {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+      glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    {
+      printf(
+          "bro you just preessed the space bar bgro that doesn't do anything \n");
+    }
   }
-  if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-    printf(
-        "bro you just preessed the space bar bgro that doesn't do anything \n");
-  }
-}
 
-struct joystick_event {
-  uint32_t time;
-  int16_t value;
-  uint8_t type;
-  uint8_t number;
-};
+  struct joystick_event
+  {
+    uint32_t time;
+    int16_t value;
+    uint8_t type;
+    uint8_t number;
+  };
 
-bool maybe_print_error(const char *file, size_t line) {
-  GLenum err;
-  bool result = false;
-  while ((err = glGetError()) != GL_NO_ERROR) {
-    result = true;
-    printf("GL error code 0x%x prior to %s:%zu\n", err, file, line);
+  bool maybe_print_error(const char *file, size_t line)
+  {
+    GLenum err;
+    bool result = false;
+    while ((err = glGetError()) != GL_NO_ERROR)
+    {
+      result = true;
+      printf("GL error code 0x%x prior to %s:%zu\n", err, file, line);
+    }
+    return result;
   }
-  return result;
-}
 
 #define CHECK_GL() maybe_print_error(__FILE__, __LINE__)
 
 } // namespace
 
-void dump(uint8_t *data, int size) {
-  for (int i = 0; i < size; i++) {
-    if (i % 8 == 0) {
+void dump(uint8_t *data, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    if (i % 8 == 0)
+    {
       printf("\n");
     }
     printf("%02X ", data[i]);
@@ -65,7 +75,8 @@ void dump(uint8_t *data, int size) {
   printf("\n");
 }
 
-void game::run() {
+void game::run()
+{
 
   is_playing = true;
 
@@ -169,8 +180,8 @@ void game::run() {
   CHECK_GL();
 
   {
-    float the_square[] = {-1.0, -1.0, -1.0, 1.0,  1.0, 1.0,
-                          -1.0, -1.0, 1.0,  -1.0, 1.0, 1.0};
+    float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
+                          -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
     glGenBuffers(1, &square_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
     glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), the_square,
@@ -198,10 +209,10 @@ void game::run() {
   // framebuffer_texture, 0);
 
   the_level.construct(gazo_shader_u_view,
-  gazo_shader_u_projection,
-  gazo_shader_u_texture,
-  terrain_shader_u_view_pos,
-  terrain_shader_u_projection_matrix);
+                      gazo_shader_u_projection,
+                      gazo_shader_u_texture,
+                      terrain_shader_u_view_pos,
+                      terrain_shader_u_projection_matrix);
   glGenTextures(1, &gazo_spritesheet_texture);
   glGenTextures(1, &stone_tile_texture);
 
@@ -219,12 +230,14 @@ void game::run() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   decode_png_truecolor(stone_tile_png, stone_tile_png_len);
 
-  while (is_playing && !glfwWindowShouldClose(window)) {
+  while (is_playing && !glfwWindowShouldClose(window))
+  {
     the_monitor_has_refreshed_again();
   }
 }
 
-void game::stop() {
+void game::stop()
+{
   the_level.demolish();
   glDeleteFramebuffers(1, &framebuffer);
   glDeleteBuffers(1, &square_buffer);
@@ -244,17 +257,20 @@ void game::stop() {
   glfwTerminate();
 }
 
-void game::the_monitor_has_refreshed_again() {
+void game::the_monitor_has_refreshed_again()
+{
   // if(frame_counter % 30 == 0) {
 
   int joystick_axis_count;
   const float *joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
-  if (joystick_axis_count >= 6) {
+  if (joystick_axis_count >= 6)
+  {
     the_level.control_gazo(joystick_axes[0], -joystick_axes[1],
                            joystick_axes[5], -joystick_axes[2]);
   }
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 8; i++)
+  {
     function_which_is_called_480hz();
   }
   glDisable(GL_DEPTH_TEST);
