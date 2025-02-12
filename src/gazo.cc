@@ -4,7 +4,7 @@
 #include <cstring>
 #include <stdlib.h>
 #include <math.h>
-
+#include <GL/gl.h>
 
 #include "./gazo.h"
 
@@ -530,5 +530,14 @@ void gazo::render(
   glEnableVertexAttribArray(shader->v_uv);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
+  glLineWidth(2);
+
   glDrawElements(GL_TRIANGLES, n_sides * 3, GL_UNSIGNED_SHORT, nullptr);
+  glEnable(GL_BLEND);
+  glBlendColor(0.0, 0.0, 0.0, 0.5);
+  glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glDrawArrays(GL_LINE_LOOP, 1, n_sides);
+  glLineWidth(1);
+  glDrawArrays(GL_LINE_LOOP, 1, n_sides);
 }

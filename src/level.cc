@@ -23,7 +23,7 @@ void level::control_gazo(float left_stick_x, float left_stick_y,
 void level::draw(gl_program_info* gazo_shader, gl_program_info* terrain_shader,
   GLuint gazo_texture, GLuint stone_tile_texture) {
   view = the_gazo.get_center_of_mass_medium_precision();
-  glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClearColor(0.0625, 0.0625, 0.0625, 1.0);
   glClearDepthf(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   float aspect = 1.5;
@@ -31,6 +31,7 @@ void level::draw(gl_program_info* gazo_shader, gl_program_info* terrain_shader,
   float projection_matrix[020] = {
       1 / aspect / fov, 0, 0, 0, 0, 1 / fov, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
   glDisable(GL_BLEND);
+   
   glUseProgram(gazo_shader->shader);
   glUniformMatrix4fv(
     gazo_shader->u_projection, 1, GL_FALSE, projection_matrix

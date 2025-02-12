@@ -14,11 +14,12 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#
 
+
+#define RESOLUTION_X 0x360
+#define RESOLUTION_Y 0x240
 namespace
 {
-
   double time_step = 1.0 / 420.0;
 
   bool collision_has_occurred = false;
@@ -115,10 +116,9 @@ void game::run()
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  glfwWindowHint(GLFW_SAMPLES, 0);
-
+  
   window = glfwCreateWindow(
-    0x240, 0x180,
+    RESOLUTION_X, RESOLUTION_Y,
     "Daught, the first glaggle to ride the mechanism 2 electric boogaloo",
     nullptr, nullptr
   );
@@ -198,7 +198,7 @@ void game::run()
   glGenFramebuffers(1, &framebuffer);
   glGenTextures(1, &framebuffer_texture);
   glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0x240, 0x180, 0, GL_RGB,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,
                GL_UNSIGNED_BYTE, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -208,7 +208,7 @@ void game::run()
 
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 0x240, 0x180, 0,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, RESOLUTION_X, RESOLUTION_Y, 0,
                GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -222,10 +222,10 @@ void game::run()
   glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   decode_png_truecolor(gazo_spritesheet_png, gazo_spritesheet_png_len);
-
+  glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -276,7 +276,7 @@ void game::the_monitor_has_refreshed_again()
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glViewport(0, 0, 0x240, 0x180);
+  glViewport(0, 0, RESOLUTION_X, RESOLUTION_Y);
   the_level.draw(
     &gazo_shader_info, &terrain_shader_info,
     gazo_spritesheet_texture, stone_tile_texture
