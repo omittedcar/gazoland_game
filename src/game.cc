@@ -78,7 +78,7 @@ void dump(uint8_t *data, int size)
 
 void game::run()
 {
-
+  info_log = (char*) malloc(69420);
   is_playing = true;
 
   /*
@@ -124,9 +124,11 @@ void game::run()
   );
   glfwSetKeyCallback(window, key_handler);
   glfwMakeContextCurrent(window);
+  glfwSetWindowOpacity(window, 0.5f);
   vertshader_basic = glCreateShader(GL_VERTEX_SHADER);
   vertshader_gazo = glCreateShader(GL_VERTEX_SHADER);
   vertshader_3d = glCreateShader(GL_VERTEX_SHADER);
+  vertshader_no_uv_map = glCreateShader(GL_VERTEX_SHADER);
   fragshader_basic = glCreateShader(GL_FRAGMENT_SHADER);
   fragshader_gamma = glCreateShader(GL_FRAGMENT_SHADER);
   {
@@ -138,6 +140,9 @@ void game::run()
                    nullptr);
     some_pointers[0] = (void *)vert_3d_glsl;
     glShaderSource(vertshader_3d, 1, (const char *const *)some_pointers,
+                   nullptr);
+    some_pointers[0] = (void *)vert_no_uv_map_glsl;
+    glShaderSource(vertshader_no_uv_map, 1, (const char *const *)some_pointers,
                    nullptr);
     some_pointers[0] = (void *)frag_basic_glsl;
     glShaderSource(fragshader_basic, 1, (const char *const *)some_pointers,
@@ -151,6 +156,7 @@ void game::run()
   CHECK_GL();
   glCompileShader(vertshader_gazo);
   CHECK_GL();
+  glCompileShader(vertshader_no_uv_map);
   glCompileShader(vertshader_3d);
   CHECK_GL();
   glCompileShader(fragshader_basic);
@@ -159,11 +165,15 @@ void game::run()
   CHECK_GL();
   gazo_shader_info.shader = glCreateProgram();
   terrain_shader_info.shader = glCreateProgram();
+  polygon_fill_shader_info.shader = glCreateProgram();
   gamma_shader = glCreateProgram();
+  CHECK_GL();
   glAttachShader(gazo_shader_info.shader, vertshader_gazo);
   glAttachShader(gazo_shader_info.shader, fragshader_basic);
   glAttachShader(terrain_shader_info.shader, vertshader_3d);
   glAttachShader(terrain_shader_info.shader, fragshader_basic);
+  glAttachShader(polygon_fill_shader_info.shader, vertshader_no_uv_map);
+  glAttachShader(polygon_fill_shader_info.shader, fragshader_basic);
   glAttachShader(gamma_shader, vertshader_basic);
   glAttachShader(gamma_shader, fragshader_gamma);
   glLinkProgram(gazo_shader_info.shader);
@@ -183,6 +193,14 @@ void game::run()
   terrain_shader_info.u_texture = glGetUniformLocation(terrain_shader_info.shader, "the_texture");
   terrain_shader_info.v_pos = glGetAttribLocation(terrain_shader_info.shader, "pos");
   terrain_shader_info.v_uv = glGetAttribLocation(terrain_shader_info.shader, "vertex_uv");
+
+  glLinkProgram(polygon_fill_shader_info.shader);
+  CHECK_GL();
+  polygon_fill_shader_info.u_panning = glGetUniformLocation(polygon_fill_shader_info.shader, "view_pos");
+  polygon_fill_shader_info.u_projection = glGetUniformLocation(polygon_fill_shader_info.shader, "projection_matrix");
+  polygon_fill_shader_info.u_texture = glGetUniformLocation(polygon_fill_shader_info.shader, "the_texture");
+  polygon_fill_shader_info.v_pos = glGetAttribLocation(polygon_fill_shader_info.shader, "vertex_pos");
+
   glLinkProgram(gamma_shader);
   CHECK_GL();
 
@@ -198,8 +216,8 @@ void game::run()
   glGenFramebuffers(1, &framebuffer);
   glGenTextures(1, &framebuffer_texture);
   glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, nullptr);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,
+               GL_HALF_FLOAT, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -228,7 +246,7 @@ void game::run()
   glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   decode_png_truecolor(stone_tile_png, stone_tile_png_len);
@@ -247,10 +265,12 @@ void game::stop()
   glDeleteShader(vertshader_basic);
   glDeleteShader(vertshader_gazo);
   glDeleteShader(vertshader_3d);
+  glDeleteShader(vertshader_no_uv_map);
   glDeleteShader(fragshader_basic);
   glDeleteShader(fragshader_gamma);
   glDeleteShader(gazo_shader_info.shader);
   glDeleteShader(terrain_shader_info.shader);
+  glDeleteShader(polygon_fill_shader_info.shader);
   glDeleteShader(gamma_shader);
   glDeleteTextures(1, &gazo_spritesheet_texture);
   glDeleteTextures(1, &stone_tile_texture);
@@ -278,7 +298,7 @@ void game::the_monitor_has_refreshed_again()
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
   glViewport(0, 0, RESOLUTION_X, RESOLUTION_Y);
   the_level.draw(
-    &gazo_shader_info, &terrain_shader_info,
+    &gazo_shader_info, &terrain_shader_info, &polygon_fill_shader_info,
     gazo_spritesheet_texture, stone_tile_texture
   );
   {

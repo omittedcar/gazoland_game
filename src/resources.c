@@ -8,6 +8,9 @@ const unsigned char vert_gazo_glsl[] = {
 const unsigned char vert_3d_glsl[] = {
 #embed "glsl/vert_3d.glsl"
 };
+const unsigned char vert_no_uv_map_glsl[] = {
+#embed "glsl/vert_no_uv_map.glsl"
+};
 const unsigned char frag_basic_glsl[] = {
 #embed "glsl/frag_basic.glsl"
 };

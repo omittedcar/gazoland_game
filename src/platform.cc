@@ -3,6 +3,7 @@
 #include <cmath>
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 
 void platform::arise() {
   side_count = 9;
@@ -17,35 +18,60 @@ void platform::arise() {
   corners[7] = {0.875,-1.0};
   corners[8] = {0.0, -1.25};
   compute_bounding_box();
-  glGenBuffers(1, &vertex_pos_buffer);
-  glGenBuffers(1, &vertex_uv_buffer);
-  glGenBuffers(1, &face_index_buffer);
+  glGenBuffers(5, &vertex_uv_buffer);
   do_vertex_buffers();
 }
 
 void platform::demolish() {
   free(corners);
-  glDeleteBuffers(1, &vertex_pos_buffer);
-  glDeleteBuffers(1, &vertex_uv_buffer);
-  glDeleteBuffers(1, &face_index_buffer);
+  glDeleteBuffers(5, &vertex_uv_buffer);
 }
 
 void platform::draw(
-  gl_program_info* rendering_shader
+  gl_program_info* surface_shader,
+  gl_program_info* fill_shader,
+  float* projection,
+  fvec2 view
 ) {
-  
-  glUseProgram(rendering_shader->shader);
-
+  glUseProgram(surface_shader->shader);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glVertexAttribPointer(rendering_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(rendering_shader->v_pos);
-
+  glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(surface_shader->v_pos);
+  
   glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
-  glVertexAttribPointer(rendering_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(rendering_shader->v_uv);
+  glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(surface_shader->v_uv);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer);
-  glDrawElements(GL_TRIANGLES, side_count * 18, GL_UNSIGNED_SHORT, nullptr);
+  glDrawElements(GL_TRIANGLES, side_count * 12, GL_UNSIGNED_SHORT, nullptr);
+  glDisableVertexAttribArray(surface_shader->v_pos);
+  glDisableVertexAttribArray(surface_shader->v_uv);
+  
+  
+  glUseProgram(fill_shader->shader);
+  glEnableVertexAttribArray(fill_shader->v_pos);
+  glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
+  glVertexAttribPointer(fill_shader->v_pos, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+  glUniformMatrix4fv(fill_shader->u_projection, 1, false, projection);
+  glUniform1i(fill_shader->u_texture, 0);
+  glUniform2f(fill_shader->u_panning, view.x, view.y);
+
+  glDisable(GL_BLEND);
+
+  glDrawArrays(GL_TRIANGLE_FAN, 0, side_count);
+
+  glUseProgram(surface_shader->shader);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
+  glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(surface_shader->v_pos);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
+  glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(surface_shader->v_uv);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer_b);
+  glEnable(GL_BLEND);
+  glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
+  glDisableVertexAttribArray(surface_shader->v_pos);
+  glDisableVertexAttribArray(surface_shader->v_uv);
 }
 
 void platform::compute_bounding_box() {
@@ -110,13 +136,15 @@ vec2 platform::shortest_path(vec2 p0) {
 void platform::do_vertex_buffers() {
   float* vertexes = (float*) malloc(side_count * 24 * sizeof(float));
   float* uvs = (float*) malloc(side_count * 16 * sizeof(float));
-  unsigned short* indexes = (unsigned short*) malloc(side_count * 18 * sizeof(unsigned short));
+  unsigned short* indexes = (unsigned short*) malloc(side_count * 12 * sizeof(unsigned short));
+  unsigned short* indexes_b = (unsigned short*) malloc(side_count * 6 * sizeof(unsigned short));
   float uv_x = 0.0;
   float uv_x_next = 0.0;
 
   for(int i = 0; i < side_count; i++) {
     fvec2 corner_a = corners[i];
     fvec2 corner_b = corners[(i+1)%side_count];
+
     fvec2 a_to_b = {
       corner_b.x - corner_a.x,
       corner_b.y - corner_a.y
@@ -193,13 +221,13 @@ void platform::do_vertex_buffers() {
     indexes[i * 3 + side_count * 9 +1] = i * 8 + 1;
     indexes[i * 3 + side_count * 9 +2] = i * 8 + 2;
 
-    indexes[i * 3 + side_count * 12] = i * 8 + 4;
-    indexes[i * 3 + side_count * 12 +1] = i * 8 + 5;
-    indexes[i * 3 + side_count * 12 +2] = i * 8 + 6;
+    indexes_b[i * 3 ] = i * 8 + 4;
+    indexes_b[i * 3 +1] = i * 8 + 5;
+    indexes_b[i * 3 +2] = i * 8 + 6;
 
-    indexes[i * 3 + side_count * 15] = i * 8 + 5;
-    indexes[i * 3 + side_count * 15 +1] = i * 8 + 6;
-    indexes[i * 3 + side_count * 15 +2] = i * 8 + 7;
+    indexes_b[i * 3 + side_count * 3] = i * 8 + 5;
+    indexes_b[i * 3 + side_count * 3 +1] = i * 8 + 6;
+    indexes_b[i * 3 + side_count * 3 +2] = i * 8 + 7;
 
     uv_x = uv_x_next;
   }
@@ -208,9 +236,17 @@ void platform::do_vertex_buffers() {
   glBufferData(GL_ARRAY_BUFFER, side_count * 24 * sizeof(float), vertexes, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
   glBufferData(GL_ARRAY_BUFFER, side_count * 16 * sizeof(float), uvs, GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER, side_count * sizeof(fvec2), (float*) corners, GL_STATIC_DRAW);
+
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 18 * sizeof(unsigned short), indexes, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 12 * sizeof(unsigned short), indexes, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer_b);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes_b, GL_STATIC_DRAW);
+  
   free(vertexes);
   free(uvs);
   free(indexes);
+  free(indexes_b);
 }

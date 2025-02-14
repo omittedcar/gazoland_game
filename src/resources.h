@@ -1,6 +1,7 @@
 extern const unsigned char vert_basic_glsl[];
 extern const unsigned char vert_gazo_glsl[];
 extern const unsigned char vert_3d_glsl[];
+extern const unsigned char vert_no_uv_map_glsl[];
 extern const unsigned char frag_basic_glsl[];
 extern const unsigned char frag_gamma_glsl[];
 

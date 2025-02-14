@@ -10,6 +10,7 @@ public:
                     float right_stick_y);
   void draw(
     gl_program_info* gazo_shader, gl_program_info* terrain_shader,
+    gl_program_info* polygon_fill_shader,
     GLuint gazo_texture, GLuint stone_tile_texture
   );
 

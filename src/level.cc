@@ -20,8 +20,11 @@ void level::control_gazo(float left_stick_x, float left_stick_y,
   the_gazo.point_other_joystick(right_stick_x, right_stick_y);
 }
 
-void level::draw(gl_program_info* gazo_shader, gl_program_info* terrain_shader,
-  GLuint gazo_texture, GLuint stone_tile_texture) {
+void level::draw(
+  gl_program_info* gazo_shader, gl_program_info* terrain_shader,
+  gl_program_info* polygon_fill_shader,
+  GLuint gazo_texture, GLuint stone_tile_texture
+) {
   view = the_gazo.get_center_of_mass_medium_precision();
   glClearColor(0.0625, 0.0625, 0.0625, 1.0);
   glClearDepthf(1.0);
@@ -45,6 +48,7 @@ void level::draw(gl_program_info* gazo_shader, gl_program_info* terrain_shader,
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, gazo_texture);
   the_gazo.render(gazo_shader);
+  
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glUseProgram(terrain_shader->shader);
@@ -58,5 +62,5 @@ void level::draw(gl_program_info* gazo_shader, gl_program_info* terrain_shader,
     terrain_shader->u_texture, 0
   );
   glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
-  the_platform.draw(terrain_shader);
+  the_platform.draw(terrain_shader, polygon_fill_shader, projection_matrix, view);
 }
