@@ -18,13 +18,13 @@ void platform::arise() {
   corners[7] = {0.875,-1.0};
   corners[8] = {0.0, -1.25};
   compute_bounding_box();
-  glGenBuffers(5, &vertex_uv_buffer);
+  glGenBuffers(6, &vertex_uv_buffer);
   do_vertex_buffers();
 }
 
 void platform::demolish() {
   free(corners);
-  glDeleteBuffers(5, &vertex_uv_buffer);
+  glDeleteBuffers(6, &vertex_uv_buffer);
 }
 
 void platform::draw(

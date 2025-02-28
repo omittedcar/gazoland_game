@@ -17,6 +17,9 @@ const unsigned char frag_basic_glsl[] = {
 const unsigned char frag_gamma_glsl[] = {
 #embed "glsl/frag_gamma.glsl"
 };
+const unsigned char frag_gui_glsl[] = {
+#embed "glsl/frag_gui.glsl"
+};
 const unsigned char gazo_spritesheet_png[] = {
 #embed "../assets/textures/gazo_indexed.png"
 }; const int gazo_spritesheet_png_len = sizeof(gazo_spritesheet_png) / sizeof(unsigned char);

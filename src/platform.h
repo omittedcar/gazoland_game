@@ -26,7 +26,9 @@ class platform {
   GLuint corner_vertex_buffer;
   GLuint face_index_buffer;
   GLuint face_index_buffer_b;
+  GLuint inner_face_index_buffer;
   void compute_bounding_box();
   void do_vertex_buffers();
+  void generate_mesh();
 };
 #endif

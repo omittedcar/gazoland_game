@@ -36,6 +36,7 @@ class game {
   GLuint vertshader_no_uv_map;
   GLuint fragshader_basic;
   GLuint fragshader_gamma;
+  GLuint fragshader_gui;
 
   GLuint gamma_shader;
   gl_program_info gazo_shader_info;
@@ -48,4 +49,5 @@ class game {
   GLuint framebuffer;
   GLuint framebuffer_texture;
   GLuint depth_texture;
+  GLuint gui_texture;
 };

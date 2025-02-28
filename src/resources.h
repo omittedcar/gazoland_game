@@ -4,6 +4,7 @@ extern const unsigned char vert_3d_glsl[];
 extern const unsigned char vert_no_uv_map_glsl[];
 extern const unsigned char frag_basic_glsl[];
 extern const unsigned char frag_gamma_glsl[];
+extern const unsigned char frag_gui_glsl[];
 
 extern const unsigned char gazo_spritesheet_png[];
 extern const int gazo_spritesheet_png_len;

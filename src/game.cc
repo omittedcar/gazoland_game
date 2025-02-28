@@ -18,9 +18,14 @@
 
 #define RESOLUTION_X 0x360
 #define RESOLUTION_Y 0x240
+
+#define UI_RESOLUTION_X 288
+#define UI_RESOLUTION_Y 192
+#define UI_AREA_DI_VIDED_BY_8 6912
+
 namespace
 {
-  double time_step = 1.0 / 420.0;
+  double time_step = 1.0 / 480.0;
 
   bool collision_has_occurred = false;
   bool should_single_step = false;
@@ -130,24 +135,28 @@ void game::run()
   vertshader_no_uv_map = glCreateShader(GL_VERTEX_SHADER);
   fragshader_basic = glCreateShader(GL_FRAGMENT_SHADER);
   fragshader_gamma = glCreateShader(GL_FRAGMENT_SHADER);
+  fragshader_gui = glCreateShader(GL_FRAGMENT_SHADER);
   {
     void *some_pointers[] = {(void *)vert_basic_glsl, nullptr};
     glShaderSource(vertshader_basic, 1, (const char *const *)(some_pointers),
                    nullptr);
-    some_pointers[0] = (void *)vert_gazo_glsl;
+    *some_pointers = (void *)vert_gazo_glsl;
     glShaderSource(vertshader_gazo, 1, (const char *const *)(some_pointers),
                    nullptr);
-    some_pointers[0] = (void *)vert_3d_glsl;
+    *some_pointers = (void *)vert_3d_glsl;
     glShaderSource(vertshader_3d, 1, (const char *const *)some_pointers,
                    nullptr);
-    some_pointers[0] = (void *)vert_no_uv_map_glsl;
+    *some_pointers = (void *)vert_no_uv_map_glsl;
     glShaderSource(vertshader_no_uv_map, 1, (const char *const *)some_pointers,
                    nullptr);
-    some_pointers[0] = (void *)frag_basic_glsl;
+    *some_pointers = (void *)frag_basic_glsl;
     glShaderSource(fragshader_basic, 1, (const char *const *)some_pointers,
                    nullptr);
-    some_pointers[0] = (void *)frag_gamma_glsl;
+    *some_pointers = (void *)frag_gamma_glsl;
     glShaderSource(fragshader_gamma, 1, (const char *const *)some_pointers,
+                   nullptr);
+    *some_pointers = (void *)frag_gui_glsl;
+    glShaderSource(fragshader_gui, 1, (const char *const *)some_pointers,
                    nullptr);
   };
   CHECK_GL();
@@ -213,7 +222,7 @@ void game::run()
   };
 
   glGenFramebuffers(1, &framebuffer);
-  glGenTextures(1, &framebuffer_texture);
+  glGenTextures(3, &framebuffer_texture);
   glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,
                GL_HALF_FLOAT, nullptr);
@@ -223,7 +232,6 @@ void game::run()
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                          framebuffer_texture, 0);
 
-  glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, RESOLUTION_X, RESOLUTION_Y, 0,
                GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
@@ -231,6 +239,10 @@ void game::run()
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
   depth_texture, 0);
+
+  glBindTexture(GL_TEXTURE_2D, gui_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 2, UI_AREA_DI_VIDED_BY_8, 0,
+               GL_RED, GL_BYTE, nullptr);
 
   the_level.construct();
   glGenTextures(1, &gazo_spritesheet_texture);
@@ -273,8 +285,7 @@ void game::stop()
   glDeleteShader(gamma_shader);
   glDeleteTextures(1, &gazo_spritesheet_texture);
   glDeleteTextures(1, &stone_tile_texture);
-  glDeleteTextures(1, &framebuffer_texture);
-  glDeleteTextures(1, &depth_texture);
+  glDeleteTextures(3, &framebuffer_texture);
   glfwDestroyWindow(window);
   glfwTerminate();
 }
