@@ -261,6 +261,7 @@ void game::run()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   decode_png_truecolor(stone_tile_png, stone_tile_png_len);
+  glGenerateMipmap(GL_TEXTURE_2D);
 
   while (is_playing && !glfwWindowShouldClose(window))
   {
