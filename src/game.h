@@ -46,6 +46,7 @@ class game {
   GLuint square_buffer;
   GLuint gazo_spritesheet_texture;
   GLuint stone_tile_texture;
+  GLuint bailey_truss_texture;
   GLuint framebuffer;
   GLuint framebuffer_texture;
   GLuint depth_texture;

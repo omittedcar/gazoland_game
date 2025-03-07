@@ -8,18 +8,19 @@
 void platform::arise() {
   side_count = 9;
   corners = (fvec2*) malloc(side_count * 2 * sizeof(fvec2));
-  corners[0] = {-0.875,-1.0};
-  corners[1] = {-1.0,-1.125};
-  corners[2] = {-1.0,-2.875};
-  corners[3] = {-0.875,-3.0};
-  corners[4] = {0.875,-3.0};
-  corners[5] = {1.0,-2.875};
-  corners[6] = {1.0,-1.125};
-  corners[7] = {0.875,-1.0};
+  corners[0] = {-4.875,1.0};
+  corners[1] = {-5.0,0.875};
+  corners[2] = {-5.0,-4.875};
+  corners[3] = {-4.875,-5.0};
+  corners[4] = {4.875,-5.0};
+  corners[5] = {5.0,-4.875};
+  corners[6] = {5.0,-1.375};
+  corners[7] = {4.875,-1.25};
   corners[8] = {0.0, -1.25};
   compute_bounding_box();
   glGenBuffers(6, &vertex_uv_buffer);
   do_vertex_buffers();
+  generate_mesh();
 }
 
 void platform::demolish() {
@@ -33,6 +34,7 @@ void platform::draw(
   float* projection,
   fvec2 view
 ) {
+  
   glUseProgram(surface_shader->shader);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
   glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
@@ -56,19 +58,24 @@ void platform::draw(
   glUniform1i(fill_shader->u_texture, 0);
   glUniform2f(fill_shader->u_panning, view.x, view.y);
 
-  glDisable(GL_BLEND);
-
-  glDrawArrays(GL_TRIANGLE_FAN, 0, side_count);
+  //glEnable(GL_BLEND);
+  
+  glBindTexture(GL_TEXTURE_2D, 6);
+  glDisable(GL_CULL_FACE);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
+  glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
 
   glUseProgram(surface_shader->shader);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
   glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(surface_shader->v_pos);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
+  
   glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(surface_shader->v_uv);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer_b);
-  glEnable(GL_BLEND);
+  //glEnable(GL_BLEND);
+  glBindTexture(GL_TEXTURE_2D, 5);
   glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
   glDisableVertexAttribArray(surface_shader->v_pos);
   glDisableVertexAttribArray(surface_shader->v_uv);
@@ -249,4 +256,16 @@ void platform::do_vertex_buffers() {
   free(uvs);
   free(indexes);
   free(indexes_b);
+}
+
+void platform::generate_mesh() {
+  unsigned short* mesh_which_we_are_generating = (unsigned short*) malloc((side_count-2) * 3 * sizeof(unsigned short) + 1);
+  for(int i = 0; i < side_count - 2 ; i++) {
+    mesh_which_we_are_generating[i*3] = i + 1;
+    mesh_which_we_are_generating[i*3+1] = i + 2;
+    mesh_which_we_are_generating[i*3+2] = 0;
+  }
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, (side_count-2) * 3 * sizeof(unsigned short), mesh_which_we_are_generating, GL_STATIC_DRAW);
+  free(mesh_which_we_are_generating);
 }

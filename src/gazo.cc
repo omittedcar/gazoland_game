@@ -47,7 +47,7 @@ double outer_stiffness = 0x1800;
 double outer_damping = 0x60;
 
 //the power of each of the gazo's muscles. (W)
-double muscle_power = 0x180;
+double muscle_power = 0x100;
 
 double inner_stiffness = 0x800; //0x600
 double inner_damping = 0x10;
@@ -75,6 +75,7 @@ void gazo::init() {
 
   mapping = (vec2*) malloc(n_verts * sizeof(vec2));
   pos20 = (float*) malloc(n_verts * 2 * sizeof(float));
+
 
   pos                           = (vec2*) malloc(n_verts * sizeof(vec2));
   vel                           = (vec2*) malloc(n_verts * sizeof(vec2));
@@ -111,6 +112,25 @@ void gazo::init() {
     mapping[i+1].x = cos(angle * double(i));
     mapping[i+1].y = sin(angle * double(i));
   }
+
+  fvec2* uv_map = (fvec2*) malloc(n_verts * 9 * sizeof(fvec2));
+  for(int i = 0; i < 9; i++) {
+    uv_map[i * n_verts] = {
+      float((i%3-1)*(i%3-1)) * (i/3==1?0.7f:0.64f) + 0.25f,
+      float(i/3-1)*(i%3==1?0.35f:0.32f) + 0.375f
+    };
+    for(int j = 0; j < n_sides; j++) {
+      vec2 mapping_here = mapping[j + 1];
+      fvec2 uv_value = {
+        (float(mapping_here.x) + (i % 3 - 1) * 2) * (i % 3 == 0 ? -0.25f : 0.25f) + 0.25f,
+        (float(-mapping_here.y) + (i / 3) * 2 + 1) * 0.125f
+      };
+      uv_map[i * n_verts + j + 1] = uv_value;
+    }
+  }
+  glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
+  glBufferData(GL_ARRAY_BUFFER, n_verts * 9 * sizeof(fvec2), (float*)uv_map, GL_STATIC_DRAW);
+  free(uv_map);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, n_sides * 3 * sizeof(ushort), elements, GL_STATIC_DRAW);
@@ -206,12 +226,6 @@ void gazo::update_gl_vertex_buffer()  {
 }
 
 void gazo::update_gl_uv_buffer()  {
-  for(uint i = 0u; i < n_verts; i++) {
-    pos20[i*2u] = float((mapping[i].x + 1.0) * 0.5);
-    pos20[i*2u+1u] = float((mapping[i].y - 1.0) * -0.5);
-  }
-  glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
-  glBufferData(GL_ARRAY_BUFFER, n_verts * 2 * sizeof(float), pos20, GL_DYNAMIC_DRAW);
 }
 
 GLuint gazo::get_gl_vertex_buffer() {
@@ -381,8 +395,8 @@ void gazo::calculate_acc(vec2* pos_in, vec2* vel_in, vec2* acc_out) {
 
 
     double target_muscle_force = (hypot(
-      mapping[i + 1].x - rotated_joystick.x * 0.625,
-      mapping[i + 1].y - rotated_joystick.y * 0.625
+      mapping[i + 1].x - rotated_joystick.x * 0.7,
+      mapping[i + 1].y - rotated_joystick.y * 0.7
     ) - 1) * inner_stiffness * radius * 1;
 
     if(target_muscle_force * deformation_rate > muscle_power) {
@@ -525,8 +539,10 @@ void gazo::render(
   glVertexAttribPointer(shader->v_pos, 2, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(shader->v_pos);
 
+
+  choose_sprite();
   glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
-  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
+  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, (void*) (uv_map_offset * 0x80));
   glEnableVertexAttribArray(shader->v_uv);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
@@ -545,4 +561,35 @@ void gazo::render(
 
   glDisableVertexAttribArray(shader->v_uv);
   glDisableVertexAttribArray(shader->v_pos);
+}
+
+void gazo::choose_sprite() {
+  vec2 rotation = {0, 0};
+  vec2 center = pos[0];
+
+  for(int i = 0; i < n_sides; i++) {
+    rotation.x +=
+      +(pos[i + 1].x - center.x) * mapping[i + 1].x
+      +(pos[i + 1].y - center.y) * mapping[i + 1].y
+    ;
+    rotation.y +=
+      -(pos[i + 1].x - center.x) * mapping[i + 1].y
+      +(pos[i + 1].y - center.y) * mapping[i + 1].x
+    ;
+  }
+
+  double rotation_normaliser = 1 / hypot(rotation.x, rotation.y);
+  rotation.x *= rotation_normaliser;
+  rotation.y *= rotation_normaliser;
+  vec2 rotated_joystick = {
+    pointing.x * rotation.x + pointing.y * rotation.y,
+    pointing.y * rotation.x - pointing.x * rotation.y
+  };
+  if(pointing.x * pointing.x + pointing.y * pointing.y < 0.5) {
+    uv_map_offset = 4;
+  } else {
+    float pointing_normalizer = 1 / hypot(pointing.x, pointing.y);
+    uv_map_offset = int(-rotated_joystick.y * pointing_normalizer * 1.5 + 1) * 3;
+    uv_map_offset += int(rotated_joystick.x * pointing_normalizer * 1.5 + 1);
+  }
 }

@@ -50,7 +50,7 @@ void level::draw(
   the_gazo.render(gazo_shader);
   
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   glUseProgram(terrain_shader->shader);
   glUniformMatrix4fv(
     terrain_shader->u_projection, 1, GL_FALSE, projection_matrix

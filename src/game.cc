@@ -2,9 +2,9 @@
 #include "./resources.h"
 #include "gl_or_gles.h"
 #include "png_decoder.h"
-#include <GL/gl.h>
-#include <GLES3/gl3.h>
+
 #include <GLFW/glfw3.h>
+//#incude <EGL/egl.h>
 #include <cassert>
 #include <cstdio>
 #include <fcntl.h>
@@ -16,8 +16,8 @@
 
 
 
-#define RESOLUTION_X 0x360
-#define RESOLUTION_Y 0x240
+#define RESOLUTION_X 1080
+#define RESOLUTION_Y 720
 
 #define UI_RESOLUTION_X 288
 #define UI_RESOLUTION_Y 192
@@ -117,7 +117,8 @@ void game::run()
 
   glfwInit();
   glfwSwapInterval(1);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  //glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_FALSE);
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -224,14 +225,14 @@ void game::run()
   glGenFramebuffers(1, &framebuffer);
   glGenTextures(3, &framebuffer_texture);
   glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,
-               GL_HALF_FLOAT, nullptr);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R11F_G11F_B10F, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,GL_UNSIGNED_INT_10F_11F_11F_REV, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                          framebuffer_texture, 0);
 
+  glEnable(GL_DITHER);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, RESOLUTION_X, RESOLUTION_Y, 0,
                GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
@@ -245,24 +246,31 @@ void game::run()
                GL_RED, GL_BYTE, nullptr);
 
   the_level.construct();
-  glGenTextures(1, &gazo_spritesheet_texture);
-  glGenTextures(1, &stone_tile_texture);
+  glGenTextures(3, &gazo_spritesheet_texture);
 
+  #define preffered_filter GL_LINEAR
+  #define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
   glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, preffered_min_filter);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, preffered_filter);
   decode_png_truecolor(gazo_spritesheet_png, gazo_spritesheet_png_len);
   glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, preffered_min_filter);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, preffered_filter);
   decode_png_truecolor(stone_tile_png, stone_tile_png_len);
   glGenerateMipmap(GL_TEXTURE_2D);
-
+  glBindTexture(GL_TEXTURE_2D, bailey_truss_texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, preffered_min_filter);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, preffered_filter);
+  decode_png_truecolor(bailey_truss_png, bailey_truss_png_len);
+  glGenerateMipmap(GL_TEXTURE_2D);
   while (is_playing && !glfwWindowShouldClose(window))
   {
     the_monitor_has_refreshed_again();
@@ -284,8 +292,7 @@ void game::stop()
   glDeleteShader(terrain_shader_info.shader);
   glDeleteShader(polygon_fill_shader_info.shader);
   glDeleteShader(gamma_shader);
-  glDeleteTextures(1, &gazo_spritesheet_texture);
-  glDeleteTextures(1, &stone_tile_texture);
+  glDeleteTextures(3, &gazo_spritesheet_texture);
   glDeleteTextures(3, &framebuffer_texture);
   glfwDestroyWindow(window);
   glfwTerminate();
@@ -337,6 +344,7 @@ void game::the_monitor_has_refreshed_again()
   glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(0);
   glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+  
   glDrawArrays(GL_TRIANGLES, 0, 6);
 
   // rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
@@ -348,8 +356,8 @@ void game::the_monitor_has_refreshed_again()
   {
     function_which_is_called_480hz();
   }
-  glfwPollEvents();
   glfwSwapBuffers(window);
+  glfwPollEvents();
   frame_counter++;
 }
 

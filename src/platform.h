@@ -17,6 +17,8 @@ class platform {
   );
   bool can_we_like_can_we_please_like_put_stuff_here_at_this_location_x_and_y_please_or_is_that_like_a_not_good_place_to_put_stuff_because_like_you_cant_put_stuff_there(vec2 p);
   vec2 shortest_path(vec2 p);
+  GLuint outer_texture;
+  GLuint inner_texture;
  private:
   int side_count;
   fvec2* corners;

@@ -44,6 +44,7 @@ class gazo {
 
 
   float* pos20;
+  int uv_map_offset;
 
   GLuint gl_vertex_buffer;
   GLuint gl_uv_buffer;
@@ -69,4 +70,6 @@ class gazo {
     vec2* vel_in,
     vec2* acc_out
   );
+
+  void choose_sprite();
 };
