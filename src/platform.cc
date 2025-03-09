@@ -49,7 +49,7 @@ void platform::draw(
   glDisableVertexAttribArray(surface_shader->v_pos);
   glDisableVertexAttribArray(surface_shader->v_uv);
   
-  
+  //glDisable(GL_BLEND);
   glUseProgram(fill_shader->shader);
   glEnableVertexAttribArray(fill_shader->v_pos);
   glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
@@ -63,7 +63,7 @@ void platform::draw(
   glBindTexture(GL_TEXTURE_2D, 6);
   glDisable(GL_CULL_FACE);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
-  glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
+  glDrawElements(GL_TRIANGLES, 3*(side_count - 4), GL_UNSIGNED_SHORT, nullptr);
 
   glUseProgram(surface_shader->shader);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
@@ -259,11 +259,43 @@ void platform::do_vertex_buffers() {
 }
 
 void platform::generate_mesh() {
-  unsigned short* mesh_which_we_are_generating = (unsigned short*) malloc((side_count-2) * 3 * sizeof(unsigned short) + 1);
-  for(int i = 0; i < side_count - 2 ; i++) {
-    mesh_which_we_are_generating[i*3] = i + 1;
-    mesh_which_we_are_generating[i*3+1] = i + 2;
-    mesh_which_we_are_generating[i*3+2] = 0;
+  signed short* mesh_which_we_are_generating =
+    (signed short*) malloc((side_count-2) * 3 * sizeof(unsigned short) + 1)
+  ;
+  signed short* unclipped_corner_indexes =
+    (signed short*) malloc((side_count) * sizeof(unsigned short) + 1)
+  ;
+  signed short unclipped_corner_count = side_count;
+  for(int i = 0; i < side_count; i++) {
+    unclipped_corner_indexes[i] = i;
+  }
+  int triangle_count = 0;
+  while(unclipped_corner_count > 3) {
+    signed short ear = 0;
+    for(; ear < unclipped_corner_count; ear++) {
+      fvec2 corner_cw = corners[unclipped_corner_indexes[(ear - 1)%unclipped_corner_count]];
+      fvec2 corner = corners[unclipped_corner_indexes[ear]];
+      fvec2 corner_ccw = corners[unclipped_corner_indexes[(ear + 1)%unclipped_corner_count]];
+      if(
+        (corner_cw.y - corner.y) * (corner_ccw.x - corner.x) -
+        (corner_cw.x - corner.x) * (corner_ccw.y - corner.y)
+        > 0.0
+      ) {
+        break;
+      }
+    }
+    mesh_which_we_are_generating[triangle_count*3] = unclipped_corner_indexes[ear];
+    mesh_which_we_are_generating[triangle_count*3+1] = unclipped_corner_indexes[
+      (ear-1)%unclipped_corner_count
+    ];
+    mesh_which_we_are_generating[triangle_count*3+2] = unclipped_corner_indexes[
+      (ear+1)%unclipped_corner_count
+    ];
+    triangle_count++;
+    unclipped_corner_count--;
+    for(int i = 0; i < unclipped_corner_count - ear; i++) {
+      unclipped_corner_indexes[ear + i] = unclipped_corner_indexes[ear+i+1];
+    }
   }
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, (side_count-2) * 3 * sizeof(unsigned short), mesh_which_we_are_generating, GL_STATIC_DRAW);

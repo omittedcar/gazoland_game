@@ -14,10 +14,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-
-
-#define RESOLUTION_X 1080
-#define RESOLUTION_Y 720
+#define RESOLUTION_X 576
+#define RESOLUTION_Y 384
 
 #define UI_RESOLUTION_X 288
 #define UI_RESOLUTION_Y 192

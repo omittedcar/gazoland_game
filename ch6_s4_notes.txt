@@ -1,0 +1,8 @@
+macromolecule
+polymer
+carb
+lipid
+protein
+amino acid
+nucleotide
+carbohydrate has 1 O and 2 H for each C
