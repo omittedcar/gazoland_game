@@ -14,8 +14,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#define RESOLUTION_X 576
-#define RESOLUTION_Y 384
+#define RESOLUTION_X 1080
+#define RESOLUTION_Y 720
 
 #define UI_RESOLUTION_X 288
 #define UI_RESOLUTION_Y 192
@@ -247,7 +247,7 @@ void game::run()
   glGenTextures(3, &gazo_spritesheet_texture);
 
   #define preffered_filter GL_LINEAR
-  #define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
+  #define preffered_min_filter GL_LINEAR_MIPMAP_NEAREST
   glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -257,7 +257,7 @@ void game::run()
   glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, preffered_min_filter);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, preffered_filter);
   decode_png_truecolor(stone_tile_png, stone_tile_png_len);

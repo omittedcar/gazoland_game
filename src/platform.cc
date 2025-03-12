@@ -63,7 +63,7 @@ void platform::draw(
   glBindTexture(GL_TEXTURE_2D, 6);
   glDisable(GL_CULL_FACE);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
-  glDrawElements(GL_TRIANGLES, 3*(side_count - 4), GL_UNSIGNED_SHORT, nullptr);
+  glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
 
   glUseProgram(surface_shader->shader);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
@@ -273,20 +273,48 @@ void platform::generate_mesh() {
   while(unclipped_corner_count > 3) {
     signed short ear = 0;
     for(; ear < unclipped_corner_count; ear++) {
-      fvec2 corner_cw = corners[unclipped_corner_indexes[(ear - 1)%unclipped_corner_count]];
+      //get the the coordinates of the clockwise corner of the potential ear
+      fvec2 corner_cw = corners[
+        unclipped_corner_indexes[(ear + unclipped_corner_count - 1)%unclipped_corner_count]
+      ]; //adding unclipped_corner_count to the number to keep it positive (poor handling of negative numbers)
+      //get the coordinates of the central corner of the potential ear
       fvec2 corner = corners[unclipped_corner_indexes[ear]];
+      //get the coordinates of the counter-clockwise corner of the potential ear
       fvec2 corner_ccw = corners[unclipped_corner_indexes[(ear + 1)%unclipped_corner_count]];
-      if(
+      if( //initial ear check: is it convex (if not then it isn't an ear)
         (corner_cw.y - corner.y) * (corner_ccw.x - corner.x) -
         (corner_cw.x - corner.x) * (corner_ccw.y - corner.y)
         > 0.0
       ) {
-        break;
-      }
-    }
+        //go through all of the unclipped corners that are not part of the potential ear
+        //to see if they poke inside of it
+        //which means that it isn't an ear
+        bool is_poking = false;
+        for(int i = 0; i < unclipped_corner_count - 3; i++) {
+          fvec2 corner_checking = corners[
+            unclipped_corner_indexes[(ear + 2 + i)%unclipped_corner_count]
+          ];
+          if(
+            (corner_checking.y - corner.y) * (corner_cw.x - corner.x) -
+            (corner_checking.x - corner.x) * (corner_cw.y - corner.y) < 0 &&
+
+            (corner_checking.y - corner_ccw.y) * (corner.x - corner_ccw.x) -
+            (corner_checking.x - corner_ccw.x) * (corner.y - corner_ccw.y) < 0 &&
+
+            (corner_checking.y - corner_cw.y) * (corner_ccw.x - corner_cw.x) -
+            (corner_checking.x - corner_cw.x) * (corner_ccw.y - corner_cw.y) < 0
+          ) {
+            is_poking = true;
+          }
+        }
+        if(!is_poking) {
+          break; //ear has been found. end of ear search.
+        }
+      } //end of ear check
+    } //end of ear search
     mesh_which_we_are_generating[triangle_count*3] = unclipped_corner_indexes[ear];
     mesh_which_we_are_generating[triangle_count*3+1] = unclipped_corner_indexes[
-      (ear-1)%unclipped_corner_count
+      (ear+unclipped_corner_count-1)%unclipped_corner_count
     ];
     mesh_which_we_are_generating[triangle_count*3+2] = unclipped_corner_indexes[
       (ear+1)%unclipped_corner_count
@@ -297,6 +325,13 @@ void platform::generate_mesh() {
       unclipped_corner_indexes[ear + i] = unclipped_corner_indexes[ear+i+1];
     }
   }
+  //remember: that was a while loop where the condition was that unclipped_corner_count > 3
+  //so now that the loop has ended, we are left with one last triangle
+  //let's add it to the mesh
+  mesh_which_we_are_generating[triangle_count*3] = unclipped_corner_indexes[0];
+  mesh_which_we_are_generating[triangle_count*3+1] = unclipped_corner_indexes[1];
+  mesh_which_we_are_generating[triangle_count*3+2] = unclipped_corner_indexes[2];
+
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, (side_count-2) * 3 * sizeof(unsigned short), mesh_which_we_are_generating, GL_STATIC_DRAW);
   free(mesh_which_we_are_generating);
