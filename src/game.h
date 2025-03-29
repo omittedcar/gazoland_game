@@ -17,6 +17,8 @@ class game {
   void the_monitor_has_refreshed_again();
   void function_which_is_called_480hz();
 
+  void write_text(const char* the_text_which_we_are_writing, int pos);
+
   input_event rumbleinator;
 	input_event derumbleinator;
 	ff_effect rumble_effect;
@@ -30,6 +32,8 @@ class game {
   int window_height = 0;
   char* info_log = nullptr;
 
+  unsigned char* lettering;
+
   GLuint vertshader_basic;
   GLuint vertshader_gazo;
   GLuint vertshader_3d;
@@ -42,6 +46,7 @@ class game {
   gl_program_info gazo_shader_info;
   gl_program_info terrain_shader_info;
   gl_program_info polygon_fill_shader_info;
+  gl_program_info gui_shader_info;
 
   GLuint square_buffer;
   GLuint gazo_spritesheet_texture;
