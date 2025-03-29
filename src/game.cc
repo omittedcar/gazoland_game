@@ -5,24 +5,38 @@
 
 #include <GLFW/glfw3.h>
 //#incude <EGL/egl.h>
-#include <cassert>
-#include <cstdio>
-#include <fcntl.h>
-#include <linux/input.h>
+//#include <cassert>
+//#include <cstdio>
+//#include <fcntl.h>
+//#include <linux/input.h>
 #include <math.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
+//#include <sys/ioctl.h>
+#include <filesystem>
 #include <unistd.h>
+#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <libgen.h>
 
-#define RESOLUTION_X 1152
-#define RESOLUTION_Y 768
+#define RESOLUTION_X 360
+#define RESOLUTION_Y 240
 
-#define UI_RESOLUTION_X 288
-#define UI_RESOLUTION_Y 192
-#define UI_AREA_DI_VIDED_BY_8 6912
+#define UI_WIDTH 40
+#define UI_HEIGHT 24
+#define UI_BYTES 0x9000
 
 namespace
 {
+  std::filesystem::path root_path;
+  void init_root_path() {
+    char exe[256];
+    readlink("/proc/self/exe", exe, 256);
+    root_path = std::filesystem::path(
+      dirname(dirname(exe)));
+  }
+
   double time_step = 1.0 / 480.0;
 
   bool collision_has_occurred = false;
@@ -79,8 +93,25 @@ void dump(uint8_t *data, int size)
   printf("\n");
 }
 
+
+void do_shader(const char* path, int type) {
+  std::filesystem::path full_path(root_path);
+  full_path /= "src";
+  full_path /= "glsl";
+  full_path /= path;
+  std::ifstream ifs(full_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
+  if(ifs.is_open()) {
+    __asm__("nop");
+  } else {
+    printf("\nsory the file isnt working\n\"%s\"\n", path);
+    abort();
+  }
+}
+
 void game::run()
 {
+  init_root_path();
+
   info_log = (char*) malloc(69420);
   is_playing = true;
 
@@ -120,7 +151,17 @@ void game::run()
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  
+  lettering = (unsigned char*) malloc(UI_BYTES + 1);
+  for(int i = 0; i < UI_BYTES; i++) {
+    lettering[i] = 0;
+  }
+  write_text(
+    //"The Mechanism is a hazardous ride located in Gazoland, built over the course of five years by Gazolandic Tesseract Engineering Incorporated. It is the largest ride in Gazo Square and, like many other rides in Gazoland, carries an extreme risk of death for both those riding it and those working to maintain it. The Mechanism is only ridden by expert ride-goers as it is infamous for inflicting at least a dozen severe injuries in poorly maintained parts of the ride. It is estimated that the average ride time of The Mechanism is three days, give or take several hours, meaning riders will have to pack provisions and be prepared to make stops on ledges or at Gazolander housing complexes located sparsely throughout the body. Do not bring children to the Mechanism unless you plan to get back down when you're in the beginning of the upper parts.\n"
+    "THE MECHANISM\n",
+    0
+  );
+
+  //memcpy(lettering, font + 1, 2048);
   window = glfwCreateWindow(
     RESOLUTION_X, RESOLUTION_Y,
     "Dat, the first glaggle to ride the mechanism 2 electric boogaloo",
@@ -135,7 +176,9 @@ void game::run()
   fragshader_basic = glCreateShader(GL_FRAGMENT_SHADER);
   fragshader_gamma = glCreateShader(GL_FRAGMENT_SHADER);
   fragshader_gui = glCreateShader(GL_FRAGMENT_SHADER);
+
   {
+    do_shader("vert_basic.glsl", GL_FRAGMENT_SHADER);
     void *some_pointers[] = {(void *)vert_basic_glsl, nullptr};
     glShaderSource(vertshader_basic, 1, (const char *const *)(some_pointers),
                    nullptr);
@@ -169,10 +212,12 @@ void game::run()
   glCompileShader(fragshader_basic);
   CHECK_GL();
   glCompileShader(fragshader_gamma);
+  glCompileShader(fragshader_gui);
   CHECK_GL();
   gazo_shader_info.shader = glCreateProgram();
   terrain_shader_info.shader = glCreateProgram();
   polygon_fill_shader_info.shader = glCreateProgram();
+  gui_shader_info.shader = glCreateProgram();
   gamma_shader = glCreateProgram();
   CHECK_GL();
   glAttachShader(gazo_shader_info.shader, vertshader_gazo);
@@ -183,6 +228,8 @@ void game::run()
   glAttachShader(polygon_fill_shader_info.shader, fragshader_basic);
   glAttachShader(gamma_shader, vertshader_basic);
   glAttachShader(gamma_shader, fragshader_gamma);
+  glAttachShader(gui_shader_info.shader, vertshader_basic);
+  glAttachShader(gui_shader_info.shader, fragshader_gui);
   glLinkProgram(gazo_shader_info.shader);
   CHECK_GL();
 
@@ -202,15 +249,19 @@ void game::run()
   terrain_shader_info.v_uv = glGetAttribLocation(terrain_shader_info.shader, "vertex_uv");
 
   glLinkProgram(polygon_fill_shader_info.shader);
-  CHECK_GL();
+  
   polygon_fill_shader_info.u_panning = glGetUniformLocation(polygon_fill_shader_info.shader, "view_pos");
   polygon_fill_shader_info.u_projection = glGetUniformLocation(polygon_fill_shader_info.shader, "projection_matrix");
   polygon_fill_shader_info.u_texture = glGetUniformLocation(polygon_fill_shader_info.shader, "the_texture");
   polygon_fill_shader_info.v_pos = glGetAttribLocation(polygon_fill_shader_info.shader, "vertex_pos");
-
-  glLinkProgram(gamma_shader);
   CHECK_GL();
-
+  glLinkProgram(gui_shader_info.shader);
+  CHECK_GL();
+  gui_shader_info.u_texture = glGetUniformLocation(gui_shader_info.shader, "the_ui");
+  CHECK_GL();
+  gui_shader_info.v_pos = glGetAttribLocation(gui_shader_info.shader, "pos");
+  CHECK_GL();
+  glLinkProgram(gamma_shader);
   {
     float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
                           -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
@@ -230,7 +281,7 @@ void game::run()
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                          framebuffer_texture, 0);
 
-  glEnable(GL_DITHER);
+  //glEnable(GL_DITHER);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, RESOLUTION_X, RESOLUTION_Y, 0,
                GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
@@ -239,20 +290,28 @@ void game::run()
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
   depth_texture, 0);
 
-  glBindTexture(GL_TEXTURE_2D, gui_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 2, UI_AREA_DI_VIDED_BY_8, 0,
-               GL_RED, GL_BYTE, nullptr);
+  #define preffered_filter GL_LINEAR
+  #define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
 
+  printf("%i\n", lettering[16]);
+
+  glBindTexture(GL_TEXTURE_2D, gui_texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, UI_WIDTH * 16, UI_HEIGHT, 0,
+               GL_RED, GL_UNSIGNED_BYTE, lettering);
+  CHECK_GL();
   the_level.construct();
   glGenTextures(3, &gazo_spritesheet_texture);
 
-  #define preffered_filter GL_LINEAR
-  #define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
   glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, preffered_min_filter);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, preffered_filter);
+
   decode_png_truecolor(gazo_spritesheet_png, gazo_spritesheet_png_len);
   glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
@@ -285,13 +344,16 @@ void game::stop()
   glDeleteShader(vertshader_3d);
   glDeleteShader(vertshader_no_uv_map);
   glDeleteShader(fragshader_basic);
+  glDeleteShader(fragshader_gui);
   glDeleteShader(fragshader_gamma);
   glDeleteShader(gazo_shader_info.shader);
   glDeleteShader(terrain_shader_info.shader);
   glDeleteShader(polygon_fill_shader_info.shader);
+  glDeleteShader(gui_shader_info.shader);
   glDeleteShader(gamma_shader);
   glDeleteTextures(3, &gazo_spritesheet_texture);
   glDeleteTextures(3, &framebuffer_texture);
+  free(lettering);
   glfwDestroyWindow(window);
   glfwTerminate();
 }
@@ -334,6 +396,7 @@ void game::the_monitor_has_refreshed_again()
   {
     glViewport(0, 0, window_width, window_height);
   }
+  glDisable(GL_BLEND);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearDepthf(1.0f);
   glClear(GL_DEPTH_BUFFER_BIT);
@@ -342,7 +405,14 @@ void game::the_monitor_has_refreshed_again()
   glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(0);
   glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  
+  glDrawArrays(GL_TRIANGLES, 0, 6);
+
+  glUseProgram(gui_shader_info.shader);
+  glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+  glVertexAttribPointer(gui_shader_info.v_pos, 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(gui_shader_info.v_pos);
+  glUniform1i(gui_shader_info.u_texture, 0);
+  glBindTexture(GL_TEXTURE_2D, gui_texture);
   glDrawArrays(GL_TRIANGLES, 0, 6);
 
   // rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
@@ -360,3 +430,9 @@ void game::the_monitor_has_refreshed_again()
 }
 
 void game::function_which_is_called_480hz() { the_level.time_step(); }
+void game::write_text(const char* text_which_we_are_writing, int offset) {
+  char char_here;
+  for(int i = 0; (char_here = text_which_we_are_writing[i]) != '\n'; i++) {
+    memcpy(lettering + (i + (i/UI_WIDTH*UI_WIDTH)) * 16 + 1, font + char_here * 16, 16);
+  }
+}
