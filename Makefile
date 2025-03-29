@@ -1,13 +1,15 @@
 
 # Modify for your local system
 
-LLVM := /usr/lib/llvm-19
+LLVM := ~/elelviem/LLVM-20.1.0-Linux-X64
 CC := $(LLVM)/bin/clang
 CXX := $(LLVM)/bin/clang++
-CPPFLAGS := -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13
+#CPPFLAGS := -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13
+CPPFLAGS := -I/home/glebem/elelviem/LLVM-20.1.0-Linux-X64/include/c++/v1 -I/home/glebem/elelviem/LLVM-20.1.0-Linux-X64/include/x86_64-unknown-linux-gnu/c++/v1
 CFLAGS := -std=c23
-LDFLAGS := -L/lib/x86_64-linux-gnu
-
+#LDFLAGS := -L/lib/x86_64-linux-gnu
+LDFLAGS := -L/usr/lib/x86_64-linux-gnu -L/home/glebem/elelviem/LLVM-20.1.0-Linux-X64/lib/x86_64-unknown-linux-gnu -L/home/glebem/elelviem/LLVM-20.1.0-Linux-X64/lib/clang/20/lib/x86_64-unknown-linux-gnu
+# -fuse-ld=ld.lld
 # Do not modify below this line
 
 DEBUGFLAGS := -O0 -g

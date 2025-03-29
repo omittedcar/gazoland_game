@@ -61,7 +61,7 @@ double drag_factor = 0x3;
 
 double outer_vertex_mass = outer_mass / n_sides;
 
-double dash_speed = 2.25;
+double dash_speed = 2.5;
 
 double radius = 0.2;
 
@@ -542,7 +542,7 @@ void gazo::render(
 
   choose_sprite();
   glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
-  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, (void*) (uv_map_offset * 0x80));
+  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, (void*) (long long int) (uv_map_offset * 0x80));
   glEnableVertexAttribArray(shader->v_uv);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);

@@ -14,8 +14,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#define RESOLUTION_X 1080
-#define RESOLUTION_Y 720
+#define RESOLUTION_X 1152
+#define RESOLUTION_Y 768
 
 #define UI_RESOLUTION_X 288
 #define UI_RESOLUTION_Y 192
@@ -247,7 +247,7 @@ void game::run()
   glGenTextures(3, &gazo_spritesheet_texture);
 
   #define preffered_filter GL_LINEAR
-  #define preffered_min_filter GL_LINEAR_MIPMAP_NEAREST
+  #define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
   glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
