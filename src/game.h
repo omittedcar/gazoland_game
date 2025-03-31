@@ -2,15 +2,16 @@
 #include "level.h"
 #include <linux/input.h>
 #include "gl_program_info.h"
+#include <dirent.h>
 
 class GLFWwindow;
 
 class game {
  public:
   game() = default;
-
   void run();
   void stop();
+  DIR *game_directory;
 
  private:
   
@@ -56,4 +57,5 @@ class game {
   GLuint framebuffer_texture;
   GLuint depth_texture;
   GLuint gui_texture;
+  void do_shader(const char* name, int shader_type);
 };

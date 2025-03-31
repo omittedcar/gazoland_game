@@ -6,22 +6,22 @@
 #include <GLFW/glfw3.h>
 //#incude <EGL/egl.h>
 //#include <cassert>
-//#include <cstdio>
+#include <stdio.h>
 //#include <fcntl.h>
 //#include <linux/input.h>
 #include <math.h>
 #include <stdlib.h>
 //#include <sys/ioctl.h>
-#include <filesystem>
-#include <unistd.h>
+//#include <filesystem>
+//#include <unistd.h>
 #include <string.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <libgen.h>
+//#include <iostream>
+//#include <fstream>
+//#include <sstream>
+//#include <libgen.h>
 
-#define RESOLUTION_X 360
-#define RESOLUTION_Y 240
+#define RESOLUTION_X 540
+#define RESOLUTION_Y 360
 
 #define UI_WIDTH 40
 #define UI_HEIGHT 24
@@ -29,13 +29,16 @@
 
 namespace
 {
+  /*
   std::filesystem::path root_path;
   void init_root_path() {
     char exe[256];
     readlink("/proc/self/exe", exe, 256);
     root_path = std::filesystem::path(
-      dirname(dirname(exe)));
+      dirname(dirname(exe))
+    );
   }
+  */
 
   double time_step = 1.0 / 480.0;
 
@@ -94,25 +97,19 @@ void dump(uint8_t *data, int size)
 }
 
 
-void do_shader(const char* path, int type) {
-  std::filesystem::path full_path(root_path);
-  full_path /= "src";
-  full_path /= "glsl";
-  full_path /= path;
-  std::ifstream ifs(full_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
-  if(ifs.is_open()) {
-    __asm__("nop");
-  } else {
-    printf("\nsory the file isnt working\n\"%s\"\n", path);
+void do_shader(const char* name, int shader_type) {
+  FILE* fp = fopen(name,"rb");
+  if(fp == NULL) {
+    printf("the file %s didnt work \n", name);
     abort();
   }
+  asm("nop");
 }
 
 void game::run()
 {
-  init_root_path();
-
-  info_log = (char*) malloc(69420);
+  //info_log = (char*) malloc(69420);
+  printf("the file descriptor is the %i\n",dirfd(game_directory));
   is_playing = true;
 
   /*
@@ -178,7 +175,7 @@ void game::run()
   fragshader_gui = glCreateShader(GL_FRAGMENT_SHADER);
 
   {
-    do_shader("vert_basic.glsl", GL_FRAGMENT_SHADER);
+    //do_shader("vert_basic.glsl", GL_FRAGMENT_SHADER);
     void *some_pointers[] = {(void *)vert_basic_glsl, nullptr};
     glShaderSource(vertshader_basic, 1, (const char *const *)(some_pointers),
                    nullptr);

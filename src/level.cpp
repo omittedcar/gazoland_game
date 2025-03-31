@@ -26,7 +26,7 @@ void level::draw(
   GLuint gazo_texture, GLuint stone_tile_texture
 ) {
   view = the_gazo.get_center_of_mass_medium_precision();
-  glClearColor(0.015625, 0.015625, 0.0, 1.0);
+  glClearColor(0.25, 0.25, 0.25, 1.0);
   glClearDepthf(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   float aspect = 1.5;
