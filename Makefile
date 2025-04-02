@@ -1,20 +1,16 @@
 
 # Modify for your local system
 
-LLVM := ~/elelviem/LLVM-20.1.0-Linux-X64
-CC := $(LLVM)/bin/clang
-CXX := $(LLVM)/bin/clang++
-#CPPFLAGS := -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13
-CPPFLAGS := -I/home/glebem/elelviem/LLVM-20.1.0-Linux-X64/include/c++/v1 -I/home/glebem/elelviem/LLVM-20.1.0-Linux-X64/include/x86_64-unknown-linux-gnu/c++/v1
-CFLAGS := -std=c23
-#LDFLAGS := -L/lib/x86_64-linux-gnu
-LDFLAGS := -L/usr/lib/x86_64-linux-gnu -L/home/glebem/elelviem/LLVM-20.1.0-Linux-X64/lib/x86_64-unknown-linux-gnu -L/home/glebem/elelviem/LLVM-20.1.0-Linux-X64/lib/clang/20/lib/x86_64-unknown-linux-gnu
-# -fuse-ld=ld.lld
+LLVM := /lib/llvm-19
+
 # Do not modify below this line
 
+CC := $(LLVM)/bin/clang
+CXX := $(LLVM)/bin/clang++
+CFLAGS := -std=c23
 DEBUGFLAGS := -O0 -g
-OBJECTS := resources.o png_decoder.o main.o game.o level.o platform.o gazo.o
-LIBS := -lglfw -lGLESv2 -lEGL 
+OBJECTS := resources.o png_decoder.o main.o game.o level.o platform.o gazo.o gl_program_info.o
+LIBS := -lglfw -lGLESv2 -lEGL -lc++
 
 default : bin/gazoland_for_linux.exe
 

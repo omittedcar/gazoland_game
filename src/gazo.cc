@@ -554,8 +554,8 @@ void gazo::render(
   glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  glDrawArrays(GL_LINE_LOOP, 1, n_sides);
-  glDisable(GL_BLEND);
+  //glDrawArrays(GL_LINE_LOOP, 1, n_sides);
+  //glDisable(GL_BLEND);
   glLineWidth(1);
   glDrawArrays(GL_LINE_LOOP, 1, n_sides);
 

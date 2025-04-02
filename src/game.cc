@@ -10,6 +10,7 @@
 //#include <fcntl.h>
 //#include <linux/input.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 //#include <sys/ioctl.h>
 #include <filesystem>
@@ -17,11 +18,11 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#include <sstream>
+//#include <sstream>
 #include <libgen.h>
 
-#define RESOLUTION_X 360
-#define RESOLUTION_Y 240
+#define RESOLUTION_X 1080
+#define RESOLUTION_Y 720
 
 #define UI_WIDTH 40
 #define UI_HEIGHT 24
@@ -78,8 +79,6 @@ namespace
 
 #define CHECK_GL() maybe_print_error(__FILE__, __LINE__)
 
-} // namespace
-
 void dump(uint8_t *data, int size)
 {
   for (int i = 0; i < size; i++)
@@ -93,20 +92,23 @@ void dump(uint8_t *data, int size)
   printf("\n");
 }
 
-
-void do_shader(const char* path, int type) {
+GLuint load_shader_source(const char* path, int type) {
+  GLuint result = glCreateShader(type);
   std::filesystem::path full_path(root_path);
   full_path /= "src";
   full_path /= "glsl";
   full_path /= path;
-  std::ifstream ifs(full_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
-  if(ifs.is_open()) {
-    __asm__("nop");
-  } else {
-    printf("\nsory the file isnt working\n\"%s\"\n", path);
-    abort();
-  }
+  std::cout << "loading shader " << full_path.string() << std::endl;
+  std::ifstream ifs(full_path.string(), std::ios::in);
+  std::ostringstream oss;
+  oss << ifs.rdbuf();
+  std::string shader_source(oss.str());
+  const char* shader_source_c = shader_source.c_str();
+  glShaderSource(result, 1, &shader_source_c, nullptr);
+  return result;
 }
+
+} // namespace
 
 void game::run()
 {
@@ -169,99 +171,41 @@ void game::run()
   );
   glfwSetKeyCallback(window, key_handler);
   glfwMakeContextCurrent(window);
-  vertshader_basic = glCreateShader(GL_VERTEX_SHADER);
-  vertshader_gazo = glCreateShader(GL_VERTEX_SHADER);
-  vertshader_3d = glCreateShader(GL_VERTEX_SHADER);
-  vertshader_no_uv_map = glCreateShader(GL_VERTEX_SHADER);
-  fragshader_basic = glCreateShader(GL_FRAGMENT_SHADER);
-  fragshader_gamma = glCreateShader(GL_FRAGMENT_SHADER);
-  fragshader_gui = glCreateShader(GL_FRAGMENT_SHADER);
 
-  {
-    do_shader("vert_basic.glsl", GL_FRAGMENT_SHADER);
-    void *some_pointers[] = {(void *)vert_basic_glsl, nullptr};
-    glShaderSource(vertshader_basic, 1, (const char *const *)(some_pointers),
-                   nullptr);
-    *some_pointers = (void *)vert_gazo_glsl;
-    glShaderSource(vertshader_gazo, 1, (const char *const *)(some_pointers),
-                   nullptr);
-    *some_pointers = (void *)vert_3d_glsl;
-    glShaderSource(vertshader_3d, 1, (const char *const *)some_pointers,
-                   nullptr);
-    *some_pointers = (void *)vert_no_uv_map_glsl;
-    glShaderSource(vertshader_no_uv_map, 1, (const char *const *)some_pointers,
-                   nullptr);
-    *some_pointers = (void *)frag_basic_glsl;
-    glShaderSource(fragshader_basic, 1, (const char *const *)some_pointers,
-                   nullptr);
-    *some_pointers = (void *)frag_gamma_glsl;
-    glShaderSource(fragshader_gamma, 1, (const char *const *)some_pointers,
-                   nullptr);
-    *some_pointers = (void *)frag_gui_glsl;
-    glShaderSource(fragshader_gui, 1, (const char *const *)some_pointers,
-                   nullptr);
-  };
-  CHECK_GL();
-  glCompileShader(vertshader_basic);
-  CHECK_GL();
-  glCompileShader(vertshader_gazo);
-  CHECK_GL();
-  glCompileShader(vertshader_no_uv_map);
-  glCompileShader(vertshader_3d);
-  CHECK_GL();
-  glCompileShader(fragshader_basic);
-  CHECK_GL();
-  glCompileShader(fragshader_gamma);
-  glCompileShader(fragshader_gui);
-  CHECK_GL();
-  gazo_shader_info.shader = glCreateProgram();
-  terrain_shader_info.shader = glCreateProgram();
-  polygon_fill_shader_info.shader = glCreateProgram();
-  gui_shader_info.shader = glCreateProgram();
+
+  vertshader_basic    = load_shader_source("vert_basic.glsl", GL_VERTEX_SHADER);
+  vertshader_gazo     = load_shader_source("vert_gazo.glsl", GL_VERTEX_SHADER);
+  vertshader_3d       = load_shader_source("vert_3d.glsl", GL_VERTEX_SHADER);
+  vertshader_no_uv_map= load_shader_source("vert_no_uv_map.glsl", GL_VERTEX_SHADER);
+  fragshader_basic    = load_shader_source("frag_basic.glsl", GL_FRAGMENT_SHADER);
+  fragshader_gamma    = load_shader_source("frag_gamma.glsl", GL_FRAGMENT_SHADER);
+  fragshader_gui      = load_shader_source("frag_gui.glsl", GL_FRAGMENT_SHADER);
+  gazo_shader_info.link(
+    vertshader_gazo, fragshader_basic,
+    "view", "projection", "the_texture",
+    "pos", "vert_uv"
+  );
+  terrain_shader_info.link(
+    vertshader_3d, fragshader_basic,
+    "view_pos", "projection_matrix", "the_texture",
+    "pos", "vertex_uv"
+  );
+  polygon_fill_shader_info.link(
+    vertshader_no_uv_map, fragshader_basic,
+    "view_pos", "projection_matrix", "the_texture",
+    "vertex_pos", nullptr
+  );
+  gui_shader_info.link(
+    vertshader_basic, fragshader_gui,
+    nullptr, nullptr, "the_ui",
+    "pos", nullptr
+  );
   gamma_shader = glCreateProgram();
-  CHECK_GL();
-  glAttachShader(gazo_shader_info.shader, vertshader_gazo);
-  glAttachShader(gazo_shader_info.shader, fragshader_basic);
-  glAttachShader(terrain_shader_info.shader, vertshader_3d);
-  glAttachShader(terrain_shader_info.shader, fragshader_basic);
-  glAttachShader(polygon_fill_shader_info.shader, vertshader_no_uv_map);
-  glAttachShader(polygon_fill_shader_info.shader, fragshader_basic);
   glAttachShader(gamma_shader, vertshader_basic);
   glAttachShader(gamma_shader, fragshader_gamma);
-  glAttachShader(gui_shader_info.shader, vertshader_basic);
-  glAttachShader(gui_shader_info.shader, fragshader_gui);
-  glLinkProgram(gazo_shader_info.shader);
-  CHECK_GL();
-
-  gazo_shader_info.u_panning = glGetUniformLocation(gazo_shader_info.shader, "view");
-  gazo_shader_info.u_projection = glGetUniformLocation(gazo_shader_info.shader, "projection");
-  gazo_shader_info.u_texture = glGetUniformLocation(gazo_shader_info.shader, "the_texture");
-  gazo_shader_info.v_pos = glGetAttribLocation(gazo_shader_info.shader, "pos");
-  gazo_shader_info.v_uv = glGetAttribLocation(gazo_shader_info.shader, "vert_uv");
-
-  
-  glLinkProgram(terrain_shader_info.shader);
-  
-  terrain_shader_info.u_panning = glGetUniformLocation(terrain_shader_info.shader, "view_pos");
-  terrain_shader_info.u_projection = glGetUniformLocation(terrain_shader_info.shader, "projection_matrix");
-  terrain_shader_info.u_texture = glGetUniformLocation(terrain_shader_info.shader, "the_texture");
-  terrain_shader_info.v_pos = glGetAttribLocation(terrain_shader_info.shader, "pos");
-  terrain_shader_info.v_uv = glGetAttribLocation(terrain_shader_info.shader, "vertex_uv");
-
-  glLinkProgram(polygon_fill_shader_info.shader);
-  
-  polygon_fill_shader_info.u_panning = glGetUniformLocation(polygon_fill_shader_info.shader, "view_pos");
-  polygon_fill_shader_info.u_projection = glGetUniformLocation(polygon_fill_shader_info.shader, "projection_matrix");
-  polygon_fill_shader_info.u_texture = glGetUniformLocation(polygon_fill_shader_info.shader, "the_texture");
-  polygon_fill_shader_info.v_pos = glGetAttribLocation(polygon_fill_shader_info.shader, "vertex_pos");
-  CHECK_GL();
-  glLinkProgram(gui_shader_info.shader);
-  CHECK_GL();
-  gui_shader_info.u_texture = glGetUniformLocation(gui_shader_info.shader, "the_ui");
-  CHECK_GL();
-  gui_shader_info.v_pos = glGetAttribLocation(gui_shader_info.shader, "pos");
-  CHECK_GL();
   glLinkProgram(gamma_shader);
+
+
   {
     float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
                           -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};

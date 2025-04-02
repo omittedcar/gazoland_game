@@ -2,6 +2,7 @@
 #include "level.h"
 #include <linux/input.h>
 #include "gl_program_info.h"
+#include <memory>
 
 class GLFWwindow;
 
