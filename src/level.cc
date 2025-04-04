@@ -1,11 +1,32 @@
 #include "level.h"
+#include "path.h"
 #include "gl_or_gles.h"
 
-void level::construct() {
+#include <iostream>
+#include <fstream>
+
+void level::construct(const char* file_name) {
+  std::filesystem::path full_path(root_path());
+  full_path /= "assets";
+  full_path /= "levels";
+  full_path /= file_name;
+  std::ifstream ifs(full_path.string(), std::ios::in);
+  ifs.seekg(3);
+  uint8_t level_size;
+  ifs >> level_size;
+  printf("the level is %i big \n", level_size);
+  for (size_t i = 0; i < 16; i++) {
+    unsigned char c;
+    ifs >> c;
+    printf("0x%x ", c);
+  }
+  printf("\n");
+
   the_gazo.init();
   the_platform.arise();
 }
 void level::demolish() {
+  fclose(the_file);
   the_gazo.kill_to_death();
   the_platform.demolish();
 }

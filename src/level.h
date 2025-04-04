@@ -1,9 +1,12 @@
 #include "gazo.h"
 #include "platform.h"
 #include "gl_program_info.h"
+#include <stdio.h>
+#include <stdlib.h>
+
 class level {
 public:
-  void construct();
+  void construct(const char* file_name);
   void demolish();
   void time_step();
   void control_gazo(float left_stick_x, float left_stick_y, float right_stick_x,
@@ -15,6 +18,7 @@ public:
   );
 
 private:
+  FILE* the_file;
   gazo the_gazo;
   platform the_platform;
   fvec2 view = {0.0, 0.0};

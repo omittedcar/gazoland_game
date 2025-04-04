@@ -9,7 +9,7 @@ CC := $(LLVM)/bin/clang
 CXX := $(LLVM)/bin/clang++
 CFLAGS := -std=c23
 DEBUGFLAGS := -O0 -g
-OBJECTS := resources.o png_decoder.o main.o game.o level.o platform.o gazo.o gl_program_info.o
+OBJECTS := resources.o path.o png_decoder.o main.o game.o level.o platform.o gazo.o gl_program_info.o
 LIBS := -lglfw -lGLESv2 -lEGL -lc++
 
 default : bin/gazoland_for_linux.exe

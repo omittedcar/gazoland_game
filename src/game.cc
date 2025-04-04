@@ -2,6 +2,7 @@
 #include "./resources.h"
 #include "gl_or_gles.h"
 #include "png_decoder.h"
+#include "path.h"
 
 #include <GLFW/glfw3.h>
 //#incude <EGL/egl.h>
@@ -13,7 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 //#include <sys/ioctl.h>
-#include <filesystem>
 #include <unistd.h>
 #include <string.h>
 #include <iostream>
@@ -21,23 +21,14 @@
 //#include <sstream>
 #include <libgen.h>
 
-#define RESOLUTION_X 1080
-#define RESOLUTION_Y 720
+#define RESOLUTION_X 720
+#define RESOLUTION_Y 480
 
 #define UI_WIDTH 40
 #define UI_HEIGHT 24
 #define UI_BYTES 0x9000
 
-namespace
-{
-  std::filesystem::path root_path;
-  void init_root_path() {
-    char exe[256];
-    readlink("/proc/self/exe", exe, 256);
-    root_path = std::filesystem::path(
-      dirname(dirname(exe)));
-  }
-
+namespace {
   double time_step = 1.0 / 480.0;
 
   bool collision_has_occurred = false;
@@ -94,7 +85,7 @@ void dump(uint8_t *data, int size)
 
 GLuint load_shader_source(const char* path, int type) {
   GLuint result = glCreateShader(type);
-  std::filesystem::path full_path(root_path);
+  std::filesystem::path full_path(root_path());
   full_path /= "src";
   full_path /= "glsl";
   full_path /= path;
@@ -112,8 +103,6 @@ GLuint load_shader_source(const char* path, int type) {
 
 void game::run()
 {
-  init_root_path();
-
   info_log = (char*) malloc(69420);
   is_playing = true;
 
@@ -247,7 +236,7 @@ void game::run()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, UI_WIDTH * 16, UI_HEIGHT, 0,
                GL_RED, GL_UNSIGNED_BYTE, lettering);
   CHECK_GL();
-  the_level.construct();
+  the_level.construct("test_level.mechanism");
   glGenTextures(3, &gazo_spritesheet_texture);
 
   glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
@@ -364,7 +353,7 @@ void game::the_monitor_has_refreshed_again()
   // rumbleinator.code = rumble_effect.id;
   // write(rumbly_file_descriptor, (const void*) &rumbleinator,
   // sizeof(rumbleinator));
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 7; i++)
   {
     function_which_is_called_480hz();
   }
