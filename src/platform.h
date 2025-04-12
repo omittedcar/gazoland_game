@@ -7,7 +7,7 @@
 
 class platform {
  public:
-  void arise();
+  void arise(fvec2* corners_in, int side_count_in);
   void demolish();
   void draw(
     gl_program_info* surface_shader,
@@ -26,8 +26,8 @@ class platform {
   GLuint vertex_uv_buffer;
   GLuint vertex_pos_buffer;
   GLuint corner_vertex_buffer;
-  GLuint face_index_buffer;
-  GLuint face_index_buffer_b;
+  GLuint upper_surface_index_buffer;
+  GLuint lower_surface_index_buffer;
   GLuint inner_face_index_buffer;
   void compute_bounding_box();
   void do_vertex_buffers();

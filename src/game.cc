@@ -22,10 +22,10 @@
 #include <libgen.h>
 
 #define RESOLUTION_X 720
-#define RESOLUTION_Y 480
+#define RESOLUTION_Y 360
 
-#define UI_WIDTH 40
-#define UI_HEIGHT 24
+#define UI_WIDTH 36
+#define UI_HEIGHT 20
 #define UI_BYTES 0x9000
 
 namespace {
@@ -353,7 +353,7 @@ void game::the_monitor_has_refreshed_again()
   // rumbleinator.code = rumble_effect.id;
   // write(rumbly_file_descriptor, (const void*) &rumbleinator,
   // sizeof(rumbleinator));
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 6; i++)
   {
     function_which_is_called_480hz();
   }

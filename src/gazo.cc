@@ -47,7 +47,7 @@ double outer_stiffness = 0x1800;
 double outer_damping = 0x60;
 
 //the power of each of the gazo's muscles. (W)
-double muscle_power = 0x100;
+double muscle_power = 0x1000;
 
 double inner_stiffness = 0x800; //0x600
 double inner_damping = 0x10;
@@ -61,7 +61,7 @@ double drag_factor = 0x3;
 
 double outer_vertex_mass = outer_mass / n_sides;
 
-double dash_speed = 2.5;
+double dash_speed = 3.25;
 
 double radius = 0.2;
 
@@ -554,8 +554,8 @@ void gazo::render(
   glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  //glDrawArrays(GL_LINE_LOOP, 1, n_sides);
-  //glDisable(GL_BLEND);
+  glDrawArrays(GL_LINE_LOOP, 1, n_sides);
+  glDisable(GL_BLEND);
   glLineWidth(1);
   glDrawArrays(GL_LINE_LOOP, 1, n_sides);
 
