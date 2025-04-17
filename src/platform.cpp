@@ -162,16 +162,16 @@ void platform::do_vertex_buffers() {
       a_to_b.y * inverse_distacne,
       -a_to_b.x * inverse_distacne
     };
-    uv_x_next = uv_x + distance_accross / 1.5;
+    uv_x_next = uv_x + distance_accross / 1.0;
 
-    vertexes[i * 24] = corner_a.x + normal.x * 0.25;
-    vertexes[i * 24 + 1] = corner_a.y + normal.y * 0.25;
+    vertexes[i * 24] = corner_a.x + normal.x * 0.375;
+    vertexes[i * 24 + 1] = corner_a.y + normal.y * 0.375;
     vertexes[i * 24 + 2] = 0.0;
     uvs[i * 16] = uv_x;
     uvs[i * 16 + 1] = 0.0;
 
-    vertexes[i * 24 + 3] = corner_b.x + normal.x * 0.25;
-    vertexes[i * 24 + 4] = corner_b.y + normal.y * 0.25;
+    vertexes[i * 24 + 3] = corner_b.x + normal.x * 0.375;
+    vertexes[i * 24 + 4] = corner_b.y + normal.y * 0.375;
     vertexes[i * 24 + 5] = 0.0;
     uvs[i * 16 + 2] = uv_x_next;
     uvs[i * 16 + 3] = 0.0;
@@ -180,34 +180,34 @@ void platform::do_vertex_buffers() {
     vertexes[i * 24 + 7] = corner_a.y;
     vertexes[i * 24 + 8] = -0.25;
     uvs[i * 16 + 4] = uv_x;
-    uvs[i * 16 + 5] = 0.33333251;
+    uvs[i * 16 + 5] = 0.375;
 
     vertexes[i * 24 + 9] = corner_b.x;
     vertexes[i * 24 + 10] = corner_b.y;
     vertexes[i * 24 + 11] = -0.25;
     uvs[i * 16 + 6] = uv_x_next;
-    uvs[i * 16 + 7] = 0.33333251;
+    uvs[i * 16 + 7] = 0.375;
 
-    vertexes[i * 24 + 12] = corner_a.x - normal.x * 0.25;
-    vertexes[i * 24 + 13] = corner_a.y - normal.y * 0.25;
+    vertexes[i * 24 + 12] = corner_a.x - normal.x * 0.125;
+    vertexes[i * 24 + 13] = corner_a.y - normal.y * 0.125;
     vertexes[i * 24 + 14] = 0.0;
     uvs[i * 16 + 8] = uv_x;
-    uvs[i * 16 + 9] = 0.66668324;
+    uvs[i * 16 + 9] = 0.5;
 
-    vertexes[i * 24 + 15] = corner_b.x - normal.x * 0.25;
-    vertexes[i * 24 + 16] = corner_b.y - normal.y * 0.25;
+    vertexes[i * 24 + 15] = corner_b.x - normal.x * 0.125;
+    vertexes[i * 24 + 16] = corner_b.y - normal.y * 0.125;
     vertexes[i * 24 + 17] = 0.0;
     uvs[i * 16 + 10] = uv_x_next;
-    uvs[i * 16 + 11] = 0.66668324;
+    uvs[i * 16 + 11] = 0.5;
 
-    vertexes[i * 24 + 18] = corner_a.x - normal.x * 0.5;
-    vertexes[i * 24 + 19] = corner_a.y - normal.y * 0.5;
+    vertexes[i * 24 + 18] = corner_a.x - normal.x * 0.625;
+    vertexes[i * 24 + 19] = corner_a.y - normal.y * 0.625;
     vertexes[i * 24 + 20] = 0.25;
     uvs[i * 16 + 12] = uv_x;
     uvs[i * 16 + 13] = 1.0;
 
-    vertexes[i * 24 + 21] = corner_b.x - normal.x * 0.5;
-    vertexes[i * 24 + 22] = corner_b.y - normal.y * 0.5;
+    vertexes[i * 24 + 21] = corner_b.x - normal.x * 0.625;
+    vertexes[i * 24 + 22] = corner_b.y - normal.y * 0.625;
     vertexes[i * 24 + 23] = 0.25;
     uvs[i * 16 + 14] = uv_x_next;
     uvs[i * 16 + 15] = 1.0;
