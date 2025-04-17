@@ -86,7 +86,7 @@ void dump(uint8_t *data, int size)
 GLuint load_shader_source(const char* path, int type) {
   GLuint result = glCreateShader(type);
   std::filesystem::path full_path(root_path());
-  full_path /= "src";
+  full_path /= "assets";
   full_path /= "glsl";
   full_path /= path;
   std::cout << "loading shader " << full_path.string() << std::endl;
@@ -294,13 +294,21 @@ void game::stop()
 void game::the_monitor_has_refreshed_again()
 {
   // if(frame_counter % 30 == 0) {
+  glfwPollEvents();
+  for (int i = 0; i < 6; i++) {
+    function_which_is_called_480hz();
+  }
   glfwGetWindowSize(window, &window_width, &window_height);
   int joystick_axis_count;
   vec2 cursor_pos;
   const float *joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
   glfwGetCursorPos(window, &cursor_pos.x, &cursor_pos.y);
-  vec2 cursor_pos_mapped = {(cursor_pos.x - window_width / 2.0) * 8.0 / window_height, -8.0*((cursor_pos.y / window_height)-0.5)};
-  float distance_squared = cursor_pos_mapped.x * cursor_pos_mapped.x + cursor_pos_mapped.y * cursor_pos_mapped.y;
+  vec2 cursor_pos_mapped = {
+    (cursor_pos.x - window_width / 2.0) * 8.0 / window_height,
+    -8.0*((cursor_pos.y / window_height)-0.5)
+  };
+  float distance_squared = cursor_pos_mapped.x * cursor_pos_mapped.x
+    + cursor_pos_mapped.y * cursor_pos_mapped.y;
   if(distance_squared > 1.0) {
     double inverse_distance = 1 / sqrt(distance_squared); // theres a machine instruction >:(
     cursor_pos_mapped.x *= inverse_distance;
@@ -353,12 +361,7 @@ void game::the_monitor_has_refreshed_again()
   // rumbleinator.code = rumble_effect.id;
   // write(rumbly_file_descriptor, (const void*) &rumbleinator,
   // sizeof(rumbleinator));
-    for (int i = 0; i < 6; i++)
-  {
-    function_which_is_called_480hz();
-  }
   glfwSwapBuffers(window);
-  glfwPollEvents();
   frame_counter++;
 }
 
