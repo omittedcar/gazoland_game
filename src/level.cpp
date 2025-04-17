@@ -1,11 +1,60 @@
 #include "level.h"
+#include "path.h"
 #include "gl_or_gles.h"
 
-void level::construct() {
+#include <iostream>
+#include <fstream>
+
+void level::construct(const char* file_name) {
+  std::filesystem::path full_path(root_path());
+  full_path /= "assets";
+  full_path /= "levels";
+  full_path /= file_name;
+  std::ifstream ifs(full_path.string(), std::ios::in);
+  ifs >> std::noskipws;
+  ifs.seekg(3);
+  unsigned char level_size;
+  
+  ifs >> level_size;
+  printf("the level is %i big \n", level_size);
+  fvec2* platform_corners = (fvec2*) malloc(level_size * sizeof(fvec2));
+  //platform_corners[0] = {-0.9, -1.0};
+  //platform_corners[1] = {-1.0, -1.1};
+  //platform_corners[2] = {-1.0, -1.9};
+  //platform_corners[3] = {-0.9, -2.0};
+  //platform_corners[4] = {+0.9, -2.0};
+  //platform_corners[5] = {+1.0, -1.9};
+  //platform_corners[6] = {+1.0, -1.1};
+  //platform_corners[7] = {+0.9, -1.0};
+
+  
+  //this gets freed by the platform bc im a bad coder
+
+  for(int i = 0; i < level_size; i++) {
+    unsigned char the_char;
+    ifs >> the_char;
+    printf("%02hhx", the_char);
+    platform_corners[i].x = float((int(the_char) - 0x80) * 4);
+    ifs >> the_char;
+    printf("%02hhx ",the_char);
+    platform_corners[i].x += float(the_char) / 64.0;
+    ifs >> the_char;
+    printf("%02hhx",the_char);
+    platform_corners[i].y = float((int(the_char) - 0x80) * 4);
+    ifs >> the_char;
+    printf("%02hhx",the_char);
+    platform_corners[i].y += float(the_char) / 64.0;
+    printf("    %f",platform_corners[i].x);
+    printf(" %f\n",platform_corners[i].y);
+  }
+  
+  printf("\n");
+
   the_gazo.init();
-  the_platform.arise();
+  the_platform.arise(platform_corners, level_size);
 }
 void level::demolish() {
+  fclose(the_file);
   the_gazo.kill_to_death();
   the_platform.demolish();
 }
@@ -26,10 +75,10 @@ void level::draw(
   GLuint gazo_texture, GLuint stone_tile_texture
 ) {
   view = the_gazo.get_center_of_mass_medium_precision();
-  glClearColor(0.25, 0.25, 0.25, 1.0);
+  glClearColor(0.5, 0.5, 0.5, 1.0);
   glClearDepthf(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  float aspect = 1.5;
+  float aspect = 2.0;
   float fov = 4.0;
   float projection_matrix[020] = {
       1 / aspect / fov, 0, 0, 0, 0, 1 / fov, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};

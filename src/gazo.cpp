@@ -47,7 +47,7 @@ double outer_stiffness = 0x1800;
 double outer_damping = 0x60;
 
 //the power of each of the gazo's muscles. (W)
-double muscle_power = 0x100;
+double muscle_power = 0x1000;
 
 double inner_stiffness = 0x800; //0x600
 double inner_damping = 0x10;
@@ -61,7 +61,7 @@ double drag_factor = 0x3;
 
 double outer_vertex_mass = outer_mass / n_sides;
 
-double dash_speed = 2.25;
+double dash_speed = 3.25;
 
 double radius = 0.2;
 
@@ -542,7 +542,7 @@ void gazo::render(
 
   choose_sprite();
   glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
-  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, (void*) (uv_map_offset * 0x80));
+  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, (void*) (long long int) (uv_map_offset * 0x80));
   glEnableVertexAttribArray(shader->v_uv);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);

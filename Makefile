@@ -1,18 +1,16 @@
 
 # Modify for your local system
 
-LLVM := /usr/lib/llvm-19
-CC := $(LLVM)/bin/clang
-CXX := $(LLVM)/bin/clang++
-CPPFLAGS := -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13
-CFLAGS := -std=c23
-LDFLAGS := -L/lib/x86_64-linux-gnu
+LLVM := /lib/llvm-19
 
 # Do not modify below this line
 
+CC := $(LLVM)/bin/clang
+CXX := $(LLVM)/bin/clang++
+CFLAGS := -std=c23
 DEBUGFLAGS := -O0 -g
-OBJECTS := resources.o png_decoder.o main.o game.o level.o platform.o gazo.o
-LIBS := -lglfw -lGLESv2 -lEGL 
+OBJECTS := resources.o path.o png_decoder.o main.o game.o level.o platform.o gazo.o gl_program_info.o
+LIBS := -lglfw -lGLESv2 -lEGL -lc++
 
 default : bin/gazoland_for_linux.exe
 

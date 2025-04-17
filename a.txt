@@ -1,0 +1,74 @@
+loading shader /home/glebem/Desktop/gazoland_game/src/glsl/vert_basic.glsl
+loading shader /home/glebem/Desktop/gazoland_game/src/glsl/vert_gazo.glsl
+loading shader /home/glebem/Desktop/gazoland_game/src/glsl/vert_3d.glsl
+loading shader /home/glebem/Desktop/gazoland_game/src/glsl/vert_no_uv_map.glsl
+loading shader /home/glebem/Desktop/gazoland_game/src/glsl/frag_basic.glsl
+loading shader /home/glebem/Desktop/gazoland_game/src/glsl/frag_gamma.glsl
+loading shader /home/glebem/Desktop/gazoland_game/src/glsl/frag_gui.glsl
+4
+the level is 61 big 
+8656 8339
+8655 8405
+865d 840e
+86d1 840e
+86d8 84bc
+86e0 84c4
+8873 84bf
+887b 84b6
+887a 8458
+89fa 8457
+89fb 84af
+8a04 84b7
+8ad2 84b7
+8ada 84af
+8aba 7f83
+8ab1 7f7a
+7fe0 7f9c
+7fd7 7fa5
+7fd9 7fcb
+7fe2 7fd4
+8055 7fd5
+8081 80ae
+808a 80b6
+80d1 80bf
+80fa 8182
+8103 8189
+81cc 818f
+824d 820b
+8258 820f
+8347 8206
+83a3 8265
+83ae 8269
+848b 8266
+8529 81e3
+8583 80f3
+8627 802d
+871b 8002
+87da 8025
+883b 8091
+8846 8096
+8879 808f
+8881 8086
+8885 805a
+8a68 8040
+8a60 80cf
+888a 80e6
+8882 80ef
+888e 83c8
+8686 83dc
+8690 82f2
+880e 82d3
+8816 82ca
+8804 8153
+87fc 814a
+8668 8149
+865f 8152
+8659 82fe
+8575 82da
+856c 82e1
+856a 8302
+8571 830b
+
+channel: 3
+channel: 4
+channel: 3

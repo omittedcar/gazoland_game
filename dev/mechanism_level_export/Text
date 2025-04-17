@@ -1,0 +1,30 @@
+import bpy
+import math
+new_file = open("./level2.mechanism", "wb")
+the_array_of_stuff = bytearray()
+
+i = 0
+
+the_thing = bpy.context.active_object.to_mesh()
+the_polygon = the_thing.polygons[0]
+the_vertex_count = len(the_polygon.vertices)
+
+the_array_of_stuff.extend([0,0,0,the_vertex_count]);
+
+def float_to_bigendian_short(x):
+    return [
+        int(math.floor((x/4) + 0x80)),
+        int(math.floor(((x/4) % 1) * 0x100))
+    ]
+
+while i < the_vertex_count:
+    the_vertex = the_thing.vertices[the_polygon.vertices[i]]
+    the_x_coordinate = float_to_bigendian_short(the_vertex.co[0])
+    the_y_coordinate = float_to_bigendian_short(the_vertex.co[1])
+    the_array_of_stuff.extend(list(the_x_coordinate))
+    print(the_x_coordinate)
+    the_array_of_stuff.extend(list(the_y_coordinate))
+    i = i + 1
+
+new_file.write(the_array_of_stuff)
+new_file.close()

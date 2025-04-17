@@ -5,18 +5,10 @@
 #include <math.h>
 #include <stdio.h>
 
-void platform::arise() {
-  side_count = 9;
-  corners = (fvec2*) malloc(side_count * 2 * sizeof(fvec2));
-  corners[0] = {-4.875,1.0};
-  corners[1] = {-5.0,0.875};
-  corners[2] = {-5.0,-4.875};
-  corners[3] = {-4.875,-5.0};
-  corners[4] = {4.875,-5.0};
-  corners[5] = {5.0,-4.875};
-  corners[6] = {5.0,-1.375};
-  corners[7] = {4.875,-1.25};
-  corners[8] = {0.0, -1.25};
+void platform::arise(fvec2* corners_in, int side_count_in) {
+  side_count = side_count_in;
+  corners = corners_in;
+
   compute_bounding_box();
   glGenBuffers(6, &vertex_uv_buffer);
   do_vertex_buffers();
@@ -44,8 +36,8 @@ void platform::draw(
   glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(surface_shader->v_uv);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer);
-  glDrawElements(GL_TRIANGLES, side_count * 12, GL_UNSIGNED_SHORT, nullptr);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer);
+  glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
   glDisableVertexAttribArray(surface_shader->v_pos);
   glDisableVertexAttribArray(surface_shader->v_uv);
   
@@ -73,7 +65,7 @@ void platform::draw(
   
   glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(surface_shader->v_uv);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer_b);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer);
   //glEnable(GL_BLEND);
   glBindTexture(GL_TEXTURE_2D, 5);
   glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
@@ -141,12 +133,18 @@ vec2 platform::shortest_path(vec2 p0) {
 }
 
 void platform::do_vertex_buffers() {
-  float* vertexes = (float*) malloc(side_count * 24 * sizeof(float));
-  float* uvs = (float*) malloc(side_count * 16 * sizeof(float));
-  unsigned short* indexes = (unsigned short*) malloc(side_count * 12 * sizeof(unsigned short));
+  //one rectangle-pair per side, each rectangle-pair is 6 verts.
+  //so the vertex count is the side count times six
+  float* vertexes = (float*) malloc(side_count * 18 * sizeof(float)); 
+  float* uvs = (float*) malloc(side_count * 12 * sizeof(float));
+  //two triangles per rectangle, three indexes per triangle.
+  unsigned short* indexes = (unsigned short*) malloc(side_count * 6 * sizeof(unsigned short));
   unsigned short* indexes_b = (unsigned short*) malloc(side_count * 6 * sizeof(unsigned short));
   float uv_x = 0.0;
   float uv_x_next = 0.0;
+
+  //the surfaces of the platform occupy the interval of depth from 
+  //from -0.25 to 0.0
 
   for(int i = 0; i < side_count; i++) {
     fvec2 corner_a = corners[i];
@@ -164,92 +162,81 @@ void platform::do_vertex_buffers() {
     };
     uv_x_next = uv_x + distance_accross / 1.0;
 
-    vertexes[i * 24] = corner_a.x + normal.x * 0.375;
-    vertexes[i * 24 + 1] = corner_a.y + normal.y * 0.375;
-    vertexes[i * 24 + 2] = 0.0;
-    uvs[i * 16] = uv_x;
-    uvs[i * 16 + 1] = 0.0;
+    //the first two vertices of the rectangle pair are 375mm above the surface:
+    vertexes[i * 18] = corner_a.x + normal.x * 0.375;
+    vertexes[i * 18 + 1] = corner_a.y + normal.y * 0.375;
+    vertexes[i * 18 + 2] = 0.0;
+    uvs[i * 12] = uv_x;
+    uvs[i * 12 + 1] = 0.0;
+    vertexes[i * 18 + 3] = corner_b.x + normal.x * 0.375;
+    vertexes[i * 18 + 4] = corner_b.y + normal.y * 0.375;
+    vertexes[i * 18 + 5] = 0.0;
+    uvs[i * 12 + 2] = uv_x_next;
+    uvs[i * 12 + 3] = 0.0;
 
-    vertexes[i * 24 + 3] = corner_b.x + normal.x * 0.375;
-    vertexes[i * 24 + 4] = corner_b.y + normal.y * 0.375;
-    vertexes[i * 24 + 5] = 0.0;
-    uvs[i * 16 + 2] = uv_x_next;
-    uvs[i * 16 + 3] = 0.0;
+//    1==--------------0
+//    |  ^^^^----____  |
+//    3==------------**2
+//    |  ^^^^----____  |
+//    5--------------**4
+//
 
-    vertexes[i * 24 + 6] = corner_a.x;
-    vertexes[i * 24 + 7] = corner_a.y;
-    vertexes[i * 24 + 8] = -0.25;
-    uvs[i * 16 + 4] = uv_x;
-    uvs[i * 16 + 5] = 0.375;
+// the next two are 125mm below the surface
+    vertexes[i * 18 + 6] = corner_a.x - normal.x * .125;
+    vertexes[i * 18 + 7] = corner_a.y - normal.y * .125;
+    vertexes[i * 18 + 8] = -0.25;
+    uvs[i * 12 + 4] = uv_x;
+    uvs[i * 12 + 5] = 0.5;
 
-    vertexes[i * 24 + 9] = corner_b.x;
-    vertexes[i * 24 + 10] = corner_b.y;
-    vertexes[i * 24 + 11] = -0.25;
-    uvs[i * 16 + 6] = uv_x_next;
-    uvs[i * 16 + 7] = 0.375;
+    vertexes[i * 18 + 9] = corner_b.x - normal.x * .125;
+    vertexes[i * 18 + 10] = corner_b.y - normal.y * .125;
+    vertexes[i * 18 + 11] = -0.25;
+    uvs[i * 12 + 6] = uv_x_next;
+    uvs[i * 12 + 7] = 0.5;
 
-    vertexes[i * 24 + 12] = corner_a.x - normal.x * 0.125;
-    vertexes[i * 24 + 13] = corner_a.y - normal.y * 0.125;
-    vertexes[i * 24 + 14] = 0.0;
-    uvs[i * 16 + 8] = uv_x;
-    uvs[i * 16 + 9] = 0.5;
+// and the last two are 625mm below the surface
+    vertexes[i * 18 + 12] = corner_a.x - normal.x * 0.625;
+    vertexes[i * 18 + 13] = corner_a.y - normal.y * 0.625;
+    vertexes[i * 18 + 14] = 0.0;
+    uvs[i * 12 + 8] = uv_x;
+    uvs[i * 12 + 9] = 1.0;
 
-    vertexes[i * 24 + 15] = corner_b.x - normal.x * 0.125;
-    vertexes[i * 24 + 16] = corner_b.y - normal.y * 0.125;
-    vertexes[i * 24 + 17] = 0.0;
-    uvs[i * 16 + 10] = uv_x_next;
-    uvs[i * 16 + 11] = 0.5;
+    vertexes[i * 18 + 15] = corner_b.x - normal.x * 0.625;
+    vertexes[i * 18 + 16] = corner_b.y - normal.y * 0.625;
+    vertexes[i * 18 + 17] = 0.0;
+    uvs[i * 12 + 10] = uv_x_next;
+    uvs[i * 12 + 11] = 1.0;
 
-    vertexes[i * 24 + 18] = corner_a.x - normal.x * 0.625;
-    vertexes[i * 24 + 19] = corner_a.y - normal.y * 0.625;
-    vertexes[i * 24 + 20] = 0.25;
-    uvs[i * 16 + 12] = uv_x;
-    uvs[i * 16 + 13] = 1.0;
+    indexes[i * 3] = i * 6 + 2;
+    indexes[i * 3+1] = i * 6 + 1;
+    indexes[i * 3+2] = i * 6 + 3;
 
-    vertexes[i * 24 + 21] = corner_b.x - normal.x * 0.625;
-    vertexes[i * 24 + 22] = corner_b.y - normal.y * 0.625;
-    vertexes[i * 24 + 23] = 0.25;
-    uvs[i * 16 + 14] = uv_x_next;
-    uvs[i * 16 + 15] = 1.0;
+    indexes[i * 3 + side_count * 3] = i * 6 + 2;
+    indexes[i * 3 + side_count * 3 + 1] = i * 6 + 0;
+    indexes[i * 3 + side_count * 3 + 2] = i * 6 + 1;
 
-    indexes[i * 3] = i * 8 + 2;
-    indexes[i * 3+1] = i * 8 + 3;
-    indexes[i * 3+2] = i * 8 + 4;
+    indexes_b[i * 3 ] = i * 6 + 4;
+    indexes_b[i * 3 +1] = i * 6 + 2;
+    indexes_b[i * 3 +2] = i * 6 + 3;
 
-    indexes[i * 3 + side_count * 3] = i * 8 + 1;
-    indexes[i * 3+ side_count * 3+1] = i * 8 + 2;
-    indexes[i * 3+ side_count * 3+2] = i * 8 + 3;
-
-    indexes[i * 3 + side_count * 6] = i * 8 + 3;
-    indexes[i * 3 + side_count * 6 +1] = i * 8 + 4;
-    indexes[i * 3 + side_count * 6 +2] = i * 8 + 5;
-
-    indexes[i * 3 + side_count * 9] = i * 8 + 0;
-    indexes[i * 3 + side_count * 9 +1] = i * 8 + 1;
-    indexes[i * 3 + side_count * 9 +2] = i * 8 + 2;
-
-    indexes_b[i * 3 ] = i * 8 + 4;
-    indexes_b[i * 3 +1] = i * 8 + 5;
-    indexes_b[i * 3 +2] = i * 8 + 6;
-
-    indexes_b[i * 3 + side_count * 3] = i * 8 + 5;
-    indexes_b[i * 3 + side_count * 3 +1] = i * 8 + 6;
-    indexes_b[i * 3 + side_count * 3 +2] = i * 8 + 7;
+    indexes_b[i * 3 + side_count * 3] = i * 6 + 4;
+    indexes_b[i * 3 + side_count * 3 +1] = i * 6 + 3;
+    indexes_b[i * 3 + side_count * 3 +2] = i * 6 + 5;
 
     uv_x = uv_x_next;
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glBufferData(GL_ARRAY_BUFFER, side_count * 24 * sizeof(float), vertexes, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, side_count * 18 * sizeof(float), vertexes, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
-  glBufferData(GL_ARRAY_BUFFER, side_count * 16 * sizeof(float), uvs, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, side_count * 12 * sizeof(float), uvs, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, side_count * sizeof(fvec2), (float*) corners, GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 12 * sizeof(unsigned short), indexes, GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes, GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, face_index_buffer_b);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes_b, GL_STATIC_DRAW);
   
   free(vertexes);
