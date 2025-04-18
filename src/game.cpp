@@ -83,7 +83,7 @@ void dump(uint8_t *data, int size)
   printf("\n");
 }
 
-GLuint load_shader_source(const char* path, int type) {
+GLuint load_shader_from_file(const char* path, int type) {
   GLuint result = glCreateShader(type);
   std::filesystem::path full_path(root_path());
   full_path /= "assets";
@@ -96,6 +96,9 @@ GLuint load_shader_source(const char* path, int type) {
   std::string shader_source(oss.str());
   const char* shader_source_c = shader_source.c_str();
   glShaderSource(result, 1, &shader_source_c, nullptr);
+  CHECK_GL();
+  glCompileShader(result);
+  CHECK_GL();
   return result;
 }
 
@@ -151,7 +154,7 @@ void game::run()
     "THE MECHANISM\n",
     0
   );
-
+  
   //memcpy(lettering, font + 1, 2048);
   window = glfwCreateWindow(
     RESOLUTION_X, RESOLUTION_Y,
@@ -161,40 +164,47 @@ void game::run()
   glfwSetKeyCallback(window, key_handler);
   glfwMakeContextCurrent(window);
 
-
-  vertshader_basic    = load_shader_source("vert_basic.glsl", GL_VERTEX_SHADER);
-  vertshader_gazo     = load_shader_source("vert_gazo.glsl", GL_VERTEX_SHADER);
-  vertshader_3d       = load_shader_source("vert_3d.glsl", GL_VERTEX_SHADER);
-  vertshader_no_uv_map= load_shader_source("vert_no_uv_map.glsl", GL_VERTEX_SHADER);
-  fragshader_basic    = load_shader_source("frag_basic.glsl", GL_FRAGMENT_SHADER);
-  fragshader_gamma    = load_shader_source("frag_gamma.glsl", GL_FRAGMENT_SHADER);
-  fragshader_gui      = load_shader_source("frag_gui.glsl", GL_FRAGMENT_SHADER);
+  
+  vertshader_basic    = load_shader_from_file("vert_basic.glsl", GL_VERTEX_SHADER);
+  vertshader_gazo     = load_shader_from_file("vert_gazo.glsl", GL_VERTEX_SHADER);
+  vertshader_3d       = load_shader_from_file("vert_3d.glsl", GL_VERTEX_SHADER);
+  vertshader_no_uv_map= load_shader_from_file("vert_no_uv_map.glsl", GL_VERTEX_SHADER);
+  fragshader_basic    = load_shader_from_file("frag_basic.glsl", GL_FRAGMENT_SHADER);
+  fragshader_gamma    = load_shader_from_file("frag_gamma.glsl", GL_FRAGMENT_SHADER);
+  fragshader_gui      = load_shader_from_file("frag_gui.glsl", GL_FRAGMENT_SHADER);
   gazo_shader_info.link(
     vertshader_gazo, fragshader_basic,
     "view", "projection", "the_texture",
     "pos", "vert_uv"
   );
+  CHECK_GL();
   terrain_shader_info.link(
     vertshader_3d, fragshader_basic,
     "view_pos", "projection_matrix", "the_texture",
     "pos", "vertex_uv"
   );
+  CHECK_GL();
   polygon_fill_shader_info.link(
     vertshader_no_uv_map, fragshader_basic,
     "view_pos", "projection_matrix", "the_texture",
     "vertex_pos", nullptr
   );
+  CHECK_GL();
   gui_shader_info.link(
     vertshader_basic, fragshader_gui,
     nullptr, nullptr, "the_ui",
     "pos", nullptr
   );
+  CHECK_GL();
+
   gamma_shader = glCreateProgram();
+  CHECK_GL();
   glAttachShader(gamma_shader, vertshader_basic);
+  CHECK_GL();
   glAttachShader(gamma_shader, fragshader_gamma);
+  CHECK_GL();
   glLinkProgram(gamma_shader);
-
-
+  CHECK_GL();
   {
     float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
                           -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
@@ -222,11 +232,8 @@ void game::run()
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
   depth_texture, 0);
-
   #define preffered_filter GL_LINEAR
   #define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
-
-  printf("%i\n", lettering[16]);
 
   glBindTexture(GL_TEXTURE_2D, gui_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -235,7 +242,7 @@ void game::run()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, UI_WIDTH * 16, UI_HEIGHT, 0,
                GL_RED, GL_UNSIGNED_BYTE, lettering);
-  CHECK_GL();
+
   the_level.construct("test_level.mechanism");
   glGenTextures(3, &gazo_spritesheet_texture);
 

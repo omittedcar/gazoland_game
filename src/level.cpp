@@ -33,22 +33,14 @@ void level::construct(const char* file_name) {
   for(int i = 0; i < level_size; i++) {
     unsigned char the_char;
     ifs >> the_char;
-    printf("%02hhx", the_char);
     platform_corners[i].x = float((int(the_char) - 0x80) * 4);
     ifs >> the_char;
-    printf("%02hhx ",the_char);
     platform_corners[i].x += float(the_char) / 64.0;
     ifs >> the_char;
-    printf("%02hhx",the_char);
     platform_corners[i].y = float((int(the_char) - 0x80) * 4);
     ifs >> the_char;
-    printf("%02hhx",the_char);
     platform_corners[i].y += float(the_char) / 64.0;
-    printf("    %f",platform_corners[i].x);
-    printf(" %f\n",platform_corners[i].y);
   }
-  
-  printf("\n");
 
   the_gazo.init();
   the_platform.arise(platform_corners, level_size);
