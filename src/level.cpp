@@ -76,7 +76,7 @@ void level::draw(
       1 / aspect / fov, 0, 0, 0, 0, 1 / fov, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
   glDisable(GL_BLEND);
    
-  glUseProgram(gazo_shader->shader);
+  glUseProgram(gazo_shader->program);
   glUniformMatrix4fv(
     gazo_shader->u_projection, 1, GL_FALSE, projection_matrix
   );  
@@ -92,7 +92,7 @@ void level::draw(
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-  glUseProgram(terrain_shader->shader);
+  glUseProgram(terrain_shader->program);
   glUniformMatrix4fv(
     terrain_shader->u_projection, 1, GL_FALSE, projection_matrix
   );

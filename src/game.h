@@ -44,11 +44,11 @@ class game {
   GLuint fragshader_gamma;
   GLuint fragshader_gui;
 
-  GLuint gamma_shader;
-  gl_program_info gazo_shader_info;
-  gl_program_info terrain_shader_info;
-  gl_program_info polygon_fill_shader_info;
-  gl_program_info gui_shader_info;
+  gl_program_info gazo_shader_info{"gazo"};
+  gl_program_info terrain_shader_info{"terrain"};
+  gl_program_info polygon_fill_shader_info{"polygon_fill"};
+  gl_program_info gui_shader_info{"gui"};
+  gl_program_info gamma_shader_info{"gamma"};
 
   GLuint square_buffer;
   GLuint gazo_spritesheet_texture;

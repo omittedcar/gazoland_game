@@ -56,20 +56,6 @@ namespace {
     uint8_t number;
   };
 
-  bool maybe_print_error(const char *file, size_t line)
-  {
-    GLenum err;
-    bool result = false;
-    while ((err = glGetError()) != GL_NO_ERROR)
-    {
-      result = true;
-      printf("GL error code 0x%x prior to %s:%zu\n", err, file, line);
-    }
-    return result;
-  }
-
-#define CHECK_GL() maybe_print_error(__FILE__, __LINE__)
-
 void dump(uint8_t *data, int size)
 {
   for (int i = 0; i < size; i++)
@@ -89,7 +75,6 @@ GLuint load_shader_from_file(const char* path, int type) {
   full_path /= "assets";
   full_path /= "glsl";
   full_path /= path;
-  std::cout << "loading shader " << full_path.string() << std::endl;
   std::ifstream ifs(full_path.string(), std::ios::in);
   std::ostringstream oss;
   oss << ifs.rdbuf();
@@ -99,6 +84,12 @@ GLuint load_shader_from_file(const char* path, int type) {
   CHECK_GL();
   glCompileShader(result);
   CHECK_GL();
+  GLint param;
+  glGetShaderiv(result, GL_COMPILE_STATUS, &param);
+  CHECK_GL();
+  if (param != GL_TRUE) {
+    std::cerr << "glCompileShader(" << full_path << ") failed." << std::endl;
+  }
   return result;
 }
 
@@ -177,34 +168,26 @@ void game::run()
     "view", "projection", "the_texture",
     "pos", "vert_uv"
   );
-  CHECK_GL();
   terrain_shader_info.link(
     vertshader_3d, fragshader_basic,
     "view_pos", "projection_matrix", "the_texture",
     "pos", "vertex_uv"
   );
-  CHECK_GL();
   polygon_fill_shader_info.link(
     vertshader_no_uv_map, fragshader_basic,
     "view_pos", "projection_matrix", "the_texture",
     "vertex_pos", nullptr
   );
-  CHECK_GL();
   gui_shader_info.link(
     vertshader_basic, fragshader_gui,
     nullptr, nullptr, "the_ui",
     "pos", nullptr
   );
-  CHECK_GL();
 
-  gamma_shader = glCreateProgram();
-  CHECK_GL();
-  glAttachShader(gamma_shader, vertshader_basic);
-  CHECK_GL();
-  glAttachShader(gamma_shader, fragshader_gamma);
-  CHECK_GL();
-  glLinkProgram(gamma_shader);
-  CHECK_GL();
+  gamma_shader_info.link(
+    vertshader_basic, fragshader_gamma,
+    nullptr, nullptr, nullptr, nullptr, nullptr);
+
   {
     float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
                           -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
@@ -277,8 +260,10 @@ void game::run()
 void game::stop()
 {
   the_level.demolish();
+
   glDeleteFramebuffers(1, &framebuffer);
   glDeleteBuffers(1, &square_buffer);
+
   glDeleteShader(vertshader_basic);
   glDeleteShader(vertshader_gazo);
   glDeleteShader(vertshader_3d);
@@ -286,13 +271,10 @@ void game::stop()
   glDeleteShader(fragshader_basic);
   glDeleteShader(fragshader_gui);
   glDeleteShader(fragshader_gamma);
-  glDeleteShader(gazo_shader_info.shader);
-  glDeleteShader(terrain_shader_info.shader);
-  glDeleteShader(polygon_fill_shader_info.shader);
-  glDeleteShader(gui_shader_info.shader);
-  glDeleteShader(gamma_shader);
+
   glDeleteTextures(3, &gazo_spritesheet_texture);
   glDeleteTextures(3, &framebuffer_texture);
+
   free(lettering);
   glfwDestroyWindow(window);
   glfwTerminate();
@@ -348,14 +330,14 @@ void game::the_monitor_has_refreshed_again()
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearDepthf(1.0f);
   glClear(GL_DEPTH_BUFFER_BIT);
-  glUseProgram(gamma_shader);
+  glUseProgram(gamma_shader_info.program);
   glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
   glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(0);
   glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
   glDrawArrays(GL_TRIANGLES, 0, 6);
 
-  glUseProgram(gui_shader_info.shader);
+  glUseProgram(gui_shader_info.program);
   glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
   glVertexAttribPointer(gui_shader_info.v_pos, 2, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(gui_shader_info.v_pos);
