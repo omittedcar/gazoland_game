@@ -1,15 +1,12 @@
 #include "path.h"
-#include <unistd.h>
-#include <libgen.h>
-namespace { 
-  std::filesystem::path rp;
-}
 
-std::filesystem::path root_path() {
-  if (rp.empty()) {
-    char exe[256];
-    readlink("/proc/self/exe", exe, 256);
-    rp = std::filesystem::path(dirname(dirname(exe)));      
+namespace fs = std::filesystem;
+
+const fs::path& root_path() {
+  static fs::path root_path_;
+  if (root_path_.empty()) {
+    fs::path exe_link("/proc/self/exe");
+    root_path_ = fs::read_symlink(exe_link).remove_filename().parent_path().parent_path();
   }
-  return rp;
+  return root_path_;
 }

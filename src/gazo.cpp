@@ -533,7 +533,7 @@ void gazo::render(
 
   update_gl_vertex_buffer();
   update_gl_uv_buffer();
-  glUseProgram(shader->shader);
+  glUseProgram(shader->program);
 
   glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
   glVertexAttribPointer(shader->v_pos, 2, GL_FLOAT, false, 0, nullptr);

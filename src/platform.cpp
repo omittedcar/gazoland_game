@@ -27,7 +27,7 @@ void platform::draw(
   fvec2 view
 ) {
   
-  glUseProgram(surface_shader->shader);
+  glUseProgram(surface_shader->program);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
   glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(surface_shader->v_pos);
@@ -42,7 +42,7 @@ void platform::draw(
   glDisableVertexAttribArray(surface_shader->v_uv);
   
   //glDisable(GL_BLEND);
-  glUseProgram(fill_shader->shader);
+  glUseProgram(fill_shader->program);
   glEnableVertexAttribArray(fill_shader->v_pos);
   glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
   glVertexAttribPointer(fill_shader->v_pos, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -57,7 +57,7 @@ void platform::draw(
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
   glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
 
-  glUseProgram(surface_shader->shader);
+  glUseProgram(surface_shader->program);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
   glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
   glEnableVertexAttribArray(surface_shader->v_pos);
