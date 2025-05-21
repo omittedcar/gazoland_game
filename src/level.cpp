@@ -70,8 +70,8 @@ void level::draw(
   glClearColor(0.5, 0.5, 0.5, 1.0);
   glClearDepthf(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  float aspect = 2.0;
-  float fov = 4.0;
+  float aspect = 4.0/3.0;
+  float fov = 3.75;
   float projection_matrix[020] = {
       1 / aspect / fov, 0, 0, 0, 0, 1 / fov, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
   glDisable(GL_BLEND);

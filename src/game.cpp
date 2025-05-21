@@ -21,13 +21,12 @@
 //#include <sstream>
 #include <libgen.h>
 
-#define RESOLUTION_X 720
-#define RESOLUTION_Y 360
+#define RESOLUTION_X 800
+#define RESOLUTION_Y 600
 
 #define UI_WIDTH 36
 #define UI_HEIGHT 20
 #define UI_BYTES 0x9000
-
 namespace {
   double time_step = 1.0 / 480.0;
 
@@ -102,8 +101,62 @@ GLuint load_shader_from_file(const char* path, int type) {
   return result;
 }
 
+void set_texture_params(int base_level, int max_level) {
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, base_level);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
+}
+
+GLuint load_texture_from_file(const char* path) {
+  GLuint result;
+  std::filesystem::path full_path(root_path());
+  full_path /= "assets";
+  full_path /= "textures";
+  full_path /= path;
+  std::cout << "loading tex " << full_path.string() << std::endl;
+  FILE* tex_file =fopen(full_path.c_str(), "rb");
+  int width = 64;
+  int height = 64;
+  int mip_count = 3;
+  int buffer_size = width * height;
+  void* data = malloc(buffer_size);
+  //note to self: the total size of the file should be 2/3 the # of pixels
+  fread(data, 1, width * height * 2 / 3, tex_file);
+  glGenTextures(1, &result);
+  glBindTexture(GL_TEXTURE_2D, result);
+  set_texture_params(0, mip_count);
+  CHECK_GL();
+  void* mip_pointer = data;
+  for( int mip_level = 0; mip_level <= mip_count; mip_level++){
+    int mip_size = width * height >> (mip_level * 2 + 1);
+    glCompressedTexImage2D(
+      GL_TEXTURE_2D,
+      mip_level,
+      GL_COMPRESSED_RGB8_ETC2,
+      width >> mip_level,
+      height >> mip_level,
+      0,
+      mip_size,
+      mip_pointer
+    );
+    mip_pointer = (void*)((char*) mip_pointer + mip_size);
+  }
+  CHECK_GL();
+  fclose(tex_file);
+  free(data);
+  //glGenerateMipmap(GL_TEXTURE_2D);
+  return result;
+}
+
 } // namespace
 
+
+void dont_free() {
+  __asm__("nop;");
+};
 void game::run()
 {
   info_log = (char*) malloc(69420);
@@ -244,30 +297,11 @@ void game::run()
                GL_RED, GL_UNSIGNED_BYTE, lettering);
 
   the_level.construct("test_level.mechanism");
-  glGenTextures(3, &gazo_spritesheet_texture);
-
-  glBindTexture(GL_TEXTURE_2D, gazo_spritesheet_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, preffered_min_filter);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, preffered_filter);
-
-  decode_png_truecolor(gazo_spritesheet_png, gazo_spritesheet_png_len);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, stone_tile_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, preffered_min_filter);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, preffered_filter);
-  decode_png_truecolor(stone_tile_png, stone_tile_png_len);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, bailey_truss_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, preffered_min_filter);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, preffered_filter);
-  decode_png_truecolor(bailey_truss_png, bailey_truss_png_len);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  
+  
+  gazo_spritesheet_texture = load_texture_from_file("4k_eyes.jpg");
+  stone_tile_texture = load_texture_from_file("xanh_mono_ascii.jpg");
+  bailey_truss_texture = load_texture_from_file("items.xcf");
   while (is_playing && !glfwWindowShouldClose(window))
   {
     the_monitor_has_refreshed_again();
