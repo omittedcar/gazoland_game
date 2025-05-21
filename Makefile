@@ -13,7 +13,6 @@ SOURCES := \
 	main \
 	path \
 	platform \
-	png_decoder \
 	resources
 
 LIBS := -lglfw -lGLESv2 -lEGL -lc++

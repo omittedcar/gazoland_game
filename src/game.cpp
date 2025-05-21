@@ -95,7 +95,7 @@ void set_texture_params(int base_level, int max_level) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, base_level);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
 }
@@ -108,24 +108,24 @@ GLuint load_texture_from_file(const char* path) {
   full_path /= path;
   std::cout << "loading tex " << full_path.string() << std::endl;
   FILE* tex_file =fopen(full_path.c_str(), "rb");
-  int width = 64;
-  int height = 64;
+  int width = 32;
+  int height = 32;
   int mip_count = 3;
-  int buffer_size = width * height;
+  int buffer_size = width * height * 2;
   void* data = malloc(buffer_size);
   //note to self: the total size of the file should be 2/3 the # of pixels
-  fread(data, 1, width * height * 2 / 3, tex_file);
+  fread(data, 1, width * height * 4 / 3, tex_file);
   glGenTextures(1, &result);
   glBindTexture(GL_TEXTURE_2D, result);
   set_texture_params(0, mip_count);
   //CHECK_GL();
   void* mip_pointer = data;
   for( int mip_level = 0; mip_level <= mip_count; mip_level++){
-    int mip_size = width * height >> (mip_level * 2 + 1);
+    int mip_size = width * height >> (mip_level * 2);
     glCompressedTexImage2D(
       GL_TEXTURE_2D,
       mip_level,
-      GL_COMPRESSED_RGB8_ETC2,
+      GL_COMPRESSED_RGBA8_ETC2_EAC,
       width >> mip_level,
       height >> mip_level,
       0,
