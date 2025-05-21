@@ -3,6 +3,6 @@
 
 #include <filesystem>
 
-const std::filesystem::path& root_path();
+std::filesystem::path root_path();
 
 #endif // #ifndef GAZOLAND_GAME_PATH_H

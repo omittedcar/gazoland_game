@@ -9,8 +9,6 @@
 
 class gl_program_info {
  public:
-  gl_program_info() = delete;
-  explicit gl_program_info(const char* name_arg);
   ~gl_program_info();
 
   static bool maybe_print_error(const char *file, size_t line);

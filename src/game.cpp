@@ -1,7 +1,6 @@
 #include "game.h"
 #include "./resources.h"
 #include "gl_or_gles.h"
-#include "png_decoder.h"
 #include "path.h"
 
 #include <GLFW/glfw3.h>
@@ -80,15 +79,15 @@ GLuint load_shader_from_file(const char* path, int type) {
   std::string shader_source(oss.str());
   const char* shader_source_c = shader_source.c_str();
   glShaderSource(result, 1, &shader_source_c, nullptr);
-  CHECK_GL();
+  //CHECK_GL();
   glCompileShader(result);
-  CHECK_GL();
+  //CHECK_GL();
   GLint param;
   glGetShaderiv(result, GL_COMPILE_STATUS, &param);
-  CHECK_GL();
+  /*CHECK_GL();
   if (param != GL_TRUE) {
     std::cerr << "glCompileShader(" << full_path << ") failed." << std::endl;
-  }
+  }*/
   return result;
 }
 
@@ -119,7 +118,7 @@ GLuint load_texture_from_file(const char* path) {
   glGenTextures(1, &result);
   glBindTexture(GL_TEXTURE_2D, result);
   set_texture_params(0, mip_count);
-  CHECK_GL();
+  //CHECK_GL();
   void* mip_pointer = data;
   for( int mip_level = 0; mip_level <= mip_count; mip_level++){
     int mip_size = width * height >> (mip_level * 2 + 1);
@@ -135,7 +134,7 @@ GLuint load_texture_from_file(const char* path) {
     );
     mip_pointer = (void*)((char*) mip_pointer + mip_size);
   }
-  CHECK_GL();
+  //CHECK_GL();
   fclose(tex_file);
   free(data);
   //glGenerateMipmap(GL_TEXTURE_2D);

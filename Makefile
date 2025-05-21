@@ -1,5 +1,8 @@
-CC := clang
-CXX := clang++
+LLVM := /lib/llvm-19
+CC := $(LLVM)/bin/clang
+CXX := $(LLVM)/bin/clang++
+
+
 CFLAGS := -std=c23
 DEBUGFLAGS := -O0 -g
 SOURCES := \
@@ -13,7 +16,7 @@ SOURCES := \
 	png_decoder \
 	resources
 
-LIBS := -lglfw -lGLESv2 -lEGL -lstdc++
+LIBS := -lglfw -lGLESv2 -lEGL -lc++
 
 default : bin/gazoland_for_linux.exe
 
