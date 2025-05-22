@@ -1,8 +1,5 @@
-LLVM := /lib/llvm-19
-CC := $(LLVM)/bin/clang
-CXX := $(LLVM)/bin/clang++
-
-
+CC := clang
+CXX := clang++
 CFLAGS := -std=c23
 DEBUGFLAGS := -O0 -g
 SOURCES := \
