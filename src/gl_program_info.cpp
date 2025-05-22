@@ -10,8 +10,12 @@ void gl_program_info::link(
   //glBindUniformLocation(shader, u_panning = 0, u_panning_name);
   //glBindUniformLocation(shader, u_projection = 1, u_projection_name);
   //glBindUniformLocation(shader, u_texture = 2, u_texture_name);
-  glBindAttribLocation(program, v_pos = 0, v_pos_name);
-  glBindAttribLocation(program, v_uv = 1, v_uv_name);
+  if (v_pos_name) {
+    glBindAttribLocation(program, v_pos = 0, v_pos_name);
+  }
+  if (v_uv_name) {
+    glBindAttribLocation(program, v_uv = 1, v_uv_name);
+  }
   glAttachShader(program, vertex_shader);
   glAttachShader(program, fragment_shader);
   glLinkProgram(program);

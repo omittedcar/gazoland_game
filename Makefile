@@ -15,7 +15,7 @@ SOURCES := \
 	platform \
 	resources
 
-LIBS := -lglfw -lGLESv2 -lEGL -lc++
+LIBS := -lglfw -lGLESv2 -lEGL
 
 default : bin/gazoland_for_linux.exe
 

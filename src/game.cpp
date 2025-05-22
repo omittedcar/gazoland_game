@@ -281,9 +281,9 @@ void game::run()
   the_level.construct("test_level.mechanism");
   
   
-  gazo_spritesheet_texture = load_texture_from_file("4k_eyes.jpg");
-  stone_tile_texture = load_texture_from_file("xanh_mono_ascii.jpg");
-  bailey_truss_texture = load_texture_from_file("items.xcf");
+  gazo_spritesheet_texture = load_texture_from_file("hd_blond_hair_surface.png");
+  stone_tile_texture = load_texture_from_file("potato_tiles.xcf");
+  bailey_truss_texture = load_texture_from_file("bill_and_ted.jpg");
   while (is_playing && !glfwWindowShouldClose(window))
   {
     the_monitor_has_refreshed_again();
