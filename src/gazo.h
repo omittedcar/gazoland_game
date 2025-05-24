@@ -1,74 +1,53 @@
 #include "stdlib.h"
-#include "gl_or_gles.h"
+#include "gles_or_vulkan.h"
 #include "platform.h"
-#include "vec2.h"
-#include "gl_program_info.h"
 
 class gazo {
  public:
-  void init();
+  gazo();
+  
   bool advance_forward(double time_step);
   void point_joystick(float x, float y);
   void point_other_joystick(float x, float y);
-  void update_gl_vertex_buffer();
-  GLuint get_gl_vertex_buffer();
-  double* get_mapping_pointer();
   int get_vertex_buffer_size();
-  void kill_to_death();
   float get_rumble();
   fvec2 get_center_of_mass_medium_precision();
-  void render(
-    gl_program_info* shader
-  );
-  void push_out_from_platform(double interval, platform* p);
+  void push_out_from_platform(double interval, platform& p);
+
+  void draw(
+      const std::shared_ptr<program>& gazo_shader,
+      const std::shared_ptr<texture>& gazo_spritesheet_tex,
+      const std::vector<float>& projection_matrix,
+      fvec2 view);
+  
  private:
-  vec2 pointing = {
-    0.0f,
-    0.0f
-  };
-  vec2 previous_joystick = {
-    0.0,
-    0.0
-  };
-  int blink_timer = 0.0;
+  vec2 pointing{0.0f, 0.0f};
+  vec2 previous_joystick{0.0, 0.0};
 
-  vec2* mapping;
-  vec2* pos;
-  vec2* vel;
+  std::vector<vec2> mapping;
+  std::vector<vec2> pos;
+  std::vector<vec2> vel;
 
-  vec2* delta_pos;
-  vec2* delta_vel;
-  vec2* sample_vel;
-  vec2* sample_pos;
-  vec2* acc;
+  std::vector<vec2> delta_pos;
+  std::vector<vec2> delta_vel;
+  std::vector<vec2> sample_vel;
+  std::vector<vec2> sample_pos;
+  std::vector<vec2> acc;
 
-
-  float* pos20;
+  std::vector<float> pos20;
   int uv_map_offset;
 
-  GLuint gl_vertex_buffer;
-  GLuint gl_uv_buffer;
-  GLuint gl_element_index_buffer;
+  std::shared_ptr<buffer> vertex_buffer;
+  std::shared_ptr<buffer> uv_buffer;
+  std::shared_ptr<buffer> element_index_buffer;
 
-  void add_thing_to_other_thing(
-    double* thing,
-    double* other_thing,
-    double coefficient
-  );
-
-  void add_thing_to_other_thing_into_another_thing(
-    double* thing,
-    double* other_thing,
-    double coefficient,
-    double* another_thing
-  );
-
-  void update_gl_uv_buffer();
+  void update_vertex_buffer();
+  void update_uv_buffer();
 
   void calculate_acc(
-    vec2* pos_in,
-    vec2* vel_in,
-    vec2* acc_out
+    const std::vector<vec2>& pos_in,
+    const std::vector<vec2>& vel_in,
+    std::vector<vec2>& acc_out
   );
 
   void choose_sprite();

@@ -1,40 +1,43 @@
+default := gles vulkan
+
+vulkan : bin/gazoland-vulkan
+
+gles : bin/gazoland-gles
+
 CC := clang
 CXX := clang++
-CFLAGS := -std=c23
-DEBUGFLAGS := -O0 -g
+CFLAGS :=
+vulkan : CFLAGS += -DGAZOLAND_VULKAN
+gles : CFLAGS += -DGAZOLAND_GLES
+
+LIBS := -lglfw
+vulkan : LIBS += -lvulkan
+gles : LIBS += -lGLESv2 -lEGL
+
 SOURCES := \
 	game \
 	gazo \
-	gl_program_info \
 	level \
 	main \
 	path \
-	platform \
-	resources
+	platform
+GLES_SOURCES := $(SOURCES) gazoland_gles
+VULKAN_SOURCES := $(SOURCES) gazoland_vulkan
 
-LIBS := -lglfw -lGLESv2 -lEGL
+bin obj :
+	mkdir $@
 
-default : bin/gazoland_for_linux.exe
+bin/gazoland-gles : $(GLES_SOURCES:%=obj/%.o) | bin
+	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-debug : bin/gazoland_for_linux_debug.exe
+bin/gazoland-vulkan : $(VULKAN_SOURCES:%=obj/%.o) | bin
+	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-bin/gazoland_for_linux.exe : $(SOURCES:%=obj/%.o)
-	mkdir -p bin && $(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
+obj/%.o : src/%.cpp src/*.h | obj
+	$(CXX) $(CFLAGS) -c -o $@ $<
 
-bin/gazoland_for_linux_debug.exe : $(SOURCES:%=obj/%-dbg.o)
-	mkdir -p bin && $(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
-
-obj/%.o : src/%.cpp src/*.h
-	mkdir -p obj && $(CXX) -c $(CPPFLAGS) -o $@ $<
-
-obj/%.o : src/%.c src/sample_text.txt src/*.h
-	mkdir -p obj && $(CC) -c $(CFLAGS) -o $@ $<
-
-obj/%-dbg.o : src/%.cpp src/*.h
-	mkdir -p obj && $(CXX) -c $(CPPFLAGS) $(DEBUGFLAGS) -o $@ $<
-
-obj/%-dbg.o : src/%.c src/*.h
-	mkdir -p obj && $(CC) -c $(CFLAGS) $(DEBUGFLAGS) -o $@ $<
+obj/%.o : src/%.c src/*.h | obj
+	$(CC) -std=c23 $(CFLAGS) -c -o $@ $<
 
 clean :
-	rm -f obj/*.o bin/gazoland_for_linux.exe bin/gazoland_for_linux_debug.exe
+	rm -rf bin obj

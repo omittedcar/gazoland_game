@@ -1,77 +1,30 @@
 #include "platform.h"
-#include "gl_or_gles.h"
+
 #include <cmath>
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
 
-void platform::arise(fvec2* corners_in, int side_count_in) {
+void platform::arise(std::vector<fvec2> corners_in, int side_count_in) {
+  corners = std::move(corners_in);
   side_count = side_count_in;
-  corners = corners_in;
 
   compute_bounding_box();
-  glGenBuffers(6, &vertex_uv_buffer);
   do_vertex_buffers();
   generate_mesh();
 }
 
-void platform::demolish() {
-  free(corners);
-  glDeleteBuffers(6, &vertex_uv_buffer);
-}
-
 void platform::draw(
-  gl_program_info* surface_shader,
-  gl_program_info* fill_shader,
-  float* projection,
-  fvec2 view
-) {
-  
-  glUseProgram(surface_shader->program);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(surface_shader->v_pos);
-  
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
-  glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(surface_shader->v_uv);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer);
-  glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
-  glDisableVertexAttribArray(surface_shader->v_pos);
-  glDisableVertexAttribArray(surface_shader->v_uv);
-  
-  //glDisable(GL_BLEND);
-  glUseProgram(fill_shader->program);
-  glEnableVertexAttribArray(fill_shader->v_pos);
-  glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
-  glVertexAttribPointer(fill_shader->v_pos, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-  glUniformMatrix4fv(fill_shader->u_projection, 1, false, projection);
-  glUniform1i(fill_shader->u_texture, 0);
-  glUniform2f(fill_shader->u_panning, view.x, view.y);
-
-  //glEnable(GL_BLEND);
-  
-  glBindTexture(GL_TEXTURE_2D, 6);
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_BLEND);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
-  glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
-
-  glUseProgram(surface_shader->program);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(surface_shader->v_pos);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
-  
-  glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(surface_shader->v_uv);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer);
-  //glEnable(GL_BLEND);
-  glBindTexture(GL_TEXTURE_2D, 5);
-  glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
-  glDisableVertexAttribArray(surface_shader->v_pos);
-  glDisableVertexAttribArray(surface_shader->v_uv);
+    const std::shared_ptr<program>& surface_shader,
+    const std::shared_ptr<program>& fill_shader,
+    const std::vector<float>& projection,
+    const fvec2& view) {
+  draw_platform(
+      surface_shader, fill_shader,
+      vertex_pos_buffer, vertex_uv_buffer,
+      upper_surface_index_buffer, lower_surface_index_buffer,
+      corner_vertex_buffer, inner_face_index_buffer,
+      projection, view.x, view.y, side_count);
 }
 
 void platform::compute_bounding_box() {
@@ -136,11 +89,15 @@ vec2 platform::shortest_path(vec2 p0) {
 void platform::do_vertex_buffers() {
   //one rectangle-pair per side, each rectangle-pair is 6 verts.
   //so the vertex count is the side count times six
-  float* vertexes = (float*) malloc(side_count * 18 * sizeof(float)); 
-  float* uvs = (float*) malloc(side_count * 12 * sizeof(float));
+  std::vector<float> vertexes(side_count * 18);
+  //float* vertexes = (float*) malloc(side_count * 18 * sizeof(float));
+  std::vector<float> uvs(side_count * 12);
+  //float* uvs = (float*) malloc(side_count * 12 * sizeof(float));
   //two triangles per rectangle, three indexes per triangle.
-  unsigned short* indexes = (unsigned short*) malloc(side_count * 6 * sizeof(unsigned short));
-  unsigned short* indexes_b = (unsigned short*) malloc(side_count * 6 * sizeof(unsigned short));
+  std::vector<unsigned short> indexes(side_count * 6);
+  //unsigned short* indexes = (unsigned short*) malloc(side_count * 6 * sizeof(unsigned short));
+  std::vector<unsigned short> indexes_b(side_count * 6);
+  //unsigned short* indexes_b = (unsigned short*) malloc(side_count * 6 * sizeof(unsigned short));
   float uv_x = 0.0;
   float uv_x_next = 0.0;
 
@@ -156,10 +113,10 @@ void platform::do_vertex_buffers() {
       corner_b.y - corner_a.y
     };
     float distance_accross = hypot(a_to_b.x, a_to_b.y);
-    float inverse_distacne = 1.0 / distance_accross;
+    float inverse_distance = 1.0 / distance_accross;
     fvec2 normal = {
-      a_to_b.y * inverse_distacne,
-      -a_to_b.x * inverse_distacne
+      a_to_b.y * inverse_distance,
+      -a_to_b.x * inverse_distance
     };
     uv_x_next = uv_x + distance_accross / 1.0;
 
@@ -227,33 +184,23 @@ void platform::do_vertex_buffers() {
     uv_x = uv_x_next;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glBufferData(GL_ARRAY_BUFFER, side_count * 18 * sizeof(float), vertexes, GL_STATIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
-  glBufferData(GL_ARRAY_BUFFER, side_count * 12 * sizeof(float), uvs, GL_STATIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, side_count * sizeof(fvec2), (float*) corners, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes_b, GL_STATIC_DRAW);
-  
-  free(vertexes);
-  free(uvs);
-  free(indexes);
-  free(indexes_b);
+  vertex_pos_buffer = buffer::create(
+      "vertex_pos", vertexes, buffer_type::k_array);
+  vertex_uv_buffer = buffer::create(
+      "vertex_uv", uvs, buffer_type::k_array);
+  corner_vertex_buffer = buffer::create(
+      "corner_vertex", corners, buffer_type::k_array);
+  upper_surface_index_buffer = buffer::create(
+      "upper_surface_index", indexes, buffer_type::k_array);
+  lower_surface_index_buffer = buffer::create(
+      "lower_surface_index", indexes_b, buffer_type::k_array);
 }
 
 void platform::generate_mesh() {
-  signed short* mesh_which_we_are_generating =
-    (signed short*) malloc((side_count-2) * 3 * sizeof(unsigned short) + 1)
-  ;
-  signed short* unclipped_corner_indexes =
-    (signed short*) malloc((side_count) * sizeof(unsigned short) + 1)
-  ;
+  std::vector<unsigned short> mesh_which_we_are_generating((side_count-2) * 3 + 1);
+  std::vector<signed short> unclipped_corner_indexes(side_count + 1);
   signed short unclipped_corner_count = side_count;
+
   for(int i = 0; i < side_count; i++) {
     unclipped_corner_indexes[i] = i;
   }
@@ -320,7 +267,6 @@ void platform::generate_mesh() {
   mesh_which_we_are_generating[triangle_count*3+1] = unclipped_corner_indexes[1];
   mesh_which_we_are_generating[triangle_count*3+2] = unclipped_corner_indexes[2];
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, (side_count-2) * 3 * sizeof(unsigned short), mesh_which_we_are_generating, GL_STATIC_DRAW);
-  free(mesh_which_we_are_generating);
+  inner_face_index_buffer = buffer::create(
+      "inner_face_index", mesh_which_we_are_generating, buffer_type::k_array);
 }
