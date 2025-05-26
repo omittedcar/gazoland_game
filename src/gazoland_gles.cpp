@@ -4,6 +4,10 @@
 #include <fstream>
 #include <iostream>
 
+#define CHECK_GL() maybe_print_gl_error(__FILE__, __LINE__)
+
+namespace {
+
 bool maybe_print_gl_error(const char *file, size_t line) {
   GLenum err;
   bool result = false;
@@ -14,6 +18,8 @@ bool maybe_print_gl_error(const char *file, size_t line) {
   }
   return result;
 }
+
+}  // namespace
 
 GLenum shader_type_to_gl(shader_type type) {
   switch (type) {

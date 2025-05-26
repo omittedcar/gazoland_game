@@ -7,10 +7,6 @@
 #include <string>
 #include <vector>
 
-#define CHECK_GL() maybe_print_gl_error(__FILE__, __LINE__)
-
-bool maybe_print_gl_error(const char *file, size_t line);
-
 GLenum shader_type_to_gl(shader_type type);
 GLenum texture_type_to_gl(texture_type type);
 GLenum buffer_type_to_gl(buffer_type type);

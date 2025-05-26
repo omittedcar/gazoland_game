@@ -1,4 +1,6 @@
-default := gles vulkan
+default := all
+
+all : gles vulkan
 
 vulkan : bin/gazoland-vulkan
 
@@ -27,16 +29,22 @@ VULKAN_SOURCES := $(SOURCES) gazoland_vulkan
 bin obj :
 	mkdir $@
 
-bin/gazoland-gles : $(GLES_SOURCES:%=obj/%.o) | bin
+bin/gazoland-gles : $(GLES_SOURCES:%=obj/%_gl.o) | bin
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-bin/gazoland-vulkan : $(VULKAN_SOURCES:%=obj/%.o) | bin
+bin/gazoland-vulkan : $(VULKAN_SOURCES:%=obj/%_vk.o) | bin
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-obj/%.o : src/%.cpp src/*.h | obj
+obj/%_gl.o : src/%.cpp src/*.h | obj
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
-obj/%.o : src/%.c src/*.h | obj
+obj/%_vk.o : src/%.cpp src/*.h | obj
+	$(CXX) $(CFLAGS) -c -o $@ $<
+
+obj/%_gl.o : src/%.c src/*.h | obj
+	$(CC) -std=c23 $(CFLAGS) -c -o $@ $<
+
+obj/%_vk.o : src/%.c src/*.h | obj
 	$(CC) -std=c23 $(CFLAGS) -c -o $@ $<
 
 clean :
