@@ -23,29 +23,26 @@ SOURCES := \
 	main \
 	path \
 	platform
-GLES_SOURCES := $(SOURCES) gazoland_gles
-VULKAN_SOURCES := $(SOURCES) gazoland_vulkan
+GLES_SOURCES := $(SOURCES:%=%_gl) gazoland_gles
+VULKAN_SOURCES := $(SOURCES:%=%_vk) gazoland_vulkan
 
 bin obj :
 	mkdir $@
 
-bin/gazoland-gles : $(GLES_SOURCES:%=obj/%_gl.o) | bin
+bin/gazoland-gles : $(GLES_SOURCES:%=obj/%.o) | bin
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-bin/gazoland-vulkan : $(VULKAN_SOURCES:%=obj/%_vk.o) | bin
+bin/gazoland-vulkan : $(VULKAN_SOURCES:%=obj/%.o) | bin
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
+
+obj/%.o : src/%.cpp src/*.h | obj
+	$(CXX) $(CFLAGS) -c -o $@ $<
 
 obj/%_gl.o : src/%.cpp src/*.h | obj
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 obj/%_vk.o : src/%.cpp src/*.h | obj
 	$(CXX) $(CFLAGS) -c -o $@ $<
-
-obj/%_gl.o : src/%.c src/*.h | obj
-	$(CC) -std=c23 $(CFLAGS) -c -o $@ $<
-
-obj/%_vk.o : src/%.c src/*.h | obj
-	$(CC) -std=c23 $(CFLAGS) -c -o $@ $<
 
 clean :
 	rm -rf bin obj
