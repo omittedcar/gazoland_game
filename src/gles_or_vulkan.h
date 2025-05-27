@@ -20,6 +20,7 @@ enum class buffer_type {
 
 #ifdef GAZOLAND_VULKAN
 # include "gazoland_vulkan.h"
+# define GLFW_INCLUDE_VULKAN
 #endif
 
 #include <GLFW/glfw3.h>

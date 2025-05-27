@@ -1,5 +1,131 @@
 #include "gles_or_vulkan.h"
 
+#include <iostream>
+#include <optional>
+
+namespace {
+VkInstance instance;
+VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+std::optional<uint32_t> graphicsFamily;
+std::optional<uint32_t> computeFamily = 0;
+VkDevice device;
+VkQueue graphicsQueue;
+}
+
+void gazoland_init() {
+  glfwInit();
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  //glfwSwapInterval(1);
+
+  {
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> extensions(extensionCount);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+    std::cout << "available extensions:" << std::endl;
+    for (const auto& extension : extensions) {
+      std::cout << '\t' << extension.extensionName << '\n';
+    }
+
+    std::cout << std::endl << "available validation layers:" << std::endl;
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+    for (const auto& layerProperties : availableLayers) {
+      std::cout << "\t" << layerProperties.layerName << std::endl;
+    }
+  }
+
+  VkApplicationInfo appInfo{};
+  appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+  appInfo.pApplicationName = "Hello Triangle";
+  appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+  appInfo.pEngineName = "No Engine";
+  appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+  appInfo.apiVersion = VK_API_VERSION_1_0;
+
+  uint32_t glfwExtensionCount = 0;
+  const char** glfwExtensions;
+  glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+  VkInstanceCreateInfo instanceCreateInfo{};
+  instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+  instanceCreateInfo.pApplicationInfo = &appInfo;
+  instanceCreateInfo.enabledExtensionCount = glfwExtensionCount;
+  instanceCreateInfo.ppEnabledExtensionNames = glfwExtensions;
+  instanceCreateInfo.enabledLayerCount = 0;
+
+  VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
+  if (result != VK_SUCCESS) {
+    std::cerr << "vkCreateInstance failed" << std::endl;
+    return;
+  }
+
+  uint32_t deviceCount = 0;
+  vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+  if (deviceCount == 0) {
+    std::cerr << "failed to find GPUs with Vulkan support!" << std::endl;
+    return;
+  }
+  std::vector<VkPhysicalDevice> devices(deviceCount);
+  vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+  for (const auto& device : devices) {
+    physicalDevice = device;
+    break;
+  }
+
+  if (physicalDevice == VK_NULL_HANDLE) {
+    throw std::runtime_error("failed to find a suitable GPU!");
+  }
+
+  uint32_t queueFamilyCount = 0;
+  vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+  std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+  vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
+  uint32_t i = 0;
+  for (const auto& family : queueFamilies) {
+    if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+      graphicsFamily.emplace(i);
+    }
+    if (family.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+      computeFamily.emplace(i);
+    }
+    if (graphicsFamily.has_value() && computeFamily.has_value()) {
+      break;
+    }
+    i++;
+  }
+  
+  VkDeviceQueueCreateInfo queueCreateInfo{};
+  queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  queueCreateInfo.queueFamilyIndex = graphicsFamily.value();
+  queueCreateInfo.queueCount = 1;
+  float queuePriority = 1.f;
+  queueCreateInfo.pQueuePriorities = &queuePriority;
+  
+  VkPhysicalDeviceFeatures deviceFeatures{};
+  VkDeviceCreateInfo deviceCreateInfo{};
+  deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+  deviceCreateInfo.queueCreateInfoCount = 1;
+  deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+  deviceCreateInfo.enabledExtensionCount = 0;
+
+  if (vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device) != VK_SUCCESS) {
+    std::cerr << "failed to create logical device!" << std::endl;
+    return;
+  }
+
+  vkGetDeviceQueue(device, graphicsFamily.value(), 0, &graphicsQueue);
+}
+
+void gazoland_cleanup() {
+  vkDestroyInstance(instance, nullptr);
+  vkDestroyDevice(device, nullptr);
+}
+
 vk_resource::~vk_resource() {}
 
 // static

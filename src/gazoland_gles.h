@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+void gazoland_init();
+void gazoland_cleanup();
+
 GLenum shader_type_to_gl(shader_type type);
 GLenum texture_type_to_gl(texture_type type);
 GLenum buffer_type_to_gl(buffer_type type);

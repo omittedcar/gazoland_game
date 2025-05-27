@@ -8,6 +8,9 @@
 #include <string>
 #include <vector>
 
+void gazoland_init();
+void gazoland_cleanup();
+
 class vk_resource {
  public:
   vk_resource() = delete;

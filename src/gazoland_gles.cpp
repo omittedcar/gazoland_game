@@ -21,6 +21,17 @@ bool maybe_print_gl_error(const char *file, size_t line) {
 
 }  // namespace
 
+void gazoland_init() {
+  glfwInit();
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+  glfwSwapInterval(1);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+}
+
+void gazoland_cleanup() {}
+
 GLenum shader_type_to_gl(shader_type type) {
   switch (type) {
   case shader_type::k_vertex:
