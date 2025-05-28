@@ -1,6 +1,8 @@
 #ifndef _GAZOLAND_SRC_GAZOLAND_GLES_H_
 #define _GAZOLAND_SRC_GAZOLAND_GLES_H_
 
+#include "vec2.h"
+
 #include <GLES3/gl3.h>
 #include <filesystem>
 #include <memory>

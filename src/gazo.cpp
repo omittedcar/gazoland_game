@@ -40,17 +40,12 @@ double inner_mass = 0x8;
 //the combined masses of all of the other nodes. (㎏)
 double outer_mass = 0xA;
 
-//the stiffness of the gazo's outer edges. (N/m)
-double outer_stiffness = 0x1800;
-
-//the damping of the gazo's outer edges. (㎏/s)
-double outer_damping = 0x60;
-
 //the power of each of the gazo's muscles. (W)
 double muscle_power = 0x1000;
 
-double inner_stiffness = 0x800; //0x600
-double inner_damping = 0x10;
+
+double stiffness = 0x800;
+double damping = 0x10;
 
 //N
 double internal_pressure_area = 0x3400;
@@ -174,17 +169,6 @@ bool gazo::advance_forward(double time_step) {
     sample_pos[i] = {0,0};
     sample_vel[i] = {0,0};
   }
-  calculate_acc(pos, vel, acc);
-  add_thing_to_other_thing(vel, delta_pos, timestep_divided_by_six);
-  add_thing_to_other_thing(acc, delta_vel, timestep_divided_by_six);
-
-  add_thing_to_other_thing_into_another_thing(vel, pos, time_step * 0.5, sample_pos);
-  add_thing_to_other_thing_into_another_thing(acc, vel, time_step * 0.5, sample_vel);
-  calculate_acc(sample_pos, sample_vel, acc);
-  add_thing_to_other_thing(sample_vel, delta_pos, timestep_divided_by_six * 2);
-  add_thing_to_other_thing(acc, delta_vel, timestep_divided_by_six * 2);
-
-
   add_thing_to_other_thing_into_another_thing(sample_vel, pos, time_step * 0.5, sample_pos);
   add_thing_to_other_thing_into_another_thing(acc, vel, time_step * 0.5, sample_vel);
   calculate_acc(sample_pos, sample_vel, acc);
@@ -368,7 +352,7 @@ void gazo::calculate_acc(
     double target_muscle_force = (hypot(
       mapping[i + 1].x - rotated_joystick.x * 0.7,
       mapping[i + 1].y - rotated_joystick.y * 0.7
-    ) - 1) * inner_stiffness * radius * 1;
+    ) - 1) * stiffness * radius * 1;
 
     if(target_muscle_force * deformation_rate > muscle_power) {
       target_muscle_force = (muscle_power / deformation_rate) || 0;
@@ -377,8 +361,8 @@ void gazo::calculate_acc(
 
     double length_difference = current_length - radius;
     double force_quotient = (
-      - length_difference * inner_stiffness
-      - deformation_rate * inner_damping + target_muscle_force
+      - length_difference * stiffness
+      - deformation_rate * damping + target_muscle_force
     ) / (current_length);
 
     acc_out[0].x -= v.x * force_quotient / inner_mass;
@@ -404,8 +388,33 @@ void gazo::calculate_acc(
 
     double length_difference = current_length - arc_distance * radius;
     double force_quotient = (
-      - length_difference * outer_stiffness
-      - deformation_rate * outer_damping
+      - length_difference * stiffness
+      - deformation_rate * damping
+    ) / (current_length);
+
+    acc_out[i + 1].x -= v.x * force_quotient / outer_vertex_mass;
+    acc_out[i + 1].y -= v.y * force_quotient / outer_vertex_mass;
+
+    acc_out[j +1].x += v.x * force_quotient / outer_vertex_mass;
+    acc_out[j +1].y += v.y * force_quotient / outer_vertex_mass;
+  }
+  for(int i = 0; i < n_sides; i++) {
+    int j = (i + 2) % n_sides;
+    vec2 v = {
+      pos_in[j+1].x - pos_in[i+1].x,
+      pos_in[j+1].y - pos_in[i+1].y
+    };
+    double current_length = hypot(v.x, v.y); 
+    double deformation_rate = (
+      (vel_in[j+1].x - vel_in[i+1].x) * v.x +
+      (vel_in[j+1].y - vel_in[i+1].y) * v.y
+    ) / current_length;
+
+
+    double length_difference = current_length - arc_distance * radius;
+    double force_quotient = (
+      - length_difference * stiffness
+      - deformation_rate * damping
     ) / (current_length);
 
     acc_out[i + 1].x -= v.x * force_quotient / outer_vertex_mass;

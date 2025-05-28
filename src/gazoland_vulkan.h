@@ -1,6 +1,8 @@
 #ifndef _GAZOLAND_SRC_GAZOLAND_VULKAN_H_
 #define _GAZOLAND_SRC_GAZOLAND_VULKAN_H_
 
+#include "vec2.h"
+
 #include <vulkan/vulkan.h>
 
 #include <filesystem>
