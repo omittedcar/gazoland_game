@@ -54,7 +54,7 @@ void platform::draw(
   
   glBindTexture(GL_TEXTURE_2D, 6);
   glDisable(GL_CULL_FACE);
-  glDisable(GL_BLEND);
+
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
   glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
 

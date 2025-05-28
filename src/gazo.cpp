@@ -44,8 +44,8 @@ double outer_mass = 0xA;
 double muscle_power = 0x1000;
 
 
-double stiffness = 0x800;
-double damping = 0x10;
+double stiffness = 0x400;
+double damping = 0x8;
 
 //N
 double internal_pressure_area = 0x3400;

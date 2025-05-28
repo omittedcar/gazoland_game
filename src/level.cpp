@@ -71,7 +71,7 @@ void level::draw(
   glClearDepthf(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   float aspect = 4.0/3.0;
-  float view_area = 64.0;
+  float view_area = 16.0;
   float projection_matrix[020] = {
       2 * sqrt(1/aspect / view_area), 0, 0, 0,
       0, 2 * sqrt(aspect / view_area), 0, 0,

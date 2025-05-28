@@ -20,8 +20,8 @@
 //#include <sstream>
 #include <libgen.h>
 
-#define RESOLUTION_X 800
-#define RESOLUTION_Y 600
+#define RESOLUTION_X 512
+#define RESOLUTION_Y 384
 
 #define UI_WIDTH 36
 #define UI_HEIGHT 20
@@ -94,7 +94,7 @@ GLuint load_shader_from_file(const char* path, int type) {
 void set_texture_params(int base_level, int max_level) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, base_level);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
@@ -108,32 +108,28 @@ GLuint load_texture_from_file(const char* path) {
   full_path /= path;
   std::cout << "loading tex " << full_path.string() << std::endl;
   FILE* tex_file =fopen(full_path.c_str(), "rb");
-  int width = 32;
-  int height = 32;
-  int mip_count = 3;
-  int buffer_size = width * height * 2;
+  int width = 256;
+  int height = 256;
+  int buffer_size = width * height;
   void* data = malloc(buffer_size);
   //note to self: the total size of the file should be 2/3 the # of pixels
-  fread(data, 1, width * height * 4 / 3, tex_file);
+  fread(data, 1, width * height, tex_file);
   glGenTextures(1, &result);
   glBindTexture(GL_TEXTURE_2D, result);
-  set_texture_params(0, mip_count);
-  //CHECK_GL();
-  void* mip_pointer = data;
-  for( int mip_level = 0; mip_level <= mip_count; mip_level++){
-    int mip_size = width * height >> (mip_level * 2);
+  set_texture_params(0, 0);
+
     glCompressedTexImage2D(
       GL_TEXTURE_2D,
-      mip_level,
-      GL_COMPRESSED_RGBA8_ETC2_EAC,
-      width >> mip_level,
-      height >> mip_level,
       0,
-      mip_size,
-      mip_pointer
+      GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
+      width,
+      height,
+      0,
+      buffer_size,
+      data
     );
-    mip_pointer = (void*)((char*) mip_pointer + mip_size);
-  }
+  
+
   //CHECK_GL();
   fclose(tex_file);
   free(data);
@@ -281,9 +277,9 @@ void game::run()
   the_level.construct("test_level.mechanism");
   
   
-  gazo_spritesheet_texture = load_texture_from_file("hd_blond_hair_surface.png");
-  stone_tile_texture = load_texture_from_file("potato_tiles.xcf");
-  bailey_truss_texture = load_texture_from_file("bill_and_ted.jpg");
+  gazo_spritesheet_texture = load_texture_from_file("aqua.pkm");
+  stone_tile_texture = load_texture_from_file("grass.pkm");
+  bailey_truss_texture = load_texture_from_file("aqua.pkm");
   while (is_playing && !glfwWindowShouldClose(window))
   {
     the_monitor_has_refreshed_again();
