@@ -4,7 +4,11 @@
 #include <fstream>
 #include <iostream>
 
-#define CHECK_GL() maybe_print_gl_error(__FILE__, __LINE__)
+#ifndef NDEBUG
+# define CHECK_GL() maybe_print_gl_error(__FILE__, __LINE__)
+#else
+# define CHECK_GL() __asm(nop)
+#endif
 
 namespace {
 
@@ -187,16 +191,16 @@ program::~program() {
 
 // static
 std::shared_ptr<texture> texture::create_from_file(
-    const std::filesystem::path& path) {
+    const std::filesystem::path& path,
+    size_t mip_count) {
   GLuint id = 0;
   FILE* tex_file = fopen(path.c_str(), "rb");
-  size_t width = 32;
-  size_t height = 32;
-  size_t buffer_size = width * height * 2;
-  size_t mip_count = 3;
+  size_t width = 256;
+  size_t height = 256;
+  size_t buffer_size = width * height;
   std::vector<unsigned char> data(buffer_size);
   //note to self: the total size of the file should be 2/3 the # of pixels
-  fread(data.data(), 1, width * height * 4 / 3, tex_file);
+  fread(data.data(), 1, width * height, tex_file);
   fclose(tex_file);
   glGenTextures(1, &id);
   CHECK_GL();
@@ -206,7 +210,7 @@ std::shared_ptr<texture> texture::create_from_file(
   CHECK_GL();
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   CHECK_GL();
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   CHECK_GL();
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   CHECK_GL();
@@ -440,7 +444,7 @@ void draw_platform(
   CHECK_GL();
   glDisable(GL_CULL_FACE);
   CHECK_GL();
-  glDisable(GL_BLEND);
+  //glDisable(GL_BLEND);
   CHECK_GL();
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer->id());
   CHECK_GL();

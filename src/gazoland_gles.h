@@ -148,7 +148,8 @@ public:
   texture(const texture&) = delete;
 
   static std::shared_ptr<texture> create_from_file(
-      const std::filesystem::path& path);
+      const std::filesystem::path& path,
+      size_t mip_count);
   static std::shared_ptr<texture> create_for_draw(
       size_t width, size_t height,
       std::shared_ptr<framebuffer> draw_framebuffer);

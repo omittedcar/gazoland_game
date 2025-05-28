@@ -186,7 +186,8 @@ program::~program() {}
 
 // static
 std::shared_ptr<texture> texture::create_from_file(
-    const std::filesystem::path& path) {
+    const std::filesystem::path& path,
+    size_t mip_count) {
   return std::shared_ptr<texture>(new texture(path));
 }
 

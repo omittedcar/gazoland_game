@@ -1,7 +1,6 @@
 #ifndef THE_MECHANISM_SRC_VEC2_H
 #define THE_MECHANISM_SRC_VEC2_H
 
-
 struct vec2 {
   double x;
   double y;
@@ -33,11 +32,6 @@ struct fvec2 {
     y += other.y;
     return *this;
   }
-};
-
-struct svec2 {
-  size_t width;
-  size_t height;
 };
 
 inline vec2 operator+(const vec2& a, const vec2& b) {

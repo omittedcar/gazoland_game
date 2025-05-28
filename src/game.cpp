@@ -14,8 +14,8 @@
 #include <iostream>
 #include <fstream>
 
-#define RESOLUTION_X 800
-#define RESOLUTION_Y 600
+#define RESOLUTION_X 512
+#define RESOLUTION_Y 384
 
 #define UI_WIDTH 36
 #define UI_HEIGHT 20
@@ -72,13 +72,13 @@ std::shared_ptr<shader> load_shader_from_file(
   return shader::create(full_path, type, v_pos_name, v_uv_name);
 }
 
-std::shared_ptr<texture> load_texture_from_file(const char* path) {
+std::shared_ptr<texture> load_texture_from_file(const char* path, size_t mip_count = 0) {
   std::filesystem::path full_path(root_path());
   full_path /= "assets";
   full_path /= "textures";
   full_path /= path;
   std::cout << "loading tex " << full_path.string() << std::endl;
-  return texture::create_from_file(full_path);
+  return texture::create_from_file(full_path, mip_count);
 }
 
 void write_text(unsigned char* destination,
@@ -188,9 +188,9 @@ void game::run()
   the_gazo = std::make_shared<gazo>();
   the_level = std::make_unique<level>("test_level.mechanism", the_gazo);
   
-  gazo_spritesheet_tex = load_texture_from_file("hd_blond_hair_surface.png");
-  stone_tile_tex = load_texture_from_file("potato_tiles.xcf");
-  bailey_truss_tex = load_texture_from_file("bill_and_ted.jpg");
+  gazo_spritesheet_tex = load_texture_from_file("aqua.pkm");
+  stone_tile_tex = load_texture_from_file("grass.pkm");
+  bailey_truss_tex = load_texture_from_file("aqua.pkm");
 
   while (is_playing && !glfwWindowShouldClose(window))
   {
