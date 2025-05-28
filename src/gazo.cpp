@@ -1,9 +1,6 @@
-#include "./gazo.h"
+#include "gazo.h"
 
 #include <cassert>
-#include <cstdio>
-#include <cstring>
-#include <stdlib.h>
 #include <math.h>
 
 namespace {

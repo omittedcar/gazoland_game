@@ -1,13 +1,14 @@
 #ifndef _GAZOLAND_SRC_LEVEL_H_
 #define _GAZOLAND_SRC_LEVEL_H_
 
-#include "gazo.h"
 #include "platform.h"
 
 #include "gles_or_vulkan.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+class gazo;
 
 class level {
 public:

@@ -1,7 +1,9 @@
 #ifndef _GAZOLAND_SRC_GAME_H_
 #define _GAZOLAND_SRC_GAME_H_
 
+#include "gazo.h"
 #include "level.h"
+
 #include "gles_or_vulkan.h"
 
 #include <memory>

@@ -3,16 +3,9 @@
 
 #include "gles_or_vulkan.h"
 
-#include <stdio.h>
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <libgen.h>
-
 #include <iostream>
-#include <fstream>
 
 #define RESOLUTION_X 512
 #define RESOLUTION_Y 384

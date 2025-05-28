@@ -1,9 +1,9 @@
 #ifndef _GAZOLAND_SRC_GAZO_H_
 #define _GAZOLAND_SRC_GAZO_H_
 
-#include "stdlib.h"
-#include "gles_or_vulkan.h"
 #include "platform.h"
+
+#include "gles_or_vulkan.h"
 
 class gazo {
  public:
