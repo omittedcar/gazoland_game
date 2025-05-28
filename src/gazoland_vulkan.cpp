@@ -10,34 +10,8 @@ std::optional<uint32_t> graphicsFamily;
 std::optional<uint32_t> computeFamily = 0;
 VkDevice device;
 VkQueue graphicsQueue;
-}
 
-void gazoland_init() {
-  glfwInit();
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-  //glfwSwapInterval(1);
-
-  {
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-    std::vector<VkExtensionProperties> extensions(extensionCount);
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-    std::cout << "available extensions:" << std::endl;
-    for (const auto& extension : extensions) {
-      std::cout << '\t' << extension.extensionName << '\n';
-    }
-
-    std::cout << std::endl << "available validation layers:" << std::endl;
-    uint32_t layerCount;
-    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-    std::vector<VkLayerProperties> availableLayers(layerCount);
-    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-    for (const auto& layerProperties : availableLayers) {
-      std::cout << "\t" << layerProperties.layerName << std::endl;
-    }
-  }
-
+bool createInstance() {
   VkApplicationInfo appInfo{};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appInfo.pApplicationName = "Hello Triangle";
@@ -60,14 +34,18 @@ void gazoland_init() {
   VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
   if (result != VK_SUCCESS) {
     std::cerr << "vkCreateInstance failed" << std::endl;
-    return;
+    return false;
   }
 
+  return true;
+}
+
+bool pickPhysicalDevice() {
   uint32_t deviceCount = 0;
   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
   if (deviceCount == 0) {
     std::cerr << "failed to find GPUs with Vulkan support!" << std::endl;
-    return;
+    return false;
   }
   std::vector<VkPhysicalDevice> devices(deviceCount);
   vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
@@ -77,9 +55,14 @@ void gazoland_init() {
   }
 
   if (physicalDevice == VK_NULL_HANDLE) {
-    throw std::runtime_error("failed to find a suitable GPU!");
+    std::cerr << "failed to find a suitable GPU!" << std::endl;
+    return false;
   }
 
+  return true;
+}
+
+bool createLogicalDevice() {
   uint32_t queueFamilyCount = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
   std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
@@ -115,10 +98,25 @@ void gazoland_init() {
 
   if (vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device) != VK_SUCCESS) {
     std::cerr << "failed to create logical device!" << std::endl;
-    return;
+    return false;
   }
 
   vkGetDeviceQueue(device, graphicsFamily.value(), 0, &graphicsQueue);
+
+  return true;
+}
+
+}  // namespace {
+
+void gazoland_init() {
+  glfwInit();
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  //glfwSwapInterval(1);
+
+  createInstance();
+  pickPhysicalDevice();
+  createLogicalDevice();
 }
 
 void gazoland_cleanup() {
