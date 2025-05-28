@@ -1,4 +1,6 @@
 #include "gles_or_vulkan.h"
+#include "gazo.h"
+#include "level.h"
 
 #include <cassert>
 #include <fstream>
@@ -362,63 +364,69 @@ void prepare_to_draw(
   CHECK_GL();
 }
 
-void draw_level(
-    const std::shared_ptr<program>& terrain_shader,
-    const std::vector<float>& projection_matrix,
-    float x, float y,
-    std::shared_ptr<texture>& stone_tile_texture) {
+void draw_platform(
+    const platform& pl,
+    const std::vector<float>& projection,
+    fvec2 view) {
+  const std::shared_ptr<program>& terrain_shader
+      = pl.get_terrain_prog();
+  const std::shared_ptr<program>& fill_shader
+      = pl.get_polygon_fill_prog();
+  const std::shared_ptr<texture>& fill_texture
+      = pl.get_stone_tile_tex();
+  const std::shared_ptr<buffer>& vertex_pos_buffer
+      = pl.get_vertex_pos_buffer();
+  const std::shared_ptr<buffer>& vertex_uv_buffer
+      = pl.get_vertex_uv_buffer();
+  const std::shared_ptr<buffer>& upper_surface_index_buffer
+      = pl.get_upper_surface_index_buffer();
+  const std::shared_ptr<buffer>& lower_surface_index_buffer
+      = pl.get_lower_surface_index_buffer();
+  const std::shared_ptr<buffer>& corner_vertex_buffer
+      = pl.get_corner_vertex_buffer();
+  const std::shared_ptr<buffer>& inner_face_index_buffer
+      = pl.get_inner_face_index_buffer();
+
   glEnable(GL_BLEND);
   CHECK_GL();
   glBlendFunc(GL_ONE, GL_SRC_ALPHA);
   CHECK_GL();
   glUseProgram(terrain_shader->id());
   CHECK_GL();
+
   glUniformMatrix4fv(
-      terrain_shader->u_projection(), 1, GL_FALSE, projection_matrix.data());
+      terrain_shader->u_projection(), 1, GL_FALSE, projection.data());
   CHECK_GL();
   glUniform2f(
-      terrain_shader->u_panning(), x, y);
+      terrain_shader->u_panning(), view.x, view.y);
   CHECK_GL();
   glUniform1i(terrain_shader->u_texture(), 0);
   CHECK_GL();
-  glBindTexture(GL_TEXTURE_2D, stone_tile_texture->id());
+  glBindTexture(GL_TEXTURE_2D, fill_texture->id());
   CHECK_GL();
-}
 
-void draw_platform(
-    const std::shared_ptr<program>& surface_shader,
-    const std::shared_ptr<program>& fill_shader,
-    const std::shared_ptr<buffer>& vertex_pos_buffer,
-    const std::shared_ptr<buffer>& vertex_uv_buffer,
-    const std::shared_ptr<buffer>& upper_surface_index_buffer,
-    const std::shared_ptr<buffer>& lower_surface_index_buffer,
-    const std::shared_ptr<buffer>& corner_vertex_buffer,
-    const std::shared_ptr<buffer>& inner_face_index_buffer,
-    const std::vector<float>& projection,
-    float x, float y, int side_count) {
-  glUseProgram(surface_shader->id());
-  CHECK_GL();
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer->id());
   CHECK_GL();
-  glVertexAttribPointer(surface_shader->v_pos(), 3, GL_FLOAT, false, 0, nullptr);
+  glVertexAttribPointer(terrain_shader->v_pos(), 3, GL_FLOAT, false, 0, nullptr);
   CHECK_GL();
-  glEnableVertexAttribArray(surface_shader->v_pos());
+  glEnableVertexAttribArray(terrain_shader->v_pos());
   CHECK_GL();
   
   glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer->id());
   CHECK_GL();
-  glVertexAttribPointer(surface_shader->v_uv(), 2, GL_FLOAT, false, 0, nullptr);
+  glVertexAttribPointer(terrain_shader->v_uv(), 2, GL_FLOAT, false, 0, nullptr);
   CHECK_GL();
-  glEnableVertexAttribArray(surface_shader->v_uv());
+  glEnableVertexAttribArray(terrain_shader->v_uv());
   CHECK_GL();
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer->id());
   CHECK_GL();
-  glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
+  glDrawElements(GL_TRIANGLES, pl.get_side_count() * 6, GL_UNSIGNED_SHORT, nullptr);
   CHECK_GL();
-  glDisableVertexAttribArray(surface_shader->v_pos());
+
+  glDisableVertexAttribArray(terrain_shader->v_pos());
   CHECK_GL();
-  glDisableVertexAttribArray(surface_shader->v_uv());
+  glDisableVertexAttribArray(terrain_shader->v_uv());
   CHECK_GL();
   
   //glDisable(GL_BLEND);
@@ -435,7 +443,7 @@ void draw_platform(
   CHECK_GL();
   glUniform1i(fill_shader->u_texture(), 0);
   CHECK_GL();
-  glUniform2f(fill_shader->u_panning(), x, y);
+  glUniform2f(fill_shader->u_panning(), view.x, view.y);
   CHECK_GL();
 
   //glEnable(GL_BLEND);
@@ -448,55 +456,56 @@ void draw_platform(
   CHECK_GL();
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer->id());
   CHECK_GL();
-  glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
+  glDrawElements(GL_TRIANGLES, 3*(pl.get_side_count() - 2), GL_UNSIGNED_SHORT, nullptr);
   CHECK_GL();
 
-  glUseProgram(surface_shader->id());
+  glUseProgram(terrain_shader->id());
   CHECK_GL();
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer->id());
   CHECK_GL();
-  glVertexAttribPointer(surface_shader->v_pos(), 3, GL_FLOAT, false, 0, nullptr);
+  glVertexAttribPointer(terrain_shader->v_pos(), 3, GL_FLOAT, false, 0, nullptr);
   CHECK_GL();
-  glEnableVertexAttribArray(surface_shader->v_pos());
+  glEnableVertexAttribArray(terrain_shader->v_pos());
   CHECK_GL();
   glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer->id());
   CHECK_GL();
   
-  glVertexAttribPointer(surface_shader->v_uv(), 2, GL_FLOAT, false, 0, nullptr);
+  glVertexAttribPointer(terrain_shader->v_uv(), 2, GL_FLOAT, false, 0, nullptr);
   CHECK_GL();
-  glEnableVertexAttribArray(surface_shader->v_uv());
+  glEnableVertexAttribArray(terrain_shader->v_uv());
   CHECK_GL();
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer->id());
   CHECK_GL();
   //glEnable(GL_BLEND);
   glBindTexture(GL_TEXTURE_2D, 5);
   CHECK_GL();
-  glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
+  glDrawElements(GL_TRIANGLES, pl.get_side_count() * 6, GL_UNSIGNED_SHORT, nullptr);
   CHECK_GL();
-  glDisableVertexAttribArray(surface_shader->v_pos());
+  glDisableVertexAttribArray(terrain_shader->v_pos());
   CHECK_GL();
-  glDisableVertexAttribArray(surface_shader->v_uv());
+  glDisableVertexAttribArray(terrain_shader->v_uv());
   CHECK_GL();
 }
 
-void draw_gazo(
-    const std::shared_ptr<program>& gazo_shader,
-    float x, float y,
-    const std::vector<float>& projection_matrix,
-    const std::shared_ptr<texture>& gazo_spritesheet_tex,
-    const std::shared_ptr<buffer> vertex_buf,
-    const std::shared_ptr<buffer> uv_buf,
-    const std::shared_ptr<buffer> element_index_buf,
-    int uv_map_offset,
-    int n_sides) {
+void draw_gazo(const gazo& gz,
+               const std::vector<float>& projection,
+               fvec2 view) {
+  const std::shared_ptr<program>& gazo_shader = gz.get_prog();
+  const std::shared_ptr<texture>& gazo_spritesheet_tex = gz.get_tex();
+  const std::shared_ptr<buffer> vertex_buf = gz.get_vertex_buf();
+  const std::shared_ptr<buffer> uv_buf = gz.get_uv_buf();
+  const std::shared_ptr<buffer> element_index_buf = gz.get_element_index_buf();
+  int uv_map_offset = gz.get_uv_map_offset();
+  int n_sides = gz.get_n_sides();
+
   glUseProgram(gazo_shader->id());
   CHECK_GL();
   glUniformMatrix4fv(
-      gazo_shader->u_projection(), 1, GL_FALSE, projection_matrix.data()
+      gazo_shader->u_projection(), 1, GL_FALSE, projection.data()
   );  
   CHECK_GL();
   glUniform2f(
-      gazo_shader->u_panning(), x, y
+      gazo_shader->u_panning(), view.x, view.y
   );
   CHECK_GL();
   glUniform1i(

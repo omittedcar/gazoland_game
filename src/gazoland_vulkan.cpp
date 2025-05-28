@@ -219,34 +219,15 @@ void prepare_to_draw(
     const std::shared_ptr<framebuffer>& fb,
     size_t width, size_t height) {}
 
-void draw_level(
-    const std::shared_ptr<program>& terrain_shader,
-    const std::vector<float>& projection_matrix,
-    float x, float y,
-    std::shared_ptr<texture>& stone_tile_texture) {}
-
 void draw_platform(
-    const std::shared_ptr<program>& surface_shader,
-    const std::shared_ptr<program>& fill_shader,
-    const std::shared_ptr<buffer>& vertex_pos_buffer,
-    const std::shared_ptr<buffer>& vertex_uv_buffer,
-    const std::shared_ptr<buffer>& upper_surface_index_buffer,
-    const std::shared_ptr<buffer>& lower_surface_index_buffer,
-    const std::shared_ptr<buffer>& corner_vertex_buffer,
-    const std::shared_ptr<buffer>& inner_face_index_buffer,
+    const platform& pl,
     const std::vector<float>& projection,
-    float x, float y, int side_count) {}
+    fvec2 view) {}
 
 void draw_gazo(
-    const std::shared_ptr<program>& gazo_shader,
-    float x, float y,
+    const gazo& gz,
     const std::vector<float>& projection_matrix,
-    const std::shared_ptr<texture>& gazo_spritesheet_tex,
-    const std::shared_ptr<buffer> vertex_buf,
-    const std::shared_ptr<buffer> uv_buf,
-    const std::shared_ptr<buffer> element_index_buf,
-    int uv_map_offset,
-    int n_sides) {}
+    fvec2 view) {}
 
 void present_game(
     size_t width, size_t height,

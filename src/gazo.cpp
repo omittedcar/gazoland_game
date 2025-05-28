@@ -88,8 +88,11 @@ void add_thing_to_other_thing_into_another_thing(
 
 }  // namespace {
 
-gazo::gazo()
-    : mapping(n_verts),
+gazo::gazo(std::shared_ptr<program> prog_arg,
+           std::shared_ptr<texture> spritesheet_tex_arg)
+    : prog(prog_arg),
+      spritesheet_tex(spritesheet_tex_arg),
+      mapping(n_verts),
       pos20(n_verts * 2),
       pos(n_verts),
       vel(n_verts),
@@ -494,18 +497,11 @@ float gazo::get_rumble() {
   return 0;
 }
 
-void gazo::draw(
-    const std::shared_ptr<program>& gazo_shader,
-    const std::shared_ptr<texture>& gazo_spritesheet_tex,
-    const std::vector<float>& projection_matrix,
-    fvec2 view) {
+void gazo::draw(const std::vector<float>& projection, fvec2 view) {
   update_vertex_buffer();
   update_uv_buffer();
   choose_sprite();
-  draw_gazo(
-      gazo_shader, view.x, view.y, projection_matrix,
-      gazo_spritesheet_tex, vertex_buffer, uv_buffer,
-      element_index_buffer, uv_map_offset, n_sides);
+  draw_gazo(*this, projection, view);
 }
 
 void gazo::choose_sprite() {

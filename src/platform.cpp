@@ -1,30 +1,72 @@
 #include "platform.h"
 
+#include "path.h"
+
 #include <cmath>
-#include <stdlib.h>
+#include <fstream>
+#include <iostream>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-void platform::arise(std::vector<fvec2> corners_in, int side_count_in) {
-  corners = std::move(corners_in);
-  side_count = side_count_in;
+platform::platform(const char *file_name,
+                   std::shared_ptr<program> terrain_prog_arg,
+                   std::shared_ptr<program> polygon_fill_prog_arg,
+                   std::shared_ptr<texture> stone_tile_tex_arg)
+    : terrain_prog(terrain_prog_arg),
+      polygon_fill_prog(polygon_fill_prog_arg),
+      stone_tile_tex(stone_tile_tex_arg) {
+  std::filesystem::path full_path(root_path());
+  full_path /= "assets";
+  full_path /= "levels";
+  full_path /= file_name;
+  std::ifstream ifs(full_path.string(), std::ios::in);
+  ifs >> std::noskipws;
+  ifs.seekg(3);
 
+  unsigned char level_size;
+  ifs >> level_size;
+  std::cout << "the level is " << level_size << " big" << std::endl;
+  side_count = level_size;
+  corners.resize(side_count);
+
+  //corners.resize(side_count = 8);
+  //corners[0] = {-0.9, -1.0};
+  //corners[1] = {-1.0, -1.1};
+  //corners[2] = {-1.0, -1.9};
+  //corners[3] = {-0.9, -2.0};
+  //corners[4] = {+0.9, -2.0};
+  //corners[5] = {+1.0, -1.9};
+  //corners[6] = {+1.0, -1.1};
+  //corners[7] = {+0.9, -1.0};
+  
+  for (int i = 0; i < level_size; i++) {
+    unsigned char the_char;
+    ifs >> the_char;
+    corners[i].x = float((int(the_char) - 0x80) * 4);
+    ifs >> the_char;
+    corners[i].x += float(the_char) / 64.0;
+    ifs >> the_char;
+    corners[i].y = float((int(the_char) - 0x80) * 4);
+    ifs >> the_char;
+    corners[i].y += float(the_char) / 64.0;
+  }
+  
   compute_bounding_box();
   do_vertex_buffers();
   generate_mesh();
 }
 
 void platform::draw(
-    const std::shared_ptr<program>& surface_shader,
-    const std::shared_ptr<program>& fill_shader,
     const std::vector<float>& projection,
     const fvec2& view) {
-  draw_platform(
-      surface_shader, fill_shader,
-      vertex_pos_buffer, vertex_uv_buffer,
-      upper_surface_index_buffer, lower_surface_index_buffer,
-      corner_vertex_buffer, inner_face_index_buffer,
-      projection, view.x, view.y, side_count);
+  draw_platform(*this, projection, view);
+  // draw_platform(
+  //     surface_shader, fill_shader,
+  //     vertex_pos_buffer, vertex_uv_buffer,
+  //     upper_surface_index_buffer, lower_surface_index_buffer,
+  //     corner_vertex_buffer, inner_face_index_buffer,
+  //     projection, view.x, view.y, side_count);
 }
 
 void platform::compute_bounding_box() {

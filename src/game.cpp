@@ -185,13 +185,15 @@ void game::run()
   depth_tex = texture::create_for_depth(RESOLUTION_X, RESOLUTION_Y, draw_fb);
   gui_tex = texture::create_for_gui(UI_WIDTH, UI_HEIGHT, lettering);
 
-  the_gazo = std::make_shared<gazo>();
-  the_level = std::make_unique<level>("test_level.mechanism", the_gazo);
-  
   gazo_spritesheet_tex = load_texture_from_file("aqua.pkm");
   stone_tile_tex = load_texture_from_file("grass.pkm");
   bailey_truss_tex = load_texture_from_file("aqua.pkm");
 
+  the_gazo = std::make_shared<gazo>(gazo_prog, gazo_spritesheet_tex);
+  the_level = std::make_unique<level>(
+      "test_level.mechanism", the_gazo, terrain_prog, polygon_fill_prog,
+      stone_tile_tex);
+  
   while (is_playing && !glfwWindowShouldClose(window))
   {
     the_monitor_has_refreshed_again();
@@ -249,9 +251,8 @@ void game::the_monitor_has_refreshed_again()
       0, 0, 0, 1};
   
   prepare_to_draw(draw_fb, RESOLUTION_X, RESOLUTION_Y);
-  the_gazo->draw(gazo_prog, gazo_spritesheet_tex, projection_matrix, view);
-  the_level->draw(terrain_prog, projection_matrix, view, stone_tile_tex,
-                  polygon_fill_prog);
+  the_gazo->draw(projection_matrix, view);
+  the_level->draw(projection_matrix, view);
   
   present_game(window_width, window_height, gamma_prog, square_buf, draw_tex);
   present_gui(gui_prog, square_buf, gui_tex);
