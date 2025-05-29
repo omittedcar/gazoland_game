@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 
-void gazoland_init();
-void gazoland_cleanup();
+GLFWwindow* gazoland_init(int width, int height, const char *title);
+void gazoland_cleanup(GLFWwindow* window);
 
 class gazo;
 class level;

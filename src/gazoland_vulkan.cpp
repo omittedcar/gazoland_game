@@ -10,6 +10,36 @@ std::optional<uint32_t> graphicsFamily;
 std::optional<uint32_t> computeFamily = 0;
 VkDevice device;
 VkQueue graphicsQueue;
+VkSurfaceKHR surface;
+
+void dumpExtensions() {
+  std::cout << "vkGetInstanceProcAddr(instance, \"vkCreateXcbSurfaceKHR\") => "
+            << vkGetInstanceProcAddr(instance, "vkCreateXcbSurfaceKHR") << std::endl;
+
+  if (!glfwVulkanSupported()) {
+    std::cerr << "No vulkan support in GLFW!" << std::endl;
+    return;
+  }
+  {
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> extensions(extensionCount);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+    std::cout << "available extensions:\n";
+    for (const auto& extension : extensions) {
+      std::cout << '\t' << extension.extensionName << '\n';
+    }
+  }
+
+  {
+    uint32_t count;
+    const char **extensions = glfwGetRequiredInstanceExtensions(&count);
+    std::cout << "GLFW requires " << count << " extensions:" << std::endl;
+    while (count) {
+      std::cout << "\t" << extensions[--count] << std::endl;
+    }
+  }
+}
 
 bool createInstance() {
   VkApplicationInfo appInfo{};
@@ -37,6 +67,14 @@ bool createInstance() {
     return false;
   }
 
+  return true;
+}
+
+bool createSurface() {
+  // VkWaylandSurfaceCreateInfoKHR createInfo{};
+  // createInfo.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+  // createInfo.hwnd = glfwGetWin32Window(window);
+  // createInfo.hinstance = GetModuleHandle(nullptr);
   return true;
 }
 
@@ -108,18 +146,48 @@ bool createLogicalDevice() {
 
 }  // namespace {
 
-void gazoland_init() {
+
+GLFWwindow* gazoland_init(int width, int height, const char *title) {
+  createInstance();
+
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   //glfwSwapInterval(1);
+  GLFWwindow* window =
+      glfwCreateWindow(width, height, title, nullptr, nullptr);
 
-  createInstance();
+  dumpExtensions();
+
+  VkResult result = glfwCreateWindowSurface(instance, window, nullptr, &surface);
+  if (result == VK_ERROR_EXTENSION_NOT_PRESENT) {
+    std::cerr << "VK_ERROR_EXTENSION_NOT_PRESENT" << std::endl;
+  }
+  if (result == VK_ERROR_NATIVE_WINDOW_IN_USE_KHR) {
+    std::cerr << "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR" << std::endl;
+  }
+  if (result == VK_ERROR_INITIALIZATION_FAILED) {
+    std::cerr << "VK_ERROR_INITIALIZATION_FAILED" << std::endl;
+  }
+
+  if (result != VK_SUCCESS) {
+    const char* err;
+    int code = glfwGetError(&err);
+    std::cerr << "Could not create window surface: " << result
+              << std::endl << "GLFW: " << err << std::endl;
+    return nullptr;
+  }
+
   pickPhysicalDevice();
   createLogicalDevice();
+
+  return window;
 }
 
-void gazoland_cleanup() {
+void gazoland_cleanup(GLFWwindow* window) {
+  glfwDestroyWindow(window);
+  glfwTerminate();
+  vkDestroySurfaceKHR(instance, surface, nullptr);
   vkDestroyInstance(instance, nullptr);
   vkDestroyDevice(device, nullptr);
 }

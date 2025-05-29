@@ -113,22 +113,17 @@ void game::run()
   );
   */
 
-  gazoland_init();
-  
   write_text(lettering.data(),
     //"The Mechanism is a hazardous ride located in Gazoland, built over the course of five years by Gazolandic Tesseract Engineering Incorporated. It is the largest ride in Gazo Square and, like many other rides in Gazoland, carries an extreme risk of death for both those riding it and those working to maintain it. The Mechanism is only ridden by expert ride-goers as it is infamous for inflicting at least a dozen severe injuries in poorly maintained parts of the ride. It is estimated that the average ride time of The Mechanism is three days, give or take several hours, meaning riders will have to pack provisions and be prepared to make stops on ledges or at Gazolander housing complexes located sparsely throughout the body. Do not bring children to the Mechanism unless you plan to get back down when you're in the beginning of the upper parts.\n"
     "THE MECHANISM\n",
     0
   );
   
-  window = glfwCreateWindow(
+  window = gazoland_init(
     RESOLUTION_X, RESOLUTION_Y,
-    "Dat, the first glaggle to ride the mechanism 2 electric boogaloo",
-    nullptr, nullptr
-  );
+    "Dat, the first glaggle to ride the mechanism 2 electric boogaloo");
   
   glfwSetKeyCallback(window, key_handler);
-  glfwMakeContextCurrent(window);
 
   std::shared_ptr<shader> vertshader_basic =
     load_shader_from_file("vert_basic", shader_type::k_vertex,
@@ -195,9 +190,7 @@ void game::run()
 
 game::~game()
 {
-  gazoland_cleanup();
-  glfwDestroyWindow(window);
-  glfwTerminate();
+  gazoland_cleanup(window);
 }
 
 void game::the_monitor_has_refreshed_again()
