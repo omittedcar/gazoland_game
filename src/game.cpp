@@ -122,6 +122,10 @@ void game::run()
   window = gazoland_init(
     RESOLUTION_X, RESOLUTION_Y,
     "Dat, the first glaggle to ride the mechanism 2 electric boogaloo");
+
+  if (!window) {
+    return;
+  }
   
   glfwSetKeyCallback(window, key_handler);
 

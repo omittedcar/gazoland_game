@@ -8,12 +8,12 @@ gles : bin/gazoland-gles
 
 CC := clang
 CXX := clang++
-CFLAGS :=
+CFLAGS := -g
 vulkan : CFLAGS += -DGAZOLAND_VULKAN
 gles : CFLAGS += -DGAZOLAND_GLES
 
 LIBS := -lglfw
-vulkan : LIBS += -lvulkan
+vulkan : LIBS += -lvulkan -lwayland-client
 gles : LIBS += -lGLESv2 -lEGL
 
 SOURCES := \

@@ -3,6 +3,7 @@
 
 #include "vec2.h"
 
+#include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
 #include <filesystem>
 #include <memory>
