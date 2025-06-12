@@ -2,7 +2,7 @@
 #include "path.h"
 
 #include "gles_or_vulkan.h"
-
+#include "embeds.h"
 #include <math.h>
 #include <string.h>
 #include <iostream>
@@ -204,7 +204,7 @@ void game::the_monitor_has_refreshed_again()
 {
   // if(frame_counter % 30 == 0) {
   glfwPollEvents();
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 8; i++) {
     function_which_is_called_480hz();
   }
   glfwGetWindowSize(window, &window_width, &window_height);
@@ -262,11 +262,6 @@ void game::the_monitor_has_refreshed_again()
 void game::function_which_is_called_480hz() { the_level->time_step(); }
 
 namespace {
-#pragma GCC diagnostic ignored "-Wc23-extensions"
-
-  const unsigned char font[] = {
-#embed "../assets/stolen_font.hehe_funny_file"
-  };
 
 void write_text(unsigned char* destination,
 		const char* text_which_we_are_writing,

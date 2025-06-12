@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <linux/input.h>
+#include <filesystem>
 
 class GLFWwindow;
 

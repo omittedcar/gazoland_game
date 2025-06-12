@@ -6,9 +6,10 @@ vulkan : bin/gazoland-vulkan
 
 gles : bin/gazoland-gles
 
-CC := clang
+CC := clang-19
 CXX := clang++
-CFLAGS :=
+CFLAGS := -std=c++2b
+ACTUALCFLAGS := -std=c23
 vulkan : CFLAGS += -DGAZOLAND_VULKAN
 gles : CFLAGS += -DGAZOLAND_GLES
 
@@ -22,7 +23,8 @@ SOURCES := \
 	level \
 	main \
 	path \
-	platform
+	platform \
+	embeds
 GLES_SOURCES := $(SOURCES:%=%_gl) gazoland_gles
 VULKAN_SOURCES := $(SOURCES:%=%_vk) gazoland_vulkan
 
@@ -38,11 +40,18 @@ bin/gazoland-vulkan : $(VULKAN_SOURCES:%=obj/%.o) | bin
 obj/%.o : src/%.cpp src/*.h | obj
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
+obj/%_gl.o : src/%.c src/*.h | obj
+	$(CC) $(ACTUALCFLAGS) -c -o $@ $<
+
 obj/%_gl.o : src/%.cpp src/*.h | obj
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 obj/%_vk.o : src/%.cpp src/*.h | obj
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
+obj/%_vk.o : src/%.c src/*.h | obj
+	$(CC) $(ACTUALCFLAGS) -c -o $@ $<
+
 clean :
 	rm -rf bin obj
+		
