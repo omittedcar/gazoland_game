@@ -288,7 +288,7 @@ std::shared_ptr<texture> texture::create_for_depth(
 
 // static
 std::shared_ptr<texture> texture::create_for_gui(
-    size_t width, size_t height, const std::vector<unsigned char>& lettering) {
+    size_t width, size_t height, unsigned char* lettering) {
   GLuint id = 0;
   glGenTextures(1, &id);
    
@@ -303,7 +303,7 @@ std::shared_ptr<texture> texture::create_for_gui(
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
    
   glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width * 16, height, 0,
-               GL_RED, GL_UNSIGNED_BYTE, lettering.data());
+               GL_RED, GL_UNSIGNED_BYTE, lettering);
    
   return std::shared_ptr<texture>(new texture("gui_buffer", id));
 }

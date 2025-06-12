@@ -16,14 +16,22 @@ class game {
  public:
   static constexpr size_t k_ui_size = 0x9000;
 
-  game() : lettering(k_ui_size) {}
+  game() {}
   ~game();
   void run();
 
  private:
   void the_monitor_has_refreshed_again();
+  void load();
+  void update();
   void function_which_is_called_480hz();
-
+  void unload();
+  void write_text(const char* text_which_we_are_writing, int offset);
+#define LOADING 0x0
+#define TITLE_SCREEN 0x01
+#define PLAYING 0x02
+#define CLEANUP 0x03
+  unsigned char state = LOADING;
   input_event rumbleinator;
   input_event derumbleinator;
   ff_effect rumble_effect;
@@ -37,7 +45,7 @@ class game {
   int window_width = 0;
   int window_height = 0;
 
-  std::vector<unsigned char> lettering;
+  unsigned char* lettering;
 
   std::shared_ptr<program> gazo_prog;
   std::shared_ptr<program> terrain_prog;
