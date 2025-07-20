@@ -119,14 +119,13 @@ public:
       const std::string& name,
       std::shared_ptr<shader> vertex_shader,
       std::shared_ptr<shader> fragment_shader,
-      const std::string& u_panning_name,
       const std::string& u_projection_name,
       const std::string& u_texture_name);
 
   GLint v_pos() const { return v_pos_; }
   GLint v_uv() const { return v_uv_; }
-  GLint u_panning() const { return u_panning_; }
-  GLint u_projection() const { return u_projection_; }
+  GLint u_projection_view() const { return u_projection_view_; }
+  GLint u_projection_matrix() const { return u_projection_matrix_; }
   GLint u_texture() const { return u_texture_; }
 
 private:
@@ -134,14 +133,14 @@ private:
 	  GLuint id,
 	  std::shared_ptr<shader> vertex_shader,
 	  std::shared_ptr<shader> fragment_shader,
-          GLint u_panning, GLint u_projection, GLint u_texture);
+          GLint u_projection_view, GLint u_projection_matrix, GLint u_texture);
 
   std::shared_ptr<shader> vertex_shader_;
   std::shared_ptr<shader> fragment_shader_;
   GLint v_pos_{-1};
   GLint v_uv_{-1};
-  GLint u_panning_{-1};
-  GLint u_projection_{-1};
+  GLint u_projection_view_{-1};
+  GLint u_projection_matrix_{-1};
   GLint u_texture_{-1};
 };
 

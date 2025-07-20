@@ -165,7 +165,6 @@ std::shared_ptr<program> program::create(
     const std::string& name,
     std::shared_ptr<shader> vertex_shader,
     std::shared_ptr<shader> fragment_shader,
-    const std::string& u_panning_name,
     const std::string& u_projection_name,
     const std::string& u_texture_name) {
   return std::shared_ptr<program>(

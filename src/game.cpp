@@ -157,19 +157,19 @@ void game::load() {
 
   gazo_prog = program::create("gazo",
       vertshader_gazo, fragshader_basic,
-      "view", "projection", "the_texture");
+      "projection", "the_texture");
   terrain_prog = program::create("terrain",
       vertshader_3d, fragshader_basic,
-      "view_pos", "projection_matrix", "the_texture");
+      "projection", "the_texture");
   polygon_fill_prog = program::create("polygon_fill",
       vertshader_no_uv_map, fragshader_basic,
-      "view_pos", "projection_matrix", "the_texture");
+      "projection", "the_texture");
   gui_prog = program::create("gui",
       vertshader_basic, fragshader_gui,
-      "", "", "the_ui");
+      "", "the_ui");
   gamma_prog = program::create("gamma",
-    vertshader_basic, fragshader_gamma,
-    "", "", "");
+      vertshader_basic, fragshader_gamma,
+      "", "");
 
   std::vector<float> the_square = 
     {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,

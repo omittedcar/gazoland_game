@@ -123,7 +123,6 @@ std::shared_ptr<program> program::create(
     const std::string& name,
     std::shared_ptr<shader> vertex_shader,
     std::shared_ptr<shader> fragment_shader,
-    const std::string& u_panning_name,
     const std::string& u_projection_name,
     const std::string& u_texture_name) {
   GLuint id = glCreateProgram();
@@ -151,14 +150,12 @@ std::shared_ptr<program> program::create(
     return nullptr;
   }
 
-  GLint u_panning = -1, u_projection = -1, u_texture = -1;
-  if (u_panning_name.length()) {
-    u_panning = glGetUniformLocation(id, u_panning_name.c_str());
-     
-  }
+  GLint u_projection_view = -1, u_projection_matrix = -1, u_texture = -1;
   if (u_projection_name.length()) {
-    u_projection = glGetUniformLocation(id, u_projection_name.c_str());
-     
+    u_projection_view = glGetUniformLocation(
+        id, (u_projection_name + ".view").c_str());
+    u_projection_matrix = glGetUniformLocation(
+        id, (u_projection_name + ".matrix").c_str());
   }
   if (u_texture_name.length()) {
     u_texture = glGetUniformLocation(id, u_texture_name.c_str());
@@ -168,7 +165,7 @@ std::shared_ptr<program> program::create(
   return std::shared_ptr<program>(
       new program(
           name, id, std::move(vertex_shader), std::move(fragment_shader),
-          u_panning, u_projection, u_texture));
+          u_projection_view, u_projection_matrix, u_texture));
 }
 
 program::program(
@@ -176,14 +173,14 @@ program::program(
     GLuint id,
     std::shared_ptr<shader> vertex_shader,
     std::shared_ptr<shader> fragment_shader,
-    GLint u_panning,
-    GLint u_projection,
+    GLint u_projection_view,
+    GLint u_projection_matrix,
     GLint u_texture)
     : gl_resource(name, id),
       vertex_shader_(std::move(vertex_shader)),
       fragment_shader_(std::move(fragment_shader)),
-      u_panning_(u_panning),
-      u_projection_(u_projection),
+      u_projection_view_(u_projection_view),
+      u_projection_matrix_(u_projection_matrix),
       u_texture_(u_texture) {
   if (vertex_shader_) {
     if (!vertex_shader_->v_pos_name().empty()) {
@@ -378,7 +375,7 @@ void prepare_to_draw(
 
 void draw_platform(
     const platform& pl,
-    const std::vector<float>& projection,
+    const std::vector<float>& projection_matrix,
     fvec2 view) {
   const std::shared_ptr<program>& terrain_shader
       = pl.get_terrain_prog();
@@ -404,42 +401,35 @@ void draw_platform(
   glBlendFunc(GL_ONE, GL_SRC_ALPHA);
    
   glUseProgram(terrain_shader->id());
-   
 
-  glUniformMatrix4fv(
-      terrain_shader->u_projection(), 1, GL_FALSE, projection.data());
-   
   glUniform2f(
-      terrain_shader->u_panning(), view.x, view.y);
-   
+      terrain_shader->u_projection_view(), view.x, view.y);
+  glUniformMatrix4fv(
+      terrain_shader->u_projection_matrix(), 1, GL_FALSE, projection_matrix.data());
+
   glUniform1i(terrain_shader->u_texture(), 0);
-   
+
   glBindTexture(GL_TEXTURE_2D, fill_texture->id());
-   
 
   glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer->id());
-   
+
   glVertexAttribPointer(terrain_shader->v_pos(), 3, GL_FLOAT, false, 0, nullptr);
    
   glEnableVertexAttribArray(terrain_shader->v_pos());
-   
   
   glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer->id());
    
   glVertexAttribPointer(terrain_shader->v_uv(), 2, GL_FLOAT, false, 0, nullptr);
    
   glEnableVertexAttribArray(terrain_shader->v_uv());
-   
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer->id());
    
   glDrawElements(GL_TRIANGLES, pl.get_side_count() * 6, GL_UNSIGNED_SHORT, nullptr);
-   
 
   glDisableVertexAttribArray(terrain_shader->v_pos());
    
   glDisableVertexAttribArray(terrain_shader->v_uv());
-   
   
   //glDisable(GL_BLEND);
 
@@ -451,11 +441,11 @@ void draw_platform(
    
   glVertexAttribPointer(fill_shader->v_pos(), 2, GL_FLOAT, GL_FALSE, 0, nullptr);
    
-  glUniformMatrix4fv(fill_shader->u_projection(), 1, false, projection.data());
+  glUniform2f(fill_shader->u_projection_view(), view.x, view.y);
+  glUniformMatrix4fv(fill_shader->u_projection_matrix(), 1, false, projection_matrix.data());
    
   glUniform1i(fill_shader->u_texture(), 0);
    
-  glUniform2f(fill_shader->u_panning(), view.x, view.y);
    
 
   //glEnable(GL_BLEND);
@@ -500,7 +490,7 @@ void draw_platform(
 }
 
 void draw_gazo(const gazo& gz,
-               const std::vector<float>& projection,
+               const std::vector<float>& projection_matrix,
                fvec2 view) {
   const std::shared_ptr<program>& gazo_shader = gz.get_prog();
   const std::shared_ptr<texture>& gazo_spritesheet_tex = gz.get_tex();
@@ -512,14 +502,13 @@ void draw_gazo(const gazo& gz,
 
   glUseProgram(gazo_shader->id());
    
-  glUniformMatrix4fv(
-      gazo_shader->u_projection(), 1, GL_FALSE, projection.data()
-  );  
-   
   glUniform2f(
-      gazo_shader->u_panning(), view.x, view.y
+      gazo_shader->u_projection_view(), view.x, view.y
   );
-   
+  glUniformMatrix4fv(
+      gazo_shader->u_projection_matrix(), 1, GL_FALSE, projection_matrix.data()
+  );
+
   glUniform1i(
       gazo_shader->u_texture(), 0
   );

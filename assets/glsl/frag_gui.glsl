@@ -1,9 +1,9 @@
 #version 310 es
 
 precision highp float;
-out vec4 color;
-in vec2 uv;
-uniform sampler2D the_ui;
+layout(location = 0) out vec4 color;
+layout(location = 0) in vec2 uv;
+layout(binding = 0) uniform sampler2D the_ui;
 void main() {
   ivec2 the_coord = ivec2(
     (uv * vec2(1.0,-1.0) + vec2(0.0,1.0))

@@ -1,9 +1,9 @@
 #version 310 es
 
 precision highp float;
-in vec2 uv;
-out vec4 color;
-uniform sampler2D the_texture;
+layout(location = 0) in vec2 uv;
+layout(location = 0) out vec4 color;
+layout(binding = 0) uniform sampler2D the_texture;
 
 void main() {
   vec4 texel = texture(the_texture,uv);
