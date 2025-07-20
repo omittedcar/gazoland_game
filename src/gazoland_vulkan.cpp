@@ -206,7 +206,7 @@ std::shared_ptr<texture> texture::create_for_depth(
 // static
 std::shared_ptr<texture> texture::create_for_gui(
     size_t width, size_t height,
-    const std::vector<unsigned char>& lettering) {
+    const unsigned char* lettering) {
   return std::shared_ptr<texture>(new texture("gui"));
 }
 

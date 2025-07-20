@@ -42,8 +42,6 @@ class game {
   std::unique_ptr<level> the_level;
   bool is_playing = false;
   GLFWwindow *window = nullptr;
-  int window_width = 0;
-  int window_height = 0;
 
   unsigned char* lettering;
 

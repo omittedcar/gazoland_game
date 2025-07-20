@@ -7,8 +7,8 @@
 #include <string.h>
 #include <iostream>
 
-#define RESOLUTION_X 512
-#define RESOLUTION_Y 384
+#define RESOLUTION_X 1024
+#define RESOLUTION_Y 768
 
 #define UI_WIDTH 36
 #define UI_HEIGHT 20
@@ -216,7 +216,11 @@ void game::the_monitor_has_refreshed_again()
   for (int i = 0; i < 8; i++) {
     function_which_is_called_480hz();
   }
+  int window_width, window_height;
   glfwGetWindowSize(window, &window_width, &window_height);
+  float xscale, yscale;
+  glfwGetWindowContentScale(window, &xscale, &yscale);
+
   int joystick_axis_count;
   vec2 cursor_pos;
   const float *joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
@@ -256,7 +260,8 @@ void game::the_monitor_has_refreshed_again()
   the_gazo->draw(projection_matrix, view);
   the_level->draw(projection_matrix, view);
   
-  present_game(window_width, window_height, gamma_prog, square_buf, draw_tex);
+  present_game(window_width * xscale, window_height * yscale,
+               gamma_prog, square_buf, draw_tex);
   present_gui(gui_prog, square_buf, gui_tex);
   
   // rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;

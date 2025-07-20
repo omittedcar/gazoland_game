@@ -6,7 +6,7 @@ vulkan : bin/gazoland-vulkan
 
 gles : bin/gazoland-gles
 
-CC := clang-19
+CC := clang
 CXX := clang++
 CFLAGS := -std=c++2b
 ACTUALCFLAGS := -std=c23
@@ -54,4 +54,3 @@ obj/%_vk.o : src/%.c src/*.h | obj
 
 clean :
 	rm -rf bin obj
-		

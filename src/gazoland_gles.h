@@ -161,7 +161,7 @@ public:
       size_t width, size_t height,
       std::shared_ptr<framebuffer> fb);
   static std::shared_ptr<texture> create_for_gui(
-      size_t width, size_t height, unsigned char* lettering);
+      size_t width, size_t height, const unsigned char* lettering);
   
 private:
   texture(const std::string& name, GLuint id)

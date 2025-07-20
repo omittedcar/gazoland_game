@@ -34,6 +34,7 @@ void gazoland_init() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   glfwSwapInterval(1);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 }
 
 void gazoland_cleanup() {}
@@ -288,7 +289,7 @@ std::shared_ptr<texture> texture::create_for_depth(
 
 // static
 std::shared_ptr<texture> texture::create_for_gui(
-    size_t width, size_t height, unsigned char* lettering) {
+    size_t width, size_t height, const unsigned char* lettering) {
   GLuint id = 0;
   glGenTextures(1, &id);
    
