@@ -1,4 +1,4 @@
-#version 300 es
+#version 310 es
 precision highp float;
 in vec3 pos;
 in vec2 vertex_uv;

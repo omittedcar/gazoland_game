@@ -94,7 +94,13 @@ std::shared_ptr<shader> shader::create(
   glGetShaderiv(id, GL_COMPILE_STATUS, &param);
    
   if (param != GL_TRUE) {
-    std::cerr << "glCompileShader(" << path << ") failed." << std::endl;
+    GLint maxLength = 0;
+    glGetShaderiv(id, GL_INFO_LOG_LENGTH, &maxLength);
+    std::vector<GLchar> infoLog(maxLength);
+    glGetShaderInfoLog(id, maxLength, &maxLength, &infoLog[0]);
+    std::cerr << "glCompileShader(" << path << ") failed." << std::endl
+              << infoLog.data() << std::endl;
+    return nullptr;
   }
 
   return std::shared_ptr<shader>(
@@ -136,7 +142,12 @@ std::shared_ptr<program> program::create(
   glGetProgramiv(id, GL_LINK_STATUS, &param);
    
   if (param != GL_TRUE) {
-    std::cerr << "Link failure for program " << name << std::endl;
+    GLint maxLength = 0;
+    glGetProgramiv(id, GL_INFO_LOG_LENGTH, &maxLength);
+    std::vector<GLchar> infoLog(maxLength);
+    glGetProgramInfoLog(id, maxLength, &maxLength, &infoLog[0]);
+    std::cerr << "Link failure for program " << name << ":" << std::endl
+              << infoLog.data() << std::endl;
     return nullptr;
   }
 
