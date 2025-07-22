@@ -5,6 +5,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <optional>
 
 #ifndef NDEBUG
 # define CHECK_GL() maybe_print_gl_error(__FILE__, __LINE__)
@@ -23,6 +24,32 @@ bool maybe_print_gl_error(const char *file, size_t line) {
               << " at " << file << ":" << line << std::endl;
   }
   return result;
+}
+
+constexpr int s_projection_binding = 0;
+GLint projection_view_offset = 0;
+GLint projection_matrix_offset = 0;
+std::shared_ptr<buffer> projection_buffer;
+
+std::ostream& operator<<(std::ostream& os, const fvec2& v) {
+  os << std::right << std::setprecision(2) << std::fixed;
+  os << "(" << v.x << ", " << v.y << ")";
+  os << std::left << std::setprecision(0) << std::defaultfloat;
+  return os;
+}
+
+std::ostream& dump_matrix(std::ostream& os,
+                          const std::vector<float>& matrix) {
+  os << "[ " << std::right << std::setprecision(2) << std::fixed;
+  for (int row = 0; row < 4; row++) {
+    for (int col = 0; col < 4; col++) {
+      os << std::setw(4) << matrix[(row*4) + col];
+      if (col < 3) os << ", ";
+    }
+    if (row < 3) os << std::endl << "  ";
+  }
+  os << std::setw(0) << std::left << std::defaultfloat << " ]" << std::endl;
+  return os;
 }
 
 }  // namespace
@@ -65,6 +92,8 @@ GLenum buffer_type_to_gl(buffer_type type) {
   switch (type) {
   case buffer_type::k_array:
     return GL_ARRAY_BUFFER;
+  case buffer_type::k_uniform:
+    return GL_UNIFORM_BUFFER;
   default:
     assert(false);
   }
@@ -78,7 +107,8 @@ std::shared_ptr<shader> shader::create(
     const std::filesystem::path& path,
     shader_type type,
     const std::string& v_pos_name,
-    const std::string& v_uv_name) {
+    const std::string& v_uv_name,
+    bool uses_projection) {
   std::ifstream ifs(path.string(), std::ios::in);
   std::ostringstream oss;
   oss << ifs.rdbuf();
@@ -104,13 +134,14 @@ std::shared_ptr<shader> shader::create(
   }
 
   return std::shared_ptr<shader>(
-      new shader(path.filename().stem(), id, v_pos_name, v_uv_name));
+      new shader(path.filename().stem(), id, v_pos_name, v_uv_name, uses_projection));
 }
 
-shader::shader(const std::string& name_arg, GLuint id_arg, const std::string& v_pos_name, const std::string& v_uv_name)
+shader::shader(const std::string& name_arg, GLuint id_arg, const std::string& v_pos_name, const std::string& v_uv_name, bool uses_projection)
     : gl_resource(name_arg, id_arg),
       v_pos_name_(v_pos_name),
-      v_uv_name_(v_uv_name) {}
+      v_uv_name_(v_uv_name),
+      uses_projection_(uses_projection) {}
 
 shader::~shader() {
   if (id()) {
@@ -123,7 +154,6 @@ std::shared_ptr<program> program::create(
     const std::string& name,
     std::shared_ptr<shader> vertex_shader,
     std::shared_ptr<shader> fragment_shader,
-    const std::string& u_projection_name,
     const std::string& u_texture_name) {
   GLuint id = glCreateProgram();
    
@@ -150,22 +180,39 @@ std::shared_ptr<program> program::create(
     return nullptr;
   }
 
-  GLint u_projection_view = -1, u_projection_matrix = -1, u_texture = -1;
-  if (u_projection_name.length()) {
-    u_projection_view = glGetUniformLocation(
-        id, (u_projection_name + ".view").c_str());
-    u_projection_matrix = glGetUniformLocation(
-        id, (u_projection_name + ".matrix").c_str());
+  if (vertex_shader->uses_projection()) {
+    GLuint projection_block_index = glGetUniformBlockIndex(
+        id, "Projection");
+    glUniformBlockBinding(id, projection_block_index, s_projection_binding);
+
+    if (!projection_buffer) {
+      const char* uniform_names[2]{"Projection.view", "Projection.matrix"};
+      GLuint uniform_indices[2];
+      glGetUniformIndices(id, 2u, uniform_names, uniform_indices);
+      GLint uniform_offsets[2];
+      glGetActiveUniformsiv(
+          id, 2u, uniform_indices, GL_UNIFORM_OFFSET, uniform_offsets);
+      projection_view_offset = uniform_offsets[0];
+      projection_matrix_offset = uniform_offsets[1];
+
+      projection_buffer = buffer::create(
+          "projection",
+          std::vector<float>((uniform_offsets[1]/sizeof(float)) + 16, 0),
+          buffer_type::k_uniform);
+      glBindBufferBase(GL_UNIFORM_BUFFER, s_projection_binding,
+                       projection_buffer->id());
+    }
   }
+
+  GLint u_texture = -1;
   if (u_texture_name.length()) {
     u_texture = glGetUniformLocation(id, u_texture_name.c_str());
-     
   }
 
   return std::shared_ptr<program>(
       new program(
           name, id, std::move(vertex_shader), std::move(fragment_shader),
-          u_projection_view, u_projection_matrix, u_texture));
+          u_texture));
 }
 
 program::program(
@@ -173,14 +220,10 @@ program::program(
     GLuint id,
     std::shared_ptr<shader> vertex_shader,
     std::shared_ptr<shader> fragment_shader,
-    GLint u_projection_view,
-    GLint u_projection_matrix,
     GLint u_texture)
     : gl_resource(name, id),
       vertex_shader_(std::move(vertex_shader)),
       fragment_shader_(std::move(fragment_shader)),
-      u_projection_view_(u_projection_view),
-      u_projection_matrix_(u_projection_matrix),
       u_texture_(u_texture) {
   if (vertex_shader_) {
     if (!vertex_shader_->v_pos_name().empty()) {
@@ -329,7 +372,6 @@ buffer::~buffer() {
   if (id()) {
     GLuint id_arg = id();
     glDeleteBuffers(1, &id_arg);
-     
   }
 }
 
@@ -351,7 +393,18 @@ framebuffer::~framebuffer() {
 
 void prepare_to_draw(
     const std::shared_ptr<framebuffer>& fb,
-    size_t width, size_t height) {
+    size_t width, size_t height,
+    const std::vector<float>& projection_matrix,
+    const fvec2& view) {
+  glBindBuffer(GL_UNIFORM_BUFFER, projection_buffer->id());
+  glBufferSubData(
+      GL_UNIFORM_BUFFER, projection_view_offset,
+      2*sizeof(float), &view);
+  glBufferSubData(
+      GL_UNIFORM_BUFFER, projection_matrix_offset,
+      16*sizeof(float), projection_matrix.data());
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
   // bind framebuffer
   glEnable(GL_DEPTH_TEST);
    
@@ -402,11 +455,6 @@ void draw_platform(
    
   glUseProgram(terrain_shader->id());
 
-  glUniform2f(
-      terrain_shader->u_projection_view(), view.x, view.y);
-  glUniformMatrix4fv(
-      terrain_shader->u_projection_matrix(), 1, GL_FALSE, projection_matrix.data());
-
   glUniform1i(terrain_shader->u_texture(), 0);
 
   glBindTexture(GL_TEXTURE_2D, fill_texture->id());
@@ -441,12 +489,7 @@ void draw_platform(
    
   glVertexAttribPointer(fill_shader->v_pos(), 2, GL_FLOAT, GL_FALSE, 0, nullptr);
    
-  glUniform2f(fill_shader->u_projection_view(), view.x, view.y);
-  glUniformMatrix4fv(fill_shader->u_projection_matrix(), 1, false, projection_matrix.data());
-   
   glUniform1i(fill_shader->u_texture(), 0);
-   
-   
 
   //glEnable(GL_BLEND);
   
@@ -502,13 +545,6 @@ void draw_gazo(const gazo& gz,
 
   glUseProgram(gazo_shader->id());
    
-  glUniform2f(
-      gazo_shader->u_projection_view(), view.x, view.y
-  );
-  glUniformMatrix4fv(
-      gazo_shader->u_projection_matrix(), 1, GL_FALSE, projection_matrix.data()
-  );
-
   glUniform1i(
       gazo_shader->u_texture(), 0
   );

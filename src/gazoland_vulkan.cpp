@@ -146,17 +146,21 @@ std::shared_ptr<shader> shader::create(
     const std::filesystem::path& path,
     shader_type shader_type_arg,
     const std::string& v_pos_name,
-    const std::string& v_uv_name) {
-  return std::shared_ptr<shader>(new shader(path, v_pos_name, v_uv_name));
+    const std::string& v_uv_name,
+    bool uses_projection) {
+  return std::shared_ptr<shader>(
+      new shader(path, v_pos_name, v_uv_name, uses_projection));
 }
 
 shader::shader(
     const std::string& name_arg,
     const std::string& v_pos_name,
-    const std::string& v_uv_name)
+    const std::string& v_uv_name,
+    bool uses_projection)
     : vk_resource(name_arg),
       v_pos_name_(v_pos_name),
-      v_uv_name_(v_uv_name) {}
+      v_uv_name_(v_uv_name),
+      uses_projection_(uses_projection) {}
 
 shader::~shader() {}
 
@@ -165,7 +169,6 @@ std::shared_ptr<program> program::create(
     const std::string& name,
     std::shared_ptr<shader> vertex_shader,
     std::shared_ptr<shader> fragment_shader,
-    const std::string& u_projection_name,
     const std::string& u_texture_name) {
   return std::shared_ptr<program>(
       new program(name, vertex_shader, fragment_shader));
@@ -216,7 +219,9 @@ texture::~texture() {}
 
 void prepare_to_draw(
     const std::shared_ptr<framebuffer>& fb,
-    size_t width, size_t height) {}
+    size_t width, size_t height,
+    const std::vector<float>& projection_matrix,
+    const fvec2& view) {}
 
 void draw_platform(
     const platform& pl,

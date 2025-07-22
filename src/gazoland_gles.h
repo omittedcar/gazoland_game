@@ -68,6 +68,7 @@ public:
       glBufferData(buffer_type_to_gl(type),
 		   data.size() * sizeof(T),
 		   data.data(), GL_STATIC_DRAW);
+      glBindBuffer(buffer_type_to_gl(type), 0);
     }
     return std::shared_ptr<buffer>(new buffer(name, id));
   }
@@ -78,6 +79,7 @@ public:
     glBufferData(buffer_type_to_gl(type),
                  data.size() * sizeof(T),
                  data.data(), GL_STATIC_DRAW);
+    glBindBuffer(buffer_type_to_gl(type), 0);
   }
 
  private:
@@ -95,18 +97,22 @@ public:
       const std::filesystem::path& path,
       shader_type shader_type_arg,
       const std::string& v_pos_name,
-      const std::string& v_uv_name);
+      const std::string& v_uv_name,
+      bool uses_projection);
 
   const std::string& v_pos_name() const { return v_pos_name_; }
   const std::string& v_uv_name() const { return v_uv_name_; }
+  const bool uses_projection() const { return uses_projection_; }
 
 private:
   shader(
       const std::string& name_arg, GLuint id,
-      const std::string& v_pos_name, const std::string& v_uv_name);
+      const std::string& v_pos_name, const std::string& v_uv_name,
+      bool uses_projection);
 
   std::string v_pos_name_;
   std::string v_uv_name_;
+  bool uses_projection_;
 };
 
 class program : public gl_resource {
@@ -119,13 +125,10 @@ public:
       const std::string& name,
       std::shared_ptr<shader> vertex_shader,
       std::shared_ptr<shader> fragment_shader,
-      const std::string& u_projection_name,
       const std::string& u_texture_name);
 
   GLint v_pos() const { return v_pos_; }
   GLint v_uv() const { return v_uv_; }
-  GLint u_projection_view() const { return u_projection_view_; }
-  GLint u_projection_matrix() const { return u_projection_matrix_; }
   GLint u_texture() const { return u_texture_; }
 
 private:
@@ -133,14 +136,12 @@ private:
 	  GLuint id,
 	  std::shared_ptr<shader> vertex_shader,
 	  std::shared_ptr<shader> fragment_shader,
-          GLint u_projection_view, GLint u_projection_matrix, GLint u_texture);
+          GLint u_texture);
 
   std::shared_ptr<shader> vertex_shader_;
   std::shared_ptr<shader> fragment_shader_;
   GLint v_pos_{-1};
   GLint v_uv_{-1};
-  GLint u_projection_view_{-1};
-  GLint u_projection_matrix_{-1};
   GLint u_texture_{-1};
 };
 
@@ -169,7 +170,9 @@ private:
 
 void prepare_to_draw(
     const std::shared_ptr<framebuffer>& fb,
-    size_t width, size_t height);
+    size_t width, size_t height,
+    const std::vector<float>& projection_matrix,
+    const fvec2& view);
 
 void draw_platform(
     const platform& pl,

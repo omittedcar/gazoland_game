@@ -11,7 +11,8 @@ enum class texture_type {
 };
 
 enum class buffer_type {
-  k_array
+  k_array,
+  k_uniform
 };
 
 #ifdef GAZOLAND_GLES

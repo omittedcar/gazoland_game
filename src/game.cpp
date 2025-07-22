@@ -55,14 +55,14 @@ void dump(uint8_t *data, int size)
 }
 
 std::shared_ptr<shader> load_shader_from_file(
-    const char* name, shader_type type,
+    const char* name, shader_type type, bool uses_projection,
     const char* v_pos_name = nullptr,
     const char* v_uv_name = nullptr) {
   std::filesystem::path full_path(root_path());
   full_path /= "assets";
   full_path /= "glsl";
   full_path /= std::string(name) + ".glsl";
-  return shader::create(full_path, type, v_pos_name, v_uv_name);
+  return shader::create(full_path, type, v_pos_name, v_uv_name, uses_projection);
 }
 
 std::shared_ptr<texture> load_texture_from_file(const char* path, size_t mip_count = 0) {
@@ -134,42 +134,37 @@ void game::load() {
   glfwMakeContextCurrent(window);
 
   std::shared_ptr<shader> vertshader_basic =
-    load_shader_from_file("vert_basic", shader_type::k_vertex,
+    load_shader_from_file("vert_basic", shader_type::k_vertex, false,
 			  "pos", "");
   std::shared_ptr<shader> vertshader_gazo =
-    load_shader_from_file("vert_gazo", shader_type::k_vertex,
+    load_shader_from_file("vert_gazo", shader_type::k_vertex, true,
 			  "pos", "vert_uv");
   std::shared_ptr<shader> vertshader_3d =
-    load_shader_from_file("vert_3d", shader_type::k_vertex,
+    load_shader_from_file("vert_3d", shader_type::k_vertex, true,
 			  "pos", "vertex_uv");
   std::shared_ptr<shader> vertshader_no_uv_map =
-    load_shader_from_file("vert_no_uv_map", shader_type::k_vertex,
+    load_shader_from_file("vert_no_uv_map", shader_type::k_vertex, true,
 			  "vertex_pos", "");
   std::shared_ptr<shader> fragshader_basic =
-    load_shader_from_file("frag_basic", shader_type::k_fragment,
+    load_shader_from_file("frag_basic", shader_type::k_fragment, false,
 			  "", "");
   std::shared_ptr<shader> fragshader_gamma =
-    load_shader_from_file("frag_gamma", shader_type::k_fragment,
+    load_shader_from_file("frag_gamma", shader_type::k_fragment, false,
 			  "", "");
   std::shared_ptr<shader> fragshader_gui =
-    load_shader_from_file("frag_gui", shader_type::k_fragment,
+    load_shader_from_file("frag_gui", shader_type::k_fragment, false,
 			  "", "");
 
-  gazo_prog = program::create("gazo",
-      vertshader_gazo, fragshader_basic,
-      "projection", "the_texture");
-  terrain_prog = program::create("terrain",
-      vertshader_3d, fragshader_basic,
-      "projection", "the_texture");
-  polygon_fill_prog = program::create("polygon_fill",
-      vertshader_no_uv_map, fragshader_basic,
-      "projection", "the_texture");
-  gui_prog = program::create("gui",
-      vertshader_basic, fragshader_gui,
-      "", "the_ui");
-  gamma_prog = program::create("gamma",
-      vertshader_basic, fragshader_gamma,
-      "", "");
+  gazo_prog = program::create(
+      "gazo", vertshader_gazo, fragshader_basic, "the_texture");
+  terrain_prog = program::create(
+      "terrain", vertshader_3d, fragshader_basic, "the_texture");
+  polygon_fill_prog = program::create(
+      "polygon_fill", vertshader_no_uv_map, fragshader_basic, "the_texture");
+  gui_prog = program::create(
+      "gui", vertshader_basic, fragshader_gui, "the_ui");
+  gamma_prog = program::create(
+      "gamma", vertshader_basic, fragshader_gamma, "");
 
   std::vector<float> the_square = 
     {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
@@ -190,6 +185,7 @@ void game::load() {
       "test_level.mechanism", the_gazo, terrain_prog, polygon_fill_prog,
       stone_tile_tex);
 }
+
 void game::update() {
   if(state == LOADING) {
     load();
@@ -256,7 +252,7 @@ void game::the_monitor_has_refreshed_again()
       0, 0, 1, 0,
       0, 0, 0, 1};
   
-  prepare_to_draw(draw_fb, RESOLUTION_X, RESOLUTION_Y);
+  prepare_to_draw(draw_fb, RESOLUTION_X, RESOLUTION_Y, projection_matrix, view);
   the_gazo->draw(projection_matrix, view);
   the_level->draw(projection_matrix, view);
   
