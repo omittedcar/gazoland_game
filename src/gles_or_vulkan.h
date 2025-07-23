@@ -21,24 +21,6 @@ enum class buffer_type {
 
 #ifdef GAZOLAND_VULKAN
 # include "gazoland_vulkan.h"
-# ifdef _WIN32
-#  define VK_USE_PLATFORM_WAYLAND_KHR
-# else
-#  define VK_USE_PLATFORM_WAYLAND_KHR
-# endif
-# define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#endif
-
-#include <GLFW/glfw3.h>
-
-#ifdef GAZOLAND_VULKAN
-# ifdef _WIN32
-#  define GLFW_EXPOSE_NATIVE_WIN32
-# else
-#  define GLFW_EXPOSE_NATIVE_WAYLAND
-# endif
-# include <GLFW/glfw3native.h>
 #endif
 
 #endif  // #ifdef _GAZOLAND_SRC_GLES_OR_VULKAN_H_

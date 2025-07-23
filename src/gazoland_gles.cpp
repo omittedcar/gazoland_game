@@ -54,7 +54,7 @@ std::ostream& dump_matrix(std::ostream& os,
 
 }  // namespace
 
-void gazoland_init() {
+GLFWwindow* gazoland_init(int width, int height, const char *title) {
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -62,9 +62,17 @@ void gazoland_init() {
   glfwSwapInterval(1);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+  glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+  GLFWwindow* result =
+      glfwCreateWindow(width, height, title, nullptr, nullptr);
+  glfwMakeContextCurrent(result);
+  return result;
 }
 
-void gazoland_cleanup() {}
+void gazoland_cleanup(GLFWwindow* window) {
+  glfwDestroyWindow(window);
+  glfwTerminate();
+}
 
 GLenum shader_type_to_gl(shader_type type) {
   switch (type) {
@@ -104,17 +112,21 @@ gl_resource::~gl_resource() {}
 
 // static
 std::shared_ptr<shader> shader::create(
-    const std::filesystem::path& path,
-    shader_type type,
+    const std::filesystem::path& assets_path,
+    const std::string& shader_name,
+    shader_type shader_type_arg,
     const std::string& v_pos_name,
     const std::string& v_uv_name,
     bool uses_projection) {
-  std::ifstream ifs(path.string(), std::ios::in);
+  std::filesystem::path full_path = assets_path;
+  full_path /= "glsl";
+  full_path /= shader_name + ".glsl";
+  std::ifstream ifs(full_path.string(), std::ios::in);
   std::ostringstream oss;
   oss << ifs.rdbuf();
   std::string shader_source(oss.str());
   const char* shader_source_c = shader_source.c_str();
-  GLuint id = glCreateShader(shader_type_to_gl(type));
+  GLuint id = glCreateShader(shader_type_to_gl(shader_type_arg));
    
   glShaderSource(id, 1, &shader_source_c, nullptr);
    
@@ -128,13 +140,13 @@ std::shared_ptr<shader> shader::create(
     glGetShaderiv(id, GL_INFO_LOG_LENGTH, &maxLength);
     std::vector<GLchar> infoLog(maxLength);
     glGetShaderInfoLog(id, maxLength, &maxLength, &infoLog[0]);
-    std::cerr << "glCompileShader(" << path << ") failed." << std::endl
+    std::cerr << "glCompileShader(" << full_path << ") failed." << std::endl
               << infoLog.data() << std::endl;
     return nullptr;
   }
 
   return std::shared_ptr<shader>(
-      new shader(path.filename().stem(), id, v_pos_name, v_uv_name, uses_projection));
+      new shader(shader_name, id, v_pos_name, v_uv_name, uses_projection));
 }
 
 shader::shader(const std::string& name_arg, GLuint id_arg, const std::string& v_pos_name, const std::string& v_uv_name, bool uses_projection)

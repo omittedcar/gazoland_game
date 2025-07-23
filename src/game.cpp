@@ -58,11 +58,10 @@ std::shared_ptr<shader> load_shader_from_file(
     const char* name, shader_type type, bool uses_projection,
     const char* v_pos_name = nullptr,
     const char* v_uv_name = nullptr) {
-  std::filesystem::path full_path(root_path());
-  full_path /= "assets";
-  full_path /= "glsl";
-  full_path /= std::string(name) + ".glsl";
-  return shader::create(full_path, type, v_pos_name, v_uv_name, uses_projection);
+  std::filesystem::path assets_path(root_path());
+  assets_path /= "assets";
+  return shader::create(
+      assets_path, name, type, v_pos_name, v_uv_name, uses_projection);
 }
 
 std::shared_ptr<texture> load_texture_from_file(const char* path, size_t mip_count = 0) {
@@ -76,7 +75,13 @@ std::shared_ptr<texture> load_texture_from_file(const char* path, size_t mip_cou
 
 void write_text(unsigned char* destination,
 		const char* text_which_we_are_writing,
-		int offset);
+		int offset) {
+  char char_here;
+  for(int i = 0; (char_here = text_which_we_are_writing[i]) != '\n'; i++) {
+    memcpy(destination + (i + (i/UI_WIDTH*UI_WIDTH)) * 16 + 1,
+           font + char_here * 16, 16);
+  }
+}
 
 }  // namespace
 
@@ -116,14 +121,17 @@ void game::load() {
   );
   */
 
-  gazoland_init();
-  
   write_text(
-    //"The Mechanism is a hazardous ride located in Gazoland, built over the course of five years by Gazolandic Tesseract Engineering Incorporated. It is the largest ride in Gazo Square and, like many other rides in Gazoland, carries an extreme risk of death for both those riding it and those working to maintain it. The Mechanism is only ridden by expert ride-goers as it is infamous for inflicting at least a dozen severe injuries in poorly maintained parts of the ride. It is estimated that the average ride time of The Mechanism is three days, give or take several hours, meaning riders will have to pack provisions and be prepared to make stops on ledges or at Gazolander housing complexes located sparsely throughout the body. Do not bring children to the Mechanism unless you plan to get back down when you're in the beginning of the upper parts.\n"
-    "THE MECHANISM\n",
-    0
+      lettering,
+      //"The Mechanism is a hazardous ride located in Gazoland, built over the course of five years by Gazolandic Tesseract Engineering Incorporated. It is the largest ride in Gazo Square and, like many other rides in Gazoland, carries an extreme risk of death for both those riding it and those working to maintain it. The Mechanism is only ridden by expert ride-goers as it is infamous for inflicting at least a dozen severe injuries in poorly maintained parts of the ride. It is estimated that the average ride time of The Mechanism is three days, give or take several hours, meaning riders will have to pack provisions and be prepared to make stops on ledges or at Gazolander housing complexes located sparsely throughout the body. Do not bring children to the Mechanism unless you plan to get back down when you're in the beginning of the upper parts.\n"
+      "THE MECHANISM\n",
+      0
   );
   
+  window = gazoland_init(
+      RESOLUTION_X, RESOLUTION_Y,
+      "Dat, the first glaggle to ride the mechanism 2 electric boogaloo");
+
   window = glfwCreateWindow(
     RESOLUTION_X, RESOLUTION_Y,
     "Dat, the first glaggle to ride the mechanism 2 electric boogaloo",
@@ -200,9 +208,7 @@ void game::unload() {
   free(lettering);
 }
 game::~game() {
-  gazoland_cleanup();
-  glfwDestroyWindow(window);
-  glfwTerminate();
+  gazoland_cleanup(window);
 }
 
 void game::the_monitor_has_refreshed_again()
@@ -269,12 +275,7 @@ void game::the_monitor_has_refreshed_again()
   frame_counter++;
 }
 
-void game::function_which_is_called_480hz() { the_level->time_step(); }
-void game::write_text(
-		const char* text_which_we_are_writing,
-		int offset) {
-  char char_here;
-  for(int i = 0; (char_here = text_which_we_are_writing[i]) != '\n'; i++) {
-    memcpy(lettering + (i + (i/UI_WIDTH*UI_WIDTH)) * 16 + 1, font + char_here * 16, 16);
-  }
+void game::function_which_is_called_480hz() {
+  the_level->time_step();
 }
+

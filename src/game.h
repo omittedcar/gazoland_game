@@ -26,7 +26,6 @@ class game {
   void update();
   void function_which_is_called_480hz();
   void unload();
-  void write_text(const char* text_which_we_are_writing, int offset);
 #define LOADING 0x0
 #define TITLE_SCREEN 0x01
 #define PLAYING 0x02
@@ -41,7 +40,7 @@ class game {
   std::shared_ptr<gazo> the_gazo;
   std::unique_ptr<level> the_level;
   bool is_playing = false;
-  GLFWwindow *window = nullptr;
+  GLFWwindow* window = nullptr;
 
   unsigned char* lettering;
 

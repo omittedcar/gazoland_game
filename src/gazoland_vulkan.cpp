@@ -106,22 +106,39 @@ bool createLogicalDevice() {
   return true;
 }
 
+void logGlfwError(const char* context) {
+  const char* description;
+  int code = glfwGetError(&description);
+  std::cerr << context << " failed with code " << code
+            << ": " << description << std::endl;
+}
+
 }  // namespace {
 
-void gazoland_init() {
+GLFWwindow* gazoland_init(int width, int height, const char *title) {
   glfwInit();
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-  //glfwSwapInterval(1);
 
   createInstance();
   pickPhysicalDevice();
   createLogicalDevice();
+
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+  glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+  GLFWwindow* window =
+      glfwCreateWindow(width, height, title, nullptr, nullptr);
+  if (!window) {
+    logGlfwError(__FUNCTION__);
+  }
+  return window;
 }
 
-void gazoland_cleanup() {
+void gazoland_cleanup(GLFWwindow* window) {
   vkDestroyInstance(instance, nullptr);
   vkDestroyDevice(device, nullptr);
+  glfwDestroyWindow(window);
+  glfwTerminate();
 }
 
 vk_resource::~vk_resource() {}
@@ -143,13 +160,18 @@ buffer::~buffer() {}
   
 // static
 std::shared_ptr<shader> shader::create(
-    const std::filesystem::path& path,
+    const std::filesystem::path& assets_path,
+    const std::string& name,
     shader_type shader_type_arg,
     const std::string& v_pos_name,
     const std::string& v_uv_name,
     bool uses_projection) {
+  std::filesystem::path full_path(assets_path);
+  full_path /= "assets";
+  full_path /= "spirv";
+  full_path += (name + ".spv");
   return std::shared_ptr<shader>(
-      new shader(path, v_pos_name, v_uv_name, uses_projection));
+      new shader(full_path, v_pos_name, v_uv_name, uses_projection));
 }
 
 shader::shader(

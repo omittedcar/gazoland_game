@@ -4,13 +4,14 @@
 #include "vec2.h"
 
 #include <GLES3/gl3.h>
+#include <GLFW/glfw3.h>
 #include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
 
-void gazoland_init();
-void gazoland_cleanup();
+GLFWwindow* gazoland_init(int width, int height, const char *title);
+void gazoland_cleanup(GLFWwindow* window);
 
 class gazo;
 class level;
@@ -94,7 +95,8 @@ public:
   shader(const shader&) = delete;
 
   static std::shared_ptr<shader> create(
-      const std::filesystem::path& path,
+      const std::filesystem::path& assets_path,
+      const std::string& shader_name,
       shader_type shader_type_arg,
       const std::string& v_pos_name,
       const std::string& v_uv_name,
