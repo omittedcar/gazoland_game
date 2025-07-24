@@ -16,6 +16,13 @@ class game {
  public:
   static constexpr size_t k_ui_size = 0x9000;
 
+  enum class gamestate {
+    kLoading,
+    kTitleScreen,
+    kPlaying,
+    kCleanup
+  };
+  
   game() {}
   ~game();
   void run();
@@ -26,11 +33,8 @@ class game {
   void update();
   void function_which_is_called_480hz();
   void unload();
-#define LOADING 0x0
-#define TITLE_SCREEN 0x01
-#define PLAYING 0x02
-#define CLEANUP 0x03
-  unsigned char state = LOADING;
+  
+  gamestate state = gamestate::kLoading;
   input_event rumbleinator;
   input_event derumbleinator;
   ff_effect rumble_effect;
@@ -39,7 +43,6 @@ class game {
   int frame_counter = 0;
   std::shared_ptr<gazo> the_gazo;
   std::unique_ptr<level> the_level;
-  bool is_playing = false;
   GLFWwindow* window = nullptr;
 
   unsigned char* lettering;

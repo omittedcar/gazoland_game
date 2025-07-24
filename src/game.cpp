@@ -86,11 +86,13 @@ void write_text(unsigned char* destination,
 }  // namespace
 
 void game::run() {
-  while (state != CLEANUP) {
+  while (state != gamestate::kCleanup) {
     update();
   }
 }
 void game::load() {
+  state = gamestate::kCleanup;
+  
   lettering = (unsigned char*) malloc(k_ui_size);
   /*
   rumble_effect.type = FF_PERIODIC;
@@ -128,16 +130,12 @@ void game::load() {
       0
   );
   
-  window = gazoland_init(
-      RESOLUTION_X, RESOLUTION_Y,
-      "Dat, the first glaggle to ride the mechanism 2 electric boogaloo");
+  if (!(window = gazoland_init(
+          RESOLUTION_X, RESOLUTION_Y,
+          "Dat, the first glaggle to ride the mechanism 2 electric boogaloo"))) {
+    return;
+  }
 
-  window = glfwCreateWindow(
-    RESOLUTION_X, RESOLUTION_Y,
-    "Dat, the first glaggle to ride the mechanism 2 electric boogaloo",
-    nullptr, nullptr
-  );
-  
   glfwSetKeyCallback(window, key_handler);
   glfwMakeContextCurrent(window);
 
@@ -163,16 +161,27 @@ void game::load() {
     load_shader_from_file("frag_gui", shader_type::k_fragment, false,
 			  "", "");
 
-  gazo_prog = program::create(
-      "gazo", vertshader_gazo, fragshader_basic, "the_texture");
-  terrain_prog = program::create(
-      "terrain", vertshader_3d, fragshader_basic, "the_texture");
-  polygon_fill_prog = program::create(
-      "polygon_fill", vertshader_no_uv_map, fragshader_basic, "the_texture");
-  gui_prog = program::create(
-      "gui", vertshader_basic, fragshader_gui, "the_ui");
-  gamma_prog = program::create(
-      "gamma", vertshader_basic, fragshader_gamma, "");
+  if (!(gazo_prog = program::create(
+          "gazo", vertshader_gazo, fragshader_basic, "the_texture"))) {
+    return;
+  }
+  if (!(terrain_prog = program::create(
+          "terrain", vertshader_3d, fragshader_basic, "the_texture"))) {
+    return;
+  }
+  if (!(polygon_fill_prog = program::create(
+          "polygon_fill", vertshader_no_uv_map, fragshader_basic,
+          "the_texture"))) {
+    return;
+  }
+  if (!(gui_prog = program::create(
+          "gui", vertshader_basic, fragshader_gui, "the_ui"))) {
+    return;
+  }
+  if (!(gamma_prog = program::create(
+          "gamma", vertshader_basic, fragshader_gamma, ""))) {
+    return;
+  }
 
   std::vector<float> the_square = 
     {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
@@ -188,25 +197,42 @@ void game::load() {
   stone_tile_tex = load_texture_from_file("grass.pkm");
   bailey_truss_tex = load_texture_from_file("aqua.pkm");
 
-  the_gazo = std::make_shared<gazo>(gazo_prog, gazo_spritesheet_tex);
-  the_level = std::make_unique<level>(
-      "test_level.mechanism", the_gazo, terrain_prog, polygon_fill_prog,
-      stone_tile_tex);
+  if (!(the_gazo = std::make_shared<gazo>(gazo_prog, gazo_spritesheet_tex))) {
+    return;
+  }
+  if (!(the_level = std::make_unique<level>(
+          "test_level.mechanism", the_gazo, terrain_prog, polygon_fill_prog,
+          stone_tile_tex))) {
+    return;
+  }
+
+  state = gamestate::kPlaying;
 }
 
 void game::update() {
-  if(state == LOADING) {
-    load();
-    state = PLAYING;
-  } else if((state = glfwWindowShouldClose(window) ? CLEANUP : state) == PLAYING) {
-    the_monitor_has_refreshed_again();
-  } else if(state == CLEANUP) {
-    unload();
+  if (window && glfwWindowShouldClose(window)) {
+    state = gamestate::kCleanup;
+  }
+  switch (state) {
+    case gamestate::kLoading:
+      load();
+      break;
+    case gamestate::kTitleScreen:
+      // TODO
+      break;
+    case gamestate::kPlaying:
+      the_monitor_has_refreshed_again();
+      break;
+    case gamestate::kCleanup:
+      unload();
+      break;
   }
 }
+
 void game::unload() {
   free(lettering);
 }
+
 game::~game() {
   gazoland_cleanup(window);
 }
