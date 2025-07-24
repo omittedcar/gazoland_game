@@ -93,6 +93,7 @@ public:
       const std::string& v_uv_name,
       bool uses_projection);
 
+  const VkShaderModule shader_module() const { return shader_module_; }
   const std::string& v_pos_name() const { return v_pos_name_; }
   const std::string& v_uv_name() const { return v_uv_name_; }
   const bool uses_projection() const { return uses_projection_; }
@@ -100,10 +101,12 @@ public:
 private:
   shader(
       const std::string& name_arg,
+      VkShaderModule shader_module_arg,
       const std::string& v_pos_name,
       const std::string& v_uv_name,
       bool uses_projection);
 
+  VkShaderModule shader_module_ = VK_NULL_HANDLE;
   std::string v_pos_name_;
   std::string v_uv_name_;
   bool uses_projection_;
@@ -124,10 +127,16 @@ public:
 private:
   program(const std::string& name,
 	  std::shared_ptr<shader> vertex_shader,
-	  std::shared_ptr<shader> fragment_shader);
+         std::shared_ptr<shader> fragment_shader,
+          VkRenderPass render_pass,
+          VkPipelineLayout pipeline_layout,
+          VkPipeline pipeline);
 
   std::shared_ptr<shader> vertex_shader_;
   std::shared_ptr<shader> fragment_shader_;
+  VkRenderPass render_pass_ = VK_NULL_HANDLE;
+  VkPipelineLayout pipeline_layout_ = VK_NULL_HANDLE;
+  VkPipeline pipeline_ = VK_NULL_HANDLE;
 };
 
 class texture : public vk_resource {
