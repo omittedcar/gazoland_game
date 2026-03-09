@@ -10,6 +10,7 @@ CC := clang
 CXX := clang++
 GLSLC := glslc
 CXXFLAGS := -std=c++2b
+
 CFLAGS := -std=c23
 vulkan : CXXFLAGS += -DGAZOLAND_VULKAN
 gles : CXXFLAGS += -DGAZOLAND_GLES
@@ -26,8 +27,8 @@ SOURCES := \
 	path \
 	platform \
 	embeds
-GLES_SOURCES := $(SOURCES:%=%_gl) gazoland_gles
-VULKAN_SOURCES := $(SOURCES:%=%_vk) gazoland_vulkan
+GLES_SOURCES := $(SOURCES:%=%_gl) mn_gfx_gles
+VULKAN_SOURCES := $(SOURCES:%=%_vk) mn_gfx_vk
 
 FRAG_SHADERS := \
        frag_basic \

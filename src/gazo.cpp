@@ -21,7 +21,7 @@ const double angle = 6.\
 const int n_verts = n_sides + 1u;
 
 //the downard acceleration that the gazo experiences (㎨)
-double gravity = 9.789615906;
+double gravity = 9.807;
 
 // the air pressure that the gazo experiences (㎩)
 double air_pressure = 0x18BCD;
@@ -42,18 +42,18 @@ double muscle_power = 0x1000;
 
 
 double stiffness = 0x400;
-double damping = 0x8;
+double damping = 0x10;
 
 //N
 double internal_pressure_area = 0x3400;
 
-double friction_coefficient = 1.0;
+double friction_coefficient = 0.3;
 
 double drag_factor = 0x3;
 
 double outer_vertex_mass = outer_mass / n_sides;
 
-double dash_speed = 3.25;
+double dash_speed = 1.0;
 
 double radius = 0.2;
 
@@ -146,8 +146,8 @@ gazo::gazo(std::shared_ptr<program> prog_arg,
   }
   for(uint i = 0u; i < n_verts; i++) {
     pos[i].y++;
-    vel[i].x = 0.0;
-    vel[i].y = 0.0;
+    vel[i].x = 10.0;
+    vel[i].y = 20.0;
   }
 
   vertex_buffer = buffer::create(
@@ -263,7 +263,7 @@ int gazo::get_vertex_buffer_size()  {
 }*/
 
 void gazo::push_out_from_platform(double interval, platform& pltfm) {
-  for(int i = 0; i < n_verts; i++) {
+  for(int i = 1; i < n_verts; i++) {
     vec2 p = pos[i];
     
     //printf("  %f", p.y);
@@ -327,6 +327,8 @@ void gazo::calculate_acc(
     ;
   }
 
+  fvec2 target_spring_model[16];
+
   double glaggle_rotation_normaliser = 1 / hypot(glaggle_rotation.x, glaggle_rotation.y);
   glaggle_rotation.x *= glaggle_rotation_normaliser;
   glaggle_rotation.y *= glaggle_rotation_normaliser;
@@ -335,7 +337,22 @@ void gazo::calculate_acc(
     pointing.x * glaggle_rotation.x + pointing.y * glaggle_rotation.y,
     pointing.y * glaggle_rotation.x - pointing.x * glaggle_rotation.y
   };
-
+  target_spring_model[0] = fvec2(rotated_joystick.x * radius * 0.7, rotated_joystick.y * radius * 0.7);
+  for(int i = 1; i < 16; i++) {
+    target_spring_model[i] = fvec2(rotated_joystick.x * 0.5, rotated_joystick.y * 0.5);
+    {
+    //aight circle raycast
+    //we have xj and yj and t and theta
+    //and hypot(x_j + tcosz, y_j + tsinz) = 1
+    // so thats um
+    //x_j^2 + t^2cosz^2 + 2tcoszx_j + y_j^2 + t^2sinz^2 + 2tcoszy_j = 1
+    //and so (sinz^2 + cosz^2)t^2 + (2x_jcosz + 2y_jsinz)t + x_j^2 + y_j^2 - 1 = 0
+    // right t^2 + (2x_jcosz + 2y_jsinz)t + (x_j^2 + y_j^2 - 1) = 0
+    // it's like (-b + /(b^2 - 4ac))/2a
+    //so (-2xcos - 2ysin + /((2xcos + 2ysin)^2 -4x^2 + -4y^2 + 4) ))/2
+    //
+    };
+  }
 
   for(int i = 0; i < n_sides; i++) {
     vec2 v = {

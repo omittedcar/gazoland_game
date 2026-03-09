@@ -16,11 +16,11 @@ enum class buffer_type {
 };
 
 #ifdef GAZOLAND_GLES
-# include "gazoland_gles.h"
+# include "mn_gfx_gles.h"
 #endif
 
 #ifdef GAZOLAND_VULKAN
-# include "gazoland_vulkan.h"
+# include "mn_gfx_vk.h"
 #endif
 
 #endif  // #ifdef _GAZOLAND_SRC_GLES_OR_VULKAN_H_
