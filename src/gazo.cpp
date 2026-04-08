@@ -1,4 +1,4 @@
-#include "gazo.h"
+#include "h/gazo.h"
 
 #include <cassert>
 #include <math.h>

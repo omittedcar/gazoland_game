@@ -1,6 +1,6 @@
-#include "platform.h"
+#include "h/platform.h"
 
-#include "path.h"
+#include "h/path.h"
 
 #include <cmath>
 #include <fstream>

@@ -1,18 +1,17 @@
-#include "./game.h"
+#include "h/game.h"
 
-#include "game.h"
-#include "path.h"
+#include "h/game.h"
+#include "h/path.h"
 
-#include "gles_or_vulkan.h"
-#include "embeds.h"
-#include "misc.h"
+#include "h/gles_or_vulkan.h"
+#include "h/embeds.h"
+#include "h/misc.h"
 #include <math.h>
 #include <string.h>
 #include <iostream>
 
-//QVGA is officially dead. Literally nobody uses it. Long live HVGA.
-#define DEFAULT_FRAME_WIDTH 480
-#define DEFAULT_FRAME_HEIGHT 320
+#define DEFAULT_FRAME_WIDTH 640
+#define DEFAULT_FRAME_HEIGHT 480
 
 #define UI_WIDTH 36
 #define UI_HEIGHT 20
@@ -184,19 +183,20 @@ void load() {
           "gui", vertshader_basic, fragshader_gui, "the_ui"))) {
     return;
   }
+  /*
   if (!(gamma_prog = program::create(
           "gamma", vertshader_basic, fragshader_gamma, ""))) {
     return;
   }
-
+  */
   std::vector<float> the_square = 
     {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
      -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
   square_buf = buffer::create("square", the_square, buffer_type::k_array);
 
-  draw_fb = framebuffer::create("draw");
-  draw_tex = texture::create_for_draw(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, draw_fb);
-  depth_tex = texture::create_for_depth(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, draw_fb);
+  //draw_fb = framebuffer::create("draw");
+  //draw_tex = texture::create_for_draw(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, draw_fb);
+  //depth_tex = texture::create_for_depth(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, draw_fb);
   gui_tex = texture::create_for_gui(UI_WIDTH, UI_HEIGHT, lettering);
 
   gazo_spritesheet_tex = load_texture_from_file("aqua.pkm");
@@ -294,8 +294,8 @@ void the_monitor_has_refreshed_again()
   the_gazo->draw(projection_matrix, view);
   the_level->draw(projection_matrix, view);
   
-  present_game(window_width * xscale, window_height * yscale,
-               gamma_prog, square_buf, draw_tex);
+  //present_game(window_width * xscale, window_height * yscale,
+  //             gamma_prog, square_buf, draw_tex);
   present_gui(gui_prog, square_buf, gui_tex);
   
   // rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;

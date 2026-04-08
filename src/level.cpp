@@ -1,5 +1,5 @@
-#include "level.h"
-#include "gazo.h"
+#include "h/level.h"
+#include "h/gazo.h"
 
 #include <iostream>
 #include <math.h>

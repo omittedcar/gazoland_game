@@ -20,7 +20,6 @@ vulkan : LIBS += -lvulkan -lwayland-client
 gles : LIBS += -lGLESv2 -lEGL
 
 SOURCES := \
-	game \
 	gazo \
 	level \
 	main \
@@ -54,19 +53,19 @@ bin/gazoland-gles : $(GLES_SOURCES:%=obj/%.o) | bin
 bin/gazoland-vulkan : $(VULKAN_SOURCES:%=obj/%.o) | bin
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-obj/%.o : src/%.cpp src/*.h | obj
+obj/%.o : src/%.cpp src/h/*.h | obj
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-obj/%_gl.o : src/%.c src/*.h | obj
+obj/%_gl.o : src/%.c src/h/*.h | obj
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-obj/%_gl.o : src/%.cpp src/*.h | obj
+obj/%_gl.o : src/%.cpp src/h/*.h | obj
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-obj/%_vk.o : src/%.cpp src/*.h | obj
+obj/%_vk.o : src/%.cpp src/h/*.h | obj
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-obj/%_vk.o : src/%.c src/*.h | obj
+obj/%_vk.o : src/%.c src/h/*.h | obj
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 assets/spirv/%.spv : assets/glsl/%.glsl | assets/spirv

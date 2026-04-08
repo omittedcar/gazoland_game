@@ -14,10 +14,11 @@ void main() {
   vec3 color_linear = texelFetch(the_texture,ivec2(gl_FragCoord.xy),0).xyz;
   //vec3 color_tonemapped = color_linear * 2.0 / (color_linear * 2.0 + vec3(1.0));
   color = vec4(
-    gamma(color_linear.x),
-    gamma(color_linear.y),
-    gamma(color_linear.z),
+    color_linear.x,
+    color_linear.y,
+    color_linear.z,
     //color_linear,
     1.0
   );
+  //fuck gamma curvers where not using gamma curves
 }
