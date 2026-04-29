@@ -17,7 +17,7 @@
 #define UI_HEIGHT 20
 
 u64 frame_n = 0;
-
+fvec2* defective_fugorg_positions;
 namespace {
   double time_step = 1.0 / 480.0;
 
@@ -99,6 +99,8 @@ void load() {
   state = gamestate::kCleanup;
   
   lettering = (unsigned char*) malloc(k_ui_size);
+  defective_fugorg_positions = (fvec2*)malloc(64);
+  defective_fugorg_positions[0] = {-1.0, 1.0};
   /*
   rumble_effect.type = FF_PERIODIC;
   rumble_effect.id = -1;
@@ -200,6 +202,7 @@ void load() {
   gui_tex = texture::create_for_gui(UI_WIDTH, UI_HEIGHT, lettering);
 
   gazo_spritesheet_tex = load_texture_from_file("aqua.pkm");
+  //defective_fugorg_tex = load_texture_from_file("defective_fugorg.bmp");
   stone_tile_tex = load_texture_from_file("grass.pkm");
   bailey_truss_tex = load_texture_from_file("aqua.pkm");
 
@@ -293,7 +296,7 @@ void the_monitor_has_refreshed_again()
   prepare_to_draw(draw_fb, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, projection_matrix, view);
   the_gazo->draw(projection_matrix, view);
   the_level->draw(projection_matrix, view);
-  
+
   //present_game(window_width * xscale, window_height * yscale,
   //             gamma_prog, square_buf, draw_tex);
   present_gui(gui_prog, square_buf, gui_tex);
