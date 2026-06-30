@@ -10,11 +10,8 @@
 #include <stdlib.h>
 
 platform::platform(const char *file_name,
-                   std::shared_ptr<program> terrain_prog_arg,
-                   std::shared_ptr<program> polygon_fill_prog_arg,
                    std::shared_ptr<texture> stone_tile_tex_arg)
-    : terrain_prog(terrain_prog_arg),
-      polygon_fill_prog(polygon_fill_prog_arg),
+    :
       stone_tile_tex(stone_tile_tex_arg) {
   std::filesystem::path full_path(root_path());
   full_path /= "assets";

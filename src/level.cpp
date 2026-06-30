@@ -13,8 +13,6 @@ level::level(
     std::shared_ptr<texture>& stone_tile_tex_arg)
     : the_gazo(gazo_arg),
       the_platform(file_name,
-                   terrain_prog_arg,
-                   polygon_fill_prog_arg,
                    stone_tile_tex_arg) {}
 
 void level::time_step() {

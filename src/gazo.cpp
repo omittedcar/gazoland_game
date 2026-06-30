@@ -38,22 +38,22 @@ double inner_mass = 0x8;
 double outer_mass = 0xA;
 
 //the power of each of the gazo's muscles. (W)
-double muscle_power = 0x1000;
+double muscle_power = 0x800;
 
 
-double stiffness = 0x400;
+double stiffness = 0x800;
 double damping = 0x10;
 
 //N
 double internal_pressure_area = 0x3400;
 
-double friction_coefficient = 0.3;
+double friction_coefficient = 0.75;
 
 double drag_factor = 0x3;
 
 double outer_vertex_mass = outer_mass / n_sides;
 
-double dash_speed = 1.0;
+double dash_speed = 3.0;
 
 double radius = 0.2;
 
@@ -281,6 +281,9 @@ void gazo::push_out_from_platform(double interval, platform& pltfm) {
       double speed_change = displacement_length / interval;
       double friction_speed_loss = friction_coefficient * speed_change;
       double parallel_speed_after = fmin(parallel_speed + friction_speed_loss, fmax(parallel_speed - friction_speed_loss, 0));
+      if(abs(parallel_speed)<speed_change*1.1) {
+        parallel_speed_after = 0.0;
+      }
       double parallel_speed_change = parallel_speed_after - parallel_speed;
       vel[i].x += parallel_speed_change * normal.y;
       vel[i].y -= parallel_speed_change * normal.x;

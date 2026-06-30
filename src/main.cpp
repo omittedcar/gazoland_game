@@ -59,6 +59,10 @@ void dump(uint8_t *data, int size)
   printf("\n");
 }
 
+int currency = 500;
+
+bool has_c;
+
 std::shared_ptr<shader> load_shader_from_file(
     const char* name, shader_type type, bool uses_projection,
     const char* v_pos_name = nullptr,
@@ -88,6 +92,7 @@ void write_text(unsigned char* destination,
   }
 }
 
+
 }  // namespace
 
 void run() {
@@ -99,7 +104,7 @@ void load() {
   state = gamestate::kCleanup;
   
   lettering = (unsigned char*) malloc(k_ui_size);
-  defective_fugorg_positions = (fvec2*)malloc(64);
+  defective_fugorg_positions = (fvec2*)malloc(512); //64
   defective_fugorg_positions[0] = {-1.0, 1.0};
   /*
   rumble_effect.type = FF_PERIODIC;
@@ -129,13 +134,15 @@ void load() {
     sizeof(rumbleinator)
   );
   */
-
-  write_text(
-      lettering,
-      //"The Mechanism is a hazardous ride located in Gazoland, built over the course of five years by Gazolandic Tesseract Engineering Incorporated. It is the largest ride in Gazo Square and, like many other rides in Gazoland, carries an extreme risk of death for both those riding it and those working to maintain it. The Mechanism is only ridden by expert ride-goers as it is infamous for inflicting at least a dozen severe injuries in poorly maintained parts of the ride. It is estimated that the average ride time of The Mechanism is three days, give or take several hours, meaning riders will have to pack provisions and be prepared to make stops on ledges or at Gazolander housing complexes located sparsely throughout the body. Do not bring children to the Mechanism unless you plan to get back down when you're in the beginning of the upper parts.\n"
-      "THE MECHANISM\n",
-      0
-  );
+  {
+    char the_text_writing[12] = {'C','U','R','N','C',0,0,0,0,0,(char)(currency+0x30),'\n'};
+    write_text(
+        lettering,
+        //"The Mechanism is a hazardous ride located in Gazoland, built over the course of five years by Gazolandic Tesseract Engineering Incorporated. It is the largest ride in Gazo Square and, like many other rides in Gazoland, carries an extreme risk of death for both those riding it and those working to maintain it. The Mechanism is only ridden by expert ride-goers as it is infamous for inflicting at least a dozen severe injuries in poorly maintained parts of the ride. It is estimated that the average ride time of The Mechanism is three days, give or take several hours, meaning riders will have to pack provisions and be prepared to make stops on ledges or at Gazolander housing complexes located sparsely throughout the body. Do not bring children to the Mechanism unless you plan to get back down when you're in the beginning of the upper parts.\n"
+        the_text_writing,
+        0
+    );
+  }
   
   if (!(window = gazoland_init(
           DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT,
@@ -197,14 +204,14 @@ void load() {
   square_buf = buffer::create("square", the_square, buffer_type::k_array);
 
   //draw_fb = framebuffer::create("draw");
-  //draw_tex = texture::create_for_draw(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, draw_fb);
+  //draw_tex = texture::create_for_draw(DEFAULT_FRAMfE_WIDTH, DEFAULT_FRAME_HEIGHT, draw_fb);
   //depth_tex = texture::create_for_depth(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, draw_fb);
   gui_tex = texture::create_for_gui(UI_WIDTH, UI_HEIGHT, lettering);
 
-  gazo_spritesheet_tex = load_texture_from_file("aqua.pkm");
-  //defective_fugorg_tex = load_texture_from_file("defective_fugorg.bmp");
-  stone_tile_tex = load_texture_from_file("grass.pkm");
-  bailey_truss_tex = load_texture_from_file("aqua.pkm");
+  gazo_spritesheet_tex = load_texture_from_file("gazo.bmp");
+  stone_tile_tex = load_texture_from_file("surface.bmp");
+  bailey_truss_tex = load_texture_from_file("fill.bmp");
+  defective_fugorg_tex = load_texture_from_file("defective_fugorg.bmp");
 
   if (!(the_gazo = std::make_shared<gazo>(gazo_prog, gazo_spritesheet_tex))) {
     return;
@@ -270,6 +277,9 @@ void the_monitor_has_refreshed_again()
     + cursor_pos_mapped.y * cursor_pos_mapped.y;
   if(distance_squared > 1.0) {
     double inverse_distance = 1 / sqrt(distance_squared); // theres a machine instruction >:(
+    //^^^ sygau🪒
+
+    //I m goign isntane
     cursor_pos_mapped.x *= inverse_distance;
     cursor_pos_mapped.y *= inverse_distance;
   }
@@ -277,6 +287,8 @@ void the_monitor_has_refreshed_again()
   {
     the_level->control_gazo(joystick_axes[0],-joystick_axes[1],
                            joystick_axes[5], -joystick_axes[2]);
+  } else if(joystick_axis_count >= 4) {
+    the_level->control_gazo(joystick_axes[0],-joystick_axes[1],joystick_axes[2],-joystick_axes[3]);
   } else {
     the_level->control_gazo(
       cursor_pos_mapped.x, cursor_pos_mapped.y,
@@ -292,8 +304,12 @@ void the_monitor_has_refreshed_again()
       0, 2 * sqrt(aspect / view_area), 0, 0,
       0, 0, 1, 0,
       0, 0, 0, 1};
-  
-  prepare_to_draw(draw_fb, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, projection_matrix, view);
+  {
+    int w, h;
+    //this is going to block forever for no reason i know it
+    glfwGetWindowSize(window, &w, &h);
+    prepare_to_draw(draw_fb, w, h, projection_matrix, view);
+  };
   the_gazo->draw(projection_matrix, view);
   the_level->draw(projection_matrix, view);
 
