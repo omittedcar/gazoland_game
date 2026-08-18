@@ -1,0 +1,12 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "gzgame",
+            "binaryDir": "${sourceDir}/out/${presetName}/build",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/${presetName}/install"
+            }
+        }
+    ]
+}
