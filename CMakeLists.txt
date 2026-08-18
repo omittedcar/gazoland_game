@@ -61,7 +61,6 @@ add_dependencies(GazolandGame spirv_shaders)
 target_sources(GazolandGame
   PRIVATE
     src/embeds.c
-    src/game.cpp
     src/gazo.cpp
     src/gazoland_vulkan.cpp
     src/level.cpp
