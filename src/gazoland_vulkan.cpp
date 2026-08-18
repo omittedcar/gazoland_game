@@ -571,7 +571,7 @@ std::shared_ptr<shader> shader::create(
   std::filesystem::path full_path(assets_path);
   full_path /= "spirv";
   full_path /= shader_name + ".spv";
-  std::ifstream ifs(full_path, std::ios::ate | std::ios::binary);
+  std::ifstream ifs(full_path, std::ios::ate | std::ios::binary);  
   std::vector<char> buf(ifs.tellg());
   ifs.seekg(0, std::ios::beg);
   ifs.read(buf.data(), static_cast<std::streamsize>(buf.size()));
@@ -889,7 +889,7 @@ program::~program() {
 std::shared_ptr<texture> texture::create_from_file(
     const std::filesystem::path& path,
     size_t mip_count) {
-  return std::shared_ptr<texture>(new texture(path));
+  return std::shared_ptr<texture>(new texture(path.filename().string()));
 }
 
 // static

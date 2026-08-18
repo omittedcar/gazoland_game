@@ -99,7 +99,7 @@ gazo::gazo(std::shared_ptr<program> prog_arg,
       delta_pos(n_verts),
       delta_vel(n_verts) {
 
-  std::vector<ushort> elements{
+  std::vector<unsigned short> elements{
     0, 1, 2,
     0, 2, 3,
     0, 3, 4,
@@ -119,7 +119,7 @@ gazo::gazo(std::shared_ptr<program> prog_arg,
 
   mapping[0] = {0.0,0.0};
 
-  for(uint i = 0u; i < n_sides; i++) {
+  for(unsigned int i = 0u; i < n_sides; i++) {
     mapping[i+1].x = cos(angle * double(i));
     mapping[i+1].y = sin(angle * double(i));
   }
@@ -140,11 +140,11 @@ gazo::gazo(std::shared_ptr<program> prog_arg,
     }
   }
 
-  for(uint i = 0u; i < n_verts; i++) {
+  for(unsigned int i = 0u; i < n_verts; i++) {
     pos[i].x = mapping[i].x * radius;
     pos[i].y = mapping[i].y * radius;
   }
-  for(uint i = 0u; i < n_verts; i++) {
+  for(unsigned int i = 0u; i < n_verts; i++) {
     pos[i].y++;
     vel[i].x = 0.0;
     vel[i].y = 0.0;
@@ -220,7 +220,7 @@ void gazo::point_other_joystick(float x, float y) {
 }
 
 void gazo::update_vertex_buffer()  {
-  for(uint i = 0u; i < n_verts; i++) {
+  for(unsigned int i = 0u; i < n_verts; i++) {
     pos20[i*2u] = float(pos[i].x);
     pos20[i*2u+1u] = float(pos[i].y);
   }

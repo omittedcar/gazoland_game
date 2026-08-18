@@ -107,7 +107,7 @@ bool platform::can_we_like_can_we_please_like_put_stuff_here_at_this_location_x_
 }
 vec2 platform::shortest_path(vec2 p0) {
   vec2 path = {0,0};
-  double distance_2 = HUGE_VAL_F64;
+  double distance_2 = HUGE_VALF;
   for(int i = 0; i < side_count; i++) {
     int j = (i + 1) % side_count;
     fvec2 p1 = corners[i];

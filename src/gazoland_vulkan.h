@@ -4,6 +4,7 @@
 #include "vec2.h"
 
 #ifdef _WIN32
+# include <windows.h>
 # define VK_USE_PLATFORM_WIN32_KHR
 # define GLFW_EXPOSE_NATIVE_WIN32
 #else
@@ -15,7 +16,10 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <vulkan/vulkan.h>
+
+#ifdef __linux__
 #include <wayland-client.h>
+#endif
 
 #include <filesystem>
 #include <memory>

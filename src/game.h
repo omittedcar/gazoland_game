@@ -7,7 +7,7 @@
 #include "gles_or_vulkan.h"
 
 #include <memory>
-#include <linux/input.h>
+//#include <linux/input.h>
 #include <filesystem>
 
 class GLFWwindow;
@@ -35,9 +35,9 @@ class game {
   void unload();
   
   gamestate state = gamestate::kLoading;
-  input_event rumbleinator;
-  input_event derumbleinator;
-  ff_effect rumble_effect;
+  // input_event rumbleinator;
+  // input_event derumbleinator;
+  // ff_effect rumble_effect;
   int rumbly_file_descriptor;
   int joystick_file_descriptor;
   int frame_counter = 0;
@@ -47,9 +47,9 @@ class game {
 
   unsigned char* lettering;
 
-  std::shared_ptr<program> gazo_prog;
   std::shared_ptr<program> terrain_prog;
   std::shared_ptr<program> polygon_fill_prog;
+  std::shared_ptr<program> gazo_prog;
   std::shared_ptr<program> gui_prog;
   std::shared_ptr<program> gamma_prog;
 

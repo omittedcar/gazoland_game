@@ -1,5 +1,7 @@
 #include "gles_or_vulkan.h"
 
+#include <memory>
+
 #ifndef THE_MECHANISM_SRC_PLATFORM_H
 #define THE_MECHANISM_SRC_PLATFORM_H
 
