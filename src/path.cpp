@@ -27,7 +27,6 @@ std::filesystem::path root_path() {
     WCHAR exe[256];
     GetModuleFileNameW(nullptr, exe, 256);
     PathCchRemoveFileSpec(exe, 256);
-    PathCchRemoveFileSpec(exe, 256);
     rp = std::filesystem::path(exe);
 #endif
   }

@@ -1,4 +1,5 @@
 #include "gles_or_vulkan.h"
+#include <vulkan/vk_enum_string_helper.h>
 
 #include <algorithm>
 #include <fstream>
@@ -571,7 +572,32 @@ std::shared_ptr<shader> shader::create(
   std::filesystem::path full_path(assets_path);
   full_path /= "spirv";
   full_path /= shader_name + ".spv";
-  std::ifstream ifs(full_path, std::ios::ate | std::ios::binary);  
+  std::ifstream ifs(full_path, std::ios::ate | std::ios::binary);
+  if (ifs.fail()) {
+    int errnum = errno;
+    DWORD win32Err = ::GetLastError();
+    std::cerr << "Error: Failed to open file: " << full_path << "\n";
+    char errBuffer[256];
+    if (strerror_s(errBuffer, sizeof(errBuffer), errnum) == 0) {
+      std::cerr << "CRT Reason: " << errBuffer << " (errno: " << errnum
+                << ")\n";
+    }
+    if (win32Err != ERROR_SUCCESS) {
+      LPSTR messageBuffer = nullptr;
+      size_t size = FormatMessageA(
+          FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+              FORMAT_MESSAGE_IGNORE_INSERTS,
+          NULL, win32Err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+          (LPSTR)&messageBuffer, 0, NULL);
+      if (size > 0) {
+        std::cerr << "Win32 Reason: " << messageBuffer << " (Code: " << win32Err
+                  << ")\n";
+        LocalFree(messageBuffer); // Free allocated buffer
+      }
+    }
+  }
+
+  // Process file...
   std::vector<char> buf(ifs.tellg());
   ifs.seekg(0, std::ios::beg);
   ifs.read(buf.data(), static_cast<std::streamsize>(buf.size()));
@@ -844,10 +870,12 @@ std::shared_ptr<program> program::create(
 
   VkPipeline graphics_pipeline = VK_NULL_HANDLE;
 
-  if (vkCreateGraphicsPipelines(
+  VkResult result = vkCreateGraphicsPipelines(
           the_app->device(), VK_NULL_HANDLE, 1,
-          &pipeline_info, nullptr, &graphics_pipeline) != VK_SUCCESS) {
+          &pipeline_info, nullptr, &graphics_pipeline);
+  if (result != VK_SUCCESS) {
     std::cerr << "Could not create graphics pipeline." << std::endl;
+    std::cerr << "Result=" << string_VkResult(result) << std::endl;
     if (render_pass != VK_NULL_HANDLE) {
       vkDestroyRenderPass(the_app->device(), render_pass, nullptr);
     }
