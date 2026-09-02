@@ -22,12 +22,15 @@ void main() {
   int y_mod_4 = the_coord.y & 3;
   int the_other_number = (the_number >> (y_mod_4 * 2)) % 4;
   if(the_other_number == 0) {
-    discard;
+    
+      discard;
+    
+  } else {
+    color = vec4(
+      sqrt(float(the_other_number) / 2.0 - 0.5),
+      sqrt(float(the_other_number) / 2.0 - 0.5),
+      sqrt(float(the_other_number) / 2.0 - 0.5),
+      1.0
+    );
   }
-  color = vec4(
-    sqrt(float(the_other_number) / 2.0 - 0.5),
-    sqrt(float(the_other_number) / 2.0 - 0.5),
-    sqrt(float(the_other_number) / 2.0 - 0.5),
-    1.0
-  );
 }

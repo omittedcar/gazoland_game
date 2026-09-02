@@ -10,7 +10,7 @@ SOURCES := \
 	main \
 	path \
 	platform \
-	resources
+	embeds
 
 LIBS := -lglfw -lGLESv2 -lEGL
 

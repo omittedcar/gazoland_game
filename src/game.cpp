@@ -340,6 +340,9 @@ void game::the_monitor_has_refreshed_again()
   {
     the_level.control_gazo(joystick_axes[0],-joystick_axes[1],
                            joystick_axes[5], -joystick_axes[2]);
+  } else if (joystick_axis_count >= 4) {
+    the_level.control_gazo(joystick_axes[0],-joystick_axes[1],
+                           joystick_axes[2],-joystick_axes[3]);
   } else {
     the_level.control_gazo(
       cursor_pos_mapped.x, cursor_pos_mapped.y,

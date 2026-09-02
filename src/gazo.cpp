@@ -47,7 +47,7 @@ double outer_stiffness = 0x1800;
 double outer_damping = 0x60;
 
 //the power of each of the gazo's muscles. (W)
-double muscle_power = 0x1000;
+double muscle_power = 0x100;
 
 double inner_stiffness = 0x800; //0x600
 double inner_damping = 0x10;
