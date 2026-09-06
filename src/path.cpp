@@ -20,7 +20,7 @@ std::filesystem::path root_path() {
 #ifdef __linux__
     char exe[256];
     readlink("/proc/self/exe", exe, 256);
-    rp = std::filesystem::path(dirname(dirname(exe)));
+    rp = std::filesystem::path(dirname(exe));
 #endif
 
 #ifdef _WIN32

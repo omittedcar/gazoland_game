@@ -1,16 +1,17 @@
 #ifdef _WIN32
 #include <windows.h>
+#include <sysinfoapi.h>
 #define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_EXPOSE_NATIVE_WIN32
 #endif
 
 #ifdef __linux__
+#include <time.h>
 #define VK_USE_PLATFORM_WAYLAND_KHR
 #define GLFW_EXPOSE_NATIVE_WAYLAND
 #endif
 
 #include <cstdint>
-#include <sysinfoapi.h>
 #include <vulkan/vulkan_core.h>
 
 #define GLFW_INCLUDE_VULKAN
@@ -25,6 +26,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <numbers>
@@ -35,6 +37,19 @@
 #include "path.h"
 
 namespace {
+
+uint64_t getTime() {
+#ifdef _WIN32
+  return GetTickCount64();
+#endif
+
+#ifdef __linux__
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+  return (t.tv_sec) * 1000 + (t.tv_nsec / 1000000);
+#endif
+}
+
 
 void dumpPhysicalDevice(const VkPhysicalDeviceProperties &deviceProperties,
                         const VkPhysicalDeviceFeatures &deviceFeatures) {
@@ -188,27 +203,7 @@ VkShaderModule loadShaderFromFile(VkDevice device,
   shader_path /= std::string(shader_name) + ".spv";
   std::ifstream ifs(shader_path, std::ios::ate | std::ios::binary);
   if (ifs.fail()) {
-    int errnum = errno;
-    DWORD win32Err = ::GetLastError();
     std::cerr << "Error: Failed to open file: " << shader_path << "\n";
-    char errBuffer[256];
-    if (strerror_s(errBuffer, sizeof(errBuffer), errnum) == 0) {
-      std::cerr << "CRT Reason: " << errBuffer << " (errno: " << errnum
-                << ")\n";
-    }
-    if (win32Err != ERROR_SUCCESS) {
-      LPSTR messageBuffer = nullptr;
-      size_t size = FormatMessageA(
-          FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-              FORMAT_MESSAGE_IGNORE_INSERTS,
-          NULL, win32Err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-          (LPSTR)&messageBuffer, 0, NULL);
-      if (size > 0) {
-        std::cerr << "Win32 Reason: " << messageBuffer << " (Code: " << win32Err
-                  << ")\n";
-        LocalFree(messageBuffer); // Free allocated buffer
-      }
-    }
   }
   std::vector<char> buf(ifs.tellg());
   ifs.seekg(0, std::ios::beg);
@@ -272,7 +267,7 @@ private:
   }
 
   void mainLoop() {
-    startTicks = GetTickCount64();
+    startTicks = getTime();
     while (!glfwWindowShouldClose(window)) {
       glfwPollEvents();
       drawFrame();
@@ -881,7 +876,7 @@ private:
   void drawFrame() {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE,
                     UINT64_MAX);
-    ULONGLONG nowTicks = GetTickCount64();
+    uint64_t nowTicks = getTime();
     float progress = (((nowTicks - startTicks) % 4000) / 4000.f);
     float angle = progress * 2 * std::numbers::pi;
     float color = (cosf(angle) + 1.f) / 2.f;
@@ -970,7 +965,7 @@ private:
   }
 
   const size_t MAX_FRAMES_IN_FLIGHT = 2;
-  ULONGLONG startTicks;
+  uint64_t startTicks;
   GLFWwindow *window = nullptr;
   VkInstance instance = VK_NULL_HANDLE;
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
