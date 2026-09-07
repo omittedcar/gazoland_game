@@ -2,7 +2,8 @@
     "version": 8,
     "configurePresets": [
         {
-            "name": "gzgame",
+            "name": "debug",
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/out/${presetName}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",

@@ -55,25 +55,25 @@ add_custom_target(spirv_shaders
     "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/frag_gui.spv"
 )
 
-add_executable(GazolandGame)
-add_dependencies(GazolandGame spirv_shaders)
-target_sources(GazolandGame
-  PRIVATE
-    src/embeds.c
-    src/gazo.cpp
-    src/gazoland_vulkan.cpp
-    src/level.cpp
-    src/main.cpp
-    src/path.cpp
-    src/platform.cpp
-)
-target_compile_definitions(GazolandGame PUBLIC GAZOLAND_VULKAN)
-target_link_libraries(GazolandGame PRIVATE
-  glm
-  GLFW
-  Vulkan::Vulkan
-  $<$<PLATFORM_ID:Windows>:pathcch.lib>
-)
+#add_executable(GazolandGame)
+#add_dependencies(GazolandGame spirv_shaders)
+#target_sources(GazolandGame
+#  PRIVATE
+#    src/embeds.c
+#    src/gazo.cpp
+#    src/gazoland_vulkan.cpp
+#    src/level.cpp
+#    src/main.cpp
+#    src/path.cpp
+#    src/platform.cpp
+#)
+#target_compile_definitions(GazolandGame PUBLIC GAZOLAND_VULKAN)
+#target_link_libraries(GazolandGame PRIVATE
+#  glm
+#  GLFW
+#  Vulkan::Vulkan
+#  $<$<PLATFORM_ID:Windows>:pathcch.lib>
+#)
 
 add_executable(VulkanDemo)
 target_sources(VulkanDemo
