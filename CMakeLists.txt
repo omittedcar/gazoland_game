@@ -79,7 +79,8 @@ add_executable(VulkanDemo)
 target_sources(VulkanDemo
   PRIVATE
     src/path.cpp
-    src/vulkan_demo.cpp
+    src/vulkan_app.cpp
+    src/vulkan_main.cpp
 )
 target_link_libraries(VulkanDemo
   PRIVATE
