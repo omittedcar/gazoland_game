@@ -53,6 +53,8 @@ add_custom_target(spirv_shaders
     "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/frag_basic.spv"
     "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/frag_gamma.spv"
     "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/frag_gui.spv"
+    "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_demo_frag.spv"
+    "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_demo_vert.spv"
 )
 
 #add_executable(GazolandGame)
@@ -78,9 +80,14 @@ add_custom_target(spirv_shaders
 add_executable(VulkanDemo)
 target_sources(VulkanDemo
   PRIVATE
+    src/embeds.c
     src/path.cpp
     src/vulkan_app.cpp
+    src/vulkan_game.cpp
+    src/vulkan_gazo.cpp
+    src/vulkan_level.cpp
     src/vulkan_main.cpp
+    src/vulkan_platform.cpp
 )
 target_link_libraries(VulkanDemo
   PRIVATE
@@ -88,9 +95,18 @@ target_link_libraries(VulkanDemo
     Vulkan::Vulkan
     $<$<PLATFORM_ID:Windows>:pathcch.lib>
 )
-add_custom_target(vulkan_demo_shaders
-  DEPENDS
-    "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_demo_frag.spv"
-    "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_demo_vert.spv"
-)
+add_custom_target(vulkan_demo_shaders DEPENDS spirv_shaders)
 add_dependencies(VulkanDemo vulkan_demo_shaders)
+
+set(TEXTURE_SOURCES
+  statue.jpg
+)
+foreach(src IN LISTS TEXTURE_SOURCES)
+add_custom_command(
+  TARGET VulkanDemo POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy
+      "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/${src}"
+      "$<TARGET_FILE_DIR:VulkanDemo>/assets/textures/${src}"
+  COMMENT "Copying ${src} to the textures directory."
+)
+endforeach()

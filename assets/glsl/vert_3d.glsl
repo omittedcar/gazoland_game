@@ -1,12 +1,13 @@
 #version 310 es
 
 precision highp float;
-layout(location = 0) in vec3 pos;
-layout(location = 1) in vec2 vertex_uv;
+layout(location = 0) in vec2 vertex_uv;
+layout(location = 1) in vec3 pos;
 layout(binding = 0) uniform Projection {
   vec2 view;
   mat4 matrix;
 } projection;
+
 layout(location = 0) out vec2 uv;
 void main() {
   uv = vertex_uv;

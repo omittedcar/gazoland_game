@@ -1,7 +1,3 @@
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #include <cstdint>
 #include <memory>
 
@@ -28,10 +24,11 @@ private:
   void cleanupSwapChain();
   void recreateSwapChain();
   void createImageViews();
-  void createRenderPass();
-  void createGraphicsPipeline();
+  void createDescriptorSetLayout();
+  void createGraphicsPipelines();
   void createFramebuffers();
   void createCommandPool();
+  void createUniformBuffers();
   void createVertexBuffer();
   void createCommandBuffers();
   void bufferVertexData();
@@ -40,7 +37,7 @@ private:
   void dumpExtensions();
   bool checkValidationLayerSupport(const char *layerName);
 
-  const size_t MAX_FRAMES_IN_FLIGHT = 2u;
+  const uint32_t MAX_FRAMES_IN_FLIGHT = 2u;
   uint64_t startTicks;
   GLFWwindow *window = nullptr;
   int windowWidth = 800;
