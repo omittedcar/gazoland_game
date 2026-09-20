@@ -752,7 +752,7 @@ void createDemoPipeline(VkDevice device, const VkExtent2D &swapChainExtent,
          .pImageInfo = &imageInfo,
          .pBufferInfo = nullptr,
          .pTexelBufferView = nullptr}};
-    vkUpdateDescriptorSets(device, 1, descriptorWrite, 0, nullptr);
+    vkUpdateDescriptorSets(device, 2, descriptorWrite, 0, nullptr);
   }
   VkPipelineLayoutCreateInfo pipelineLayoutInfo{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
