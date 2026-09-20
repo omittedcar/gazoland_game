@@ -20,6 +20,7 @@ set(VERT_SHADER_SOURCES
   vert_gazo
   vert_no_uv_map
   vulkan_demo_vert
+  vulkan_tutorial_vert
 )
 foreach(src IN LISTS VERT_SHADER_SOURCES)
   add_custom_command(
@@ -35,6 +36,7 @@ set(FRAG_SHADER_SOURCES
   frag_gamma
   frag_gui
   vulkan_demo_frag
+  vulkan_tutorial_frag
 )
 foreach(src IN LISTS FRAG_SHADER_SOURCES)
   add_custom_command(
@@ -55,6 +57,8 @@ add_custom_target(spirv_shaders
     "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/frag_gui.spv"
     "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_demo_frag.spv"
     "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_demo_vert.spv"
+    "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_tutorial_frag.spv"
+    "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_tutorial_vert.spv"
 )
 
 #add_executable(GazolandGame)
@@ -77,6 +81,20 @@ add_custom_target(spirv_shaders
 #  $<$<PLATFORM_ID:Windows>:pathcch.lib>
 #)
 
+add_executable(VulkanTutorial)
+target_sources(VulkanTutorial
+  PRIVATE
+    src/26_texture_mapping.cpp
+    src/path.cpp
+)
+target_link_libraries(VulkanTutorial
+  PRIVATE
+    glfw
+    Vulkan::Vulkan
+    $<$<PLATFORM_ID:Windows>:pathcch.lib>
+)
+add_dependencies(VulkanTutorial spirv_shaders)
+
 add_executable(VulkanDemo)
 target_sources(VulkanDemo
   PRIVATE
@@ -95,8 +113,7 @@ target_link_libraries(VulkanDemo
     Vulkan::Vulkan
     $<$<PLATFORM_ID:Windows>:pathcch.lib>
 )
-add_custom_target(vulkan_demo_shaders DEPENDS spirv_shaders)
-add_dependencies(VulkanDemo vulkan_demo_shaders)
+add_dependencies(VulkanDemo spirv_shaders)
 
 set(TEXTURE_SOURCES
   statue.jpg

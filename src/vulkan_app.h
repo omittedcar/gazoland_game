@@ -30,8 +30,8 @@ private:
   void createCommandPool();
   void createUniformBuffers();
   void createVertexBuffer();
+  void createIndexBuffer();
   void createCommandBuffers();
-  void bufferVertexData();
   void createSyncObjects();
   void drawFrame();
   void dumpExtensions();
