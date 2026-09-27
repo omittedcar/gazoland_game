@@ -1,77 +1,77 @@
 #include "platform.h"
-#include "gl_or_gles.h"
+//#include "gl_or_gles.h"
 #include <cmath>
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
+//#include <stdio.h>
 
-void platform::arise(fvec2* corners_in, int side_count_in) {
+void platform::arise(glm::vec2* corners_in, int side_count_in) {
   side_count = side_count_in;
   corners = corners_in;
 
   compute_bounding_box();
-  glGenBuffers(6, &vertex_uv_buffer);
+  //glGenBuffers(6, &vertex_uv_buffer);
   do_vertex_buffers();
   generate_mesh();
 }
 
 void platform::demolish() {
   free(corners);
-  glDeleteBuffers(6, &vertex_uv_buffer);
+  //glDeleteBuffers(6, &vertex_uv_buffer);
 }
 
 void platform::draw(
-  gl_program_info* surface_shader,
-  gl_program_info* fill_shader,
+  //gl_program_info* surface_shader,
+  //gl_program_info* fill_shader,
   float* projection,
-  fvec2 view
+  glm::vec2 view
 ) {
   
-  glUseProgram(surface_shader->program);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(surface_shader->v_pos);
+  //glUseProgram(surface_shader->program);
+  //glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
+  //glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
+  //glEnableVertexAttribArray(surface_shader->v_pos);
   
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
-  glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(surface_shader->v_uv);
+  //glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
+  //glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
+  //glEnableVertexAttribArray(surface_shader->v_uv);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer);
-  glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
-  glDisableVertexAttribArray(surface_shader->v_pos);
-  glDisableVertexAttribArray(surface_shader->v_uv);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer);
+  //glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
+  //glDisableVertexAttribArray(surface_shader->v_pos);
+  //glDisableVertexAttribArray(surface_shader->v_uv);
   
   //glDisable(GL_BLEND);
-  glUseProgram(fill_shader->program);
-  glEnableVertexAttribArray(fill_shader->v_pos);
-  glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
-  glVertexAttribPointer(fill_shader->v_pos, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-  glUniformMatrix4fv(fill_shader->u_projection, 1, false, projection);
-  glUniform1i(fill_shader->u_texture, 0);
-  glUniform2f(fill_shader->u_panning, view.x, view.y);
+  //glUseProgram(fill_shader->program);
+  //glEnableVertexAttribArray(fill_shader->v_pos);
+  //glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
+  //glVertexAttribPointer(fill_shader->v_pos, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+  //glUniformMatrix4fv(fill_shader->u_projection, 1, false, projection);
+  //glUniform1i(fill_shader->u_texture, 0);
+  //glUniform2f(fill_shader->u_panning, view.x, view.y);
 
   //glEnable(GL_BLEND);
   
-  glBindTexture(GL_TEXTURE_2D, 6);
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_BLEND);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
-  glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
+  //glBindTexture(GL_TEXTURE_2D, 6);
+  //glDisable(GL_CULL_FACE);
+  //glDisable(GL_BLEND);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
+  //glDrawElements(GL_TRIANGLES, 3*(side_count - 2), GL_UNSIGNED_SHORT, nullptr);
 
-  glUseProgram(surface_shader->program);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(surface_shader->v_pos);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
+  //glUseProgram(surface_shader->program);
+  //glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
+  //glVertexAttribPointer(surface_shader->v_pos, 3, GL_FLOAT, false, 0, nullptr);
+  //glEnableVertexAttribArray(surface_shader->v_pos);
+  //glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
   
-  glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(surface_shader->v_uv);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer);
+  //glVertexAttribPointer(surface_shader->v_uv, 2, GL_FLOAT, false, 0, nullptr);
+  //glEnableVertexAttribArray(surface_shader->v_uv);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer);
   //glEnable(GL_BLEND);
-  glBindTexture(GL_TEXTURE_2D, 5);
-  glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
-  glDisableVertexAttribArray(surface_shader->v_pos);
-  glDisableVertexAttribArray(surface_shader->v_uv);
+  //glBindTexture(GL_TEXTURE_2D, 5);
+  //glDrawElements(GL_TRIANGLES, side_count * 6, GL_UNSIGNED_SHORT, nullptr);
+  //glDisableVertexAttribArray(surface_shader->v_pos);
+  //glDisableVertexAttribArray(surface_shader->v_uv);
 }
 
 void platform::compute_bounding_box() {
@@ -92,7 +92,7 @@ void platform::compute_bounding_box() {
     }
   }
 }
-bool platform::can_we_like_can_we_please_like_put_stuff_here_at_this_location_x_and_y_please_or_is_that_like_a_not_good_place_to_put_stuff_because_like_you_cant_put_stuff_there(vec2 p) {
+bool platform::can_we_like_can_we_please_like_put_stuff_here_at_this_location_x_and_y_please_or_is_that_like_a_not_good_place_to_put_stuff_because_like_you_cant_put_stuff_there(glm::dvec2 p) {
   bool is_colliding = false;
   for(int i = 0; i < side_count; i++) {
     int j = (i + 1) % side_count;
@@ -110,19 +110,19 @@ bool platform::can_we_like_can_we_please_like_put_stuff_here_at_this_location_x_
   //return p.y < -1;
   return is_colliding;
 }
-vec2 platform::shortest_path(vec2 p0) {
-  vec2 path = {0,0};
-  double distance_2 = HUGE_VAL_F64;
+glm::dvec2 platform::shortest_path(glm::dvec2 p0) {
+  glm::dvec2 path = {0,0};
+  double distance_2 = HUGE_VAL;
   for(int i = 0; i < side_count; i++) {
     int j = (i + 1) % side_count;
-    fvec2 p1 = corners[i];
-    fvec2 p2 = corners[j];
-    vec2 a2b = {p2.x - p1.x, p2.y - p1.y};
-    vec2 a2p = {p0.x - p1.x, p0.y - p1.y};
+    glm::vec2 p1 = corners[i];
+    glm::vec2 p2 = corners[j];
+    glm::dvec2 a2b = {p2.x - p1.x, p2.y - p1.y};
+    glm::dvec2 a2p = {p0.x - p1.x, p0.y - p1.y};
     double len = a2b.x * a2b.x + a2b.y * a2b.y;
     double dot = (a2p.x * a2b.x) + (a2p.y * a2b.y);
     double t = fmin( 1, fmax( 0, dot / len ) );
-    vec2 canidate = {p1.x + a2b.x * t - p0.x,p1.y + a2b.y * t - p0.y};
+    glm::dvec2 canidate = {p1.x + a2b.x * t - p0.x,p1.y + a2b.y * t - p0.y};
     double candidate_distance_2 = canidate.x * canidate.x + canidate.y * canidate.y;
     if(candidate_distance_2 < distance_2) {
       distance_2 = candidate_distance_2;
@@ -148,16 +148,16 @@ void platform::do_vertex_buffers() {
   //from -0.25 to 0.0
 
   for(int i = 0; i < side_count; i++) {
-    fvec2 corner_a = corners[i];
-    fvec2 corner_b = corners[(i+1)%side_count];
+    glm::vec2 corner_a = corners[i];
+    glm::vec2 corner_b = corners[(i+1)%side_count];
 
-    fvec2 a_to_b = {
+    glm::vec2 a_to_b = {
       corner_b.x - corner_a.x,
       corner_b.y - corner_a.y
     };
     float distance_accross = hypot(a_to_b.x, a_to_b.y);
     float inverse_distacne = 1.0 / distance_accross;
-    fvec2 normal = {
+    glm::vec2 normal = {
       a_to_b.y * inverse_distacne,
       -a_to_b.x * inverse_distacne
     };
@@ -227,18 +227,18 @@ void platform::do_vertex_buffers() {
     uv_x = uv_x_next;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
-  glBufferData(GL_ARRAY_BUFFER, side_count * 18 * sizeof(float), vertexes, GL_STATIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
-  glBufferData(GL_ARRAY_BUFFER, side_count * 12 * sizeof(float), uvs, GL_STATIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, side_count * sizeof(fvec2), (float*) corners, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ARRAY_BUFFER, vertex_pos_buffer);
+  //glBufferData(GL_ARRAY_BUFFER, side_count * 18 * sizeof(float), vertexes, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ARRAY_BUFFER, vertex_uv_buffer);
+  //glBufferData(GL_ARRAY_BUFFER, side_count * 12 * sizeof(float), uvs, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ARRAY_BUFFER, corner_vertex_buffer);
+  //glBufferData(GL_ARRAY_BUFFER, side_count * sizeof(glm::vec2), (float*) corners, GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, upper_surface_index_buffer);
+  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes, GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes_b, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lower_surface_index_buffer);
+  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, side_count * 6 * sizeof(unsigned short), indexes_b, GL_STATIC_DRAW);
   
   free(vertexes);
   free(uvs);
@@ -262,13 +262,13 @@ void platform::generate_mesh() {
     signed short ear = 0;
     for(; ear < unclipped_corner_count; ear++) {
       //get the the coordinates of the clockwise corner of the potential ear
-      fvec2 corner_cw = corners[
+      glm::vec2 corner_cw = corners[
         unclipped_corner_indexes[(ear + unclipped_corner_count - 1)%unclipped_corner_count]
       ]; //adding unclipped_corner_count to the number to keep it positive (poor handling of negative numbers)
       //get the coordinates of the central corner of the potential ear
-      fvec2 corner = corners[unclipped_corner_indexes[ear]];
+      glm::vec2 corner = corners[unclipped_corner_indexes[ear]];
       //get the coordinates of the counter-clockwise corner of the potential ear
-      fvec2 corner_ccw = corners[unclipped_corner_indexes[(ear + 1)%unclipped_corner_count]];
+      glm::vec2 corner_ccw = corners[unclipped_corner_indexes[(ear + 1)%unclipped_corner_count]];
       if( //initial ear check: is it convex (if not then it isn't an ear)
         (corner_cw.y - corner.y) * (corner_ccw.x - corner.x) -
         (corner_cw.x - corner.x) * (corner_ccw.y - corner.y)
@@ -279,7 +279,7 @@ void platform::generate_mesh() {
         //which means that it isn't an ear
         bool is_poking = false;
         for(int i = 0; i < unclipped_corner_count - 3; i++) {
-          fvec2 corner_checking = corners[
+          glm::vec2 corner_checking = corners[
             unclipped_corner_indexes[(ear + 2 + i)%unclipped_corner_count]
           ];
           if(
@@ -320,7 +320,7 @@ void platform::generate_mesh() {
   mesh_which_we_are_generating[triangle_count*3+1] = unclipped_corner_indexes[1];
   mesh_which_we_are_generating[triangle_count*3+2] = unclipped_corner_indexes[2];
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, (side_count-2) * 3 * sizeof(unsigned short), mesh_which_we_are_generating, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inner_face_index_buffer);
+  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, (side_count-2) * 3 * sizeof(unsigned short), mesh_which_we_are_generating, GL_STATIC_DRAW);
   free(mesh_which_we_are_generating);
 }

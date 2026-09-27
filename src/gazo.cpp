@@ -1,10 +1,9 @@
 
-#include "gl_or_gles.h"
-#include <cstdio>
+//#include "gl_or_gles.h"
+//#include <cstdio>
 #include <cstring>
 #include <stdlib.h>
 #include <math.h>
-#include <GL/gl.h>
 
 #include "./gazo.h"
 
@@ -69,26 +68,26 @@ double arc_distance = hypot(cos(angle) - 1, sin(angle));
 
 
 void gazo::init() {
-  glGenBuffers(1, &gl_vertex_buffer);
-  glGenBuffers(1, &gl_element_index_buffer);
-  glGenBuffers(1, &gl_uv_buffer);
+  //glGenBuffers(1, &gl_vertex_buffer);
+  //glGenBuffers(1, &gl_element_index_buffer);
+  //glGenBuffers(1, &gl_uv_buffer);
 
-  mapping = (vec2*) malloc(n_verts * sizeof(vec2));
+  mapping = (glm::dvec2*) malloc(n_verts * sizeof(glm::dvec2));
   pos20 = (float*) malloc(n_verts * 2 * sizeof(float));
 
 
-  pos                           = (vec2*) malloc(n_verts * sizeof(vec2));
-  vel                           = (vec2*) malloc(n_verts * sizeof(vec2));
-  sample_pos                    = (vec2*) malloc(n_verts * sizeof(vec2));
-  sample_vel                    = (vec2*) malloc(n_verts * sizeof(vec2));
-  acc                           = (vec2*) malloc(n_verts * sizeof(vec2));
-  memset(acc, 0, n_verts * sizeof(vec2)); // 0x0000000000000000 is equal to 0.0
-  delta_pos                     = (vec2*) malloc(n_verts * sizeof(vec2));
-  delta_vel                     = (vec2*) malloc(n_verts * sizeof(vec2));
+  pos                           = (glm::dvec2*) malloc(n_verts * sizeof(glm::dvec2));
+  vel                           = (glm::dvec2*) malloc(n_verts * sizeof(glm::dvec2));
+  sample_pos                    = (glm::dvec2*) malloc(n_verts * sizeof(glm::dvec2));
+  sample_vel                    = (glm::dvec2*) malloc(n_verts * sizeof(glm::dvec2));
+  acc                           = (glm::dvec2*) malloc(n_verts * sizeof(glm::dvec2));
+  memset(acc, 0, n_verts * sizeof(glm::dvec2)); // 0x0000000000000000 is equal to 0.0
+  delta_pos                     = (glm::dvec2*) malloc(n_verts * sizeof(glm::dvec2));
+  delta_vel                     = (glm::dvec2*) malloc(n_verts * sizeof(glm::dvec2));
 
 
 
-  ushort elements[45] = {
+  uint16_t elements[45] = {
     0, 1, 2,
     0, 2, 3,
     0, 3, 4,
@@ -108,37 +107,37 @@ void gazo::init() {
 
   mapping[0] = {0.0,0.0};
 
-  for(uint i = 0u; i < n_sides; i++) {
+  for(unsigned i = 0u; i < n_sides; i++) {
     mapping[i+1].x = cos(angle * double(i));
     mapping[i+1].y = sin(angle * double(i));
   }
 
-  fvec2* uv_map = (fvec2*) malloc(n_verts * 9 * sizeof(fvec2));
+  glm::vec2* uv_map = (glm::vec2*) malloc(n_verts * 9 * sizeof(glm::vec2));
   for(int i = 0; i < 9; i++) {
     uv_map[i * n_verts] = {
       float((i%3-1)*(i%3-1)) * (i/3==1?0.7f:0.64f) + 0.25f,
-      float(i/3-1)*(i%3==1?0.35f:0.32f) + 0.375f
+      float(i/3-1)*(i%3==1?0.35f:0.32f) + 0.375f  // NOLINT(bugprone-integer-division)
     };
     for(int j = 0; j < n_sides; j++) {
-      vec2 mapping_here = mapping[j + 1];
-      fvec2 uv_value = {
+      glm::dvec2 mapping_here = mapping[j + 1];
+      glm::vec2 uv_value = {
         (float(mapping_here.x) + (i % 3 - 1) * 2) * (i % 3 == 0 ? -0.25f : 0.25f) + 0.25f,
-        (float(-mapping_here.y) + (i / 3) * 2 + 1) * 0.125f
+        (float(-mapping_here.y) + (i / 3) * 2 + 1) * 0.125f  // NOLINT(bugprone-integer-division)
       };
       uv_map[i * n_verts + j + 1] = uv_value;
     }
   }
-  glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
-  glBufferData(GL_ARRAY_BUFFER, n_verts * 9 * sizeof(fvec2), (float*)uv_map, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
+  //glBufferData(GL_ARRAY_BUFFER, n_verts * 9 * sizeof(glm::vec2), (float*)uv_map, GL_STATIC_DRAW);
   free(uv_map);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, n_sides * 3 * sizeof(ushort), elements, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
+  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, n_sides * 3 * sizeof(ushort), elements, GL_STATIC_DRAW);
 
-  for(uint i = 0u; i < n_verts * 2u; i++) {
+  for(unsigned i = 0u; i < n_verts * 2u; i++) {
     ((double*)pos)[i] = ((double*)mapping)[i] * radius;
   }
-  for(uint i = 0u; i < n_verts; i++) {
+  for(unsigned i = 0u; i < n_verts; i++) {
     pos[i].y++;
     vel[i].x = 0.0;
     vel[i].y = 0.0;
@@ -186,8 +185,8 @@ bool gazo::advance_forward(double time_step) {
   return false;
 }
 
-fvec2 gazo::get_center_of_mass_medium_precision() {
-  fvec2 output = {
+glm::vec2 gazo::get_center_of_mass_medium_precision() {
+  glm::vec2 output = {
     float(pos[0].x * inner_mass),
     float(pos[0].y * inner_mass)
   };
@@ -205,7 +204,7 @@ void gazo::point_joystick(float x, float y) {
 }
 
 void gazo::point_other_joystick(float x, float y) {
-  vec2 dashing = {
+  glm::dvec2 dashing = {
     x - previous_joystick.x,
     y - previous_joystick.y
   };
@@ -217,20 +216,20 @@ void gazo::point_other_joystick(float x, float y) {
 }
 
 void gazo::update_gl_vertex_buffer()  {
-  for(uint i = 0u; i < n_verts; i++) {
+  for(unsigned i = 0u; i < n_verts; i++) {
     pos20[i*2u] = float(pos[i].x);
     pos20[i*2u+1u] = float(pos[i].y);
   }
-  glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, n_verts * 2 * sizeof(float), pos20, GL_DYNAMIC_DRAW);
+  //glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
+  //glBufferData(GL_ARRAY_BUFFER, n_verts * 2 * sizeof(float), pos20, GL_DYNAMIC_DRAW);
 }
 
 void gazo::update_gl_uv_buffer()  {
 }
 
-GLuint gazo::get_gl_vertex_buffer() {
-  return gl_vertex_buffer;
-}
+//GLuint gazo::get_gl_vertex_buffer() {
+//  return gl_vertex_buffer;
+//}
 
 double* gazo::get_mapping_pointer() {
   return (double*)mapping;
@@ -241,9 +240,9 @@ int gazo::get_vertex_buffer_size()  {
 }
 
 void gazo::kill_to_death() {
-  glDeleteBuffers(1, &gl_vertex_buffer);
-  glDeleteBuffers(1, &gl_uv_buffer);
-  glDeleteBuffers(1, &gl_element_index_buffer);
+  //glDeleteBuffers(1, &gl_vertex_buffer);
+  //glDeleteBuffers(1, &gl_uv_buffer);
+  //glDeleteBuffers(1, &gl_element_index_buffer);
   free(mapping);
   free(pos);
   free(pos20);
@@ -298,18 +297,18 @@ void gazo::add_thing_to_other_thing(
 
 void gazo::push_out_from_platform(double interval, platform* pltfm) {
   for(int i = 0; i < n_verts; i++) {
-    vec2 p = pos[i];
+    glm::dvec2 p = pos[i];
     
     //printf("  %f", p.y);
     if(pltfm->can_we_like_can_we_please_like_put_stuff_here_at_this_location_x_and_y_please_or_is_that_like_a_not_good_place_to_put_stuff_because_like_you_cant_put_stuff_there(p)) {
-      vec2 displacement = pltfm->shortest_path(p);
+      glm::dvec2 displacement = pltfm->shortest_path(p);
       pos[i].x += displacement.x;
       pos[i].y += displacement.y;
-      vec2 velocity_change = vec2{displacement.x / interval, displacement.y / interval};
+      glm::dvec2 velocity_change = glm::dvec2{displacement.x / interval, displacement.y / interval};
       double displacement_length = hypot(displacement.x, displacement.y);
-      vec2 normal = vec2{displacement.x / displacement_length, displacement.y / displacement_length};
+      glm::dvec2 normal = glm::dvec2{displacement.x / displacement_length, displacement.y / displacement_length};
       
-      vec2 v = vel[i];
+      glm::dvec2 v = vel[i];
       
       double parallel_speed = v.x * normal.y - v.y * normal.x;
       double speed_change = displacement_length / interval;
@@ -341,7 +340,7 @@ void gazo::add_thing_to_other_thing_into_another_thing(
 
 
 
-void gazo::calculate_acc(vec2* pos_in, vec2* vel_in, vec2* acc_out) {
+void gazo::calculate_acc(glm::dvec2* pos_in, glm::dvec2* vel_in, glm::dvec2* acc_out) {
   for(int i = 0; i < n_verts; i++) {
     acc_out[i] = {0.0, -gravity};
   }
@@ -357,9 +356,9 @@ void gazo::calculate_acc(vec2* pos_in, vec2* vel_in, vec2* acc_out) {
   polygon_area *= 0.5;
   double total_pressure = internal_pressure_area / polygon_area - air_pressure;
 
-  vec2 glaggle_rotation = {0, 0}; //as like a complex number.
+  glm::dvec2 glaggle_rotation = {0, 0}; //as like a complex number.
   //for example {0, 1} means rotated counterclokwise 90 degress
-  vec2 glaggle_center = pos_in[0];
+  glm::dvec2 glaggle_center = pos_in[0];
 
   for(int i = 0; i < n_sides; i++) {
     glaggle_rotation.x +=
@@ -376,14 +375,14 @@ void gazo::calculate_acc(vec2* pos_in, vec2* vel_in, vec2* acc_out) {
   glaggle_rotation.x *= glaggle_rotation_normaliser;
   glaggle_rotation.y *= glaggle_rotation_normaliser;
 
-  vec2 rotated_joystick = {
+  glm::dvec2 rotated_joystick = {
     pointing.x * glaggle_rotation.x + pointing.y * glaggle_rotation.y,
     pointing.y * glaggle_rotation.x - pointing.x * glaggle_rotation.y
   };
 
 
   for(int i = 0; i < n_sides; i++) {
-    vec2 v = {
+    glm::dvec2 v = {
       pos_in[i + 1].x - pos_in[0].x,
       pos_in[i + 1].y - pos_in[0].y
     };
@@ -420,7 +419,7 @@ void gazo::calculate_acc(vec2* pos_in, vec2* vel_in, vec2* acc_out) {
 
   for(int i = 0; i < n_sides; i++) {
     int j = (i + 1) % n_sides;
-    vec2 v = {
+    glm::dvec2 v = {
       pos_in[j+1].x - pos_in[i+1].x,
       pos_in[j+1].y - pos_in[i+1].y
     };
@@ -446,18 +445,18 @@ void gazo::calculate_acc(vec2* pos_in, vec2* vel_in, vec2* acc_out) {
 
   for(int i = 0; i < n_sides; i++) {
     int j = (i + 1) % n_sides;
-    vec2 v = {
+    glm::dvec2 v = {
       pos_in[j+1].x - pos_in[i+1].x,
       pos_in[j+1].y - pos_in[i+1].y,
     };
 
     double edge_length = hypot(v.x, v.y);
-    vec2 normal_direction = {
+    glm::dvec2 normal_direction = {
       v.y / edge_length,
       -v.x / edge_length
     };
 
-    vec2 endpoint_velocities[2] = {
+    glm::dvec2 endpoint_velocities[2] = {
       {vel_in[i+1].x, vel_in[i+1].y},
       {vel_in[j+1].x, vel_in[j+1].y}
     };
@@ -526,46 +525,46 @@ float gazo::get_rumble() {
 }
 
 void gazo::render(
-  gl_program_info* shader
+  //gl_program_info* shader
 ) {
   blink_timer++;
-  glDisable(GL_CULL_FACE);
+  //glDisable(GL_CULL_FACE);
 
   update_gl_vertex_buffer();
   update_gl_uv_buffer();
-  glUseProgram(shader->program);
+  //glUseProgram(shader->program);
 
-  glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
-  glVertexAttribPointer(shader->v_pos, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(shader->v_pos);
+  //glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
+  //glVertexAttribPointer(shader->v_pos, 2, GL_FLOAT, false, 0, nullptr);
+  //glEnableVertexAttribArray(shader->v_pos);
 
 
   choose_sprite();
-  glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
-  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, (void*) (long long int) (uv_map_offset * 0x80));
-  glEnableVertexAttribArray(shader->v_uv);
+  //glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
+  //glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, (void*) (long long int) (uv_map_offset * 0x80));
+  //glEnableVertexAttribArray(shader->v_uv);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
-  glLineWidth(2);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
+  //glLineWidth(2);
 
-  glDrawElements(GL_TRIANGLES, n_sides * 3, GL_UNSIGNED_SHORT, nullptr);
-  glEnable(GL_BLEND);
-  glBlendColor(0.0, 0.0, 0.0, 0.5);
-  glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
-  glBindTexture(GL_TEXTURE_2D, 0);
+  //glDrawElements(GL_TRIANGLES, n_sides * 3, GL_UNSIGNED_SHORT, nullptr);
+  //glEnable(GL_BLEND);
+  //glBlendColor(0.0, 0.0, 0.0, 0.5);
+  //glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
+  //glBindTexture(GL_TEXTURE_2D, 0);
 
-  glDrawArrays(GL_LINE_LOOP, 1, n_sides);
-  glDisable(GL_BLEND);
-  glLineWidth(1);
-  glDrawArrays(GL_LINE_LOOP, 1, n_sides);
+  //glDrawArrays(GL_LINE_LOOP, 1, n_sides);
+  //glDisable(GL_BLEND);
+  //glLineWidth(1);
+  //glDrawArrays(GL_LINE_LOOP, 1, n_sides);
 
-  glDisableVertexAttribArray(shader->v_uv);
-  glDisableVertexAttribArray(shader->v_pos);
+  //glDisableVertexAttribArray(shader->v_uv);
+  //glDisableVertexAttribArray(shader->v_pos);
 }
 
 void gazo::choose_sprite() {
-  vec2 rotation = {0, 0};
-  vec2 center = pos[0];
+  glm::dvec2 rotation = {0, 0};
+  glm::dvec2 center = pos[0];
 
   for(int i = 0; i < n_sides; i++) {
     rotation.x +=
@@ -581,7 +580,7 @@ void gazo::choose_sprite() {
   double rotation_normaliser = 1 / hypot(rotation.x, rotation.y);
   rotation.x *= rotation_normaliser;
   rotation.y *= rotation_normaliser;
-  vec2 rotated_joystick = {
+  glm::dvec2 rotated_joystick = {
     pointing.x * rotation.x + pointing.y * rotation.y,
     pointing.y * rotation.x - pointing.x * rotation.y
   };

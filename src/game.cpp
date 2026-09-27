@@ -1,7 +1,7 @@
 #include "game.h"
-#include "./resources.h"
-#include "gl_or_gles.h"
-#include "path.h"
+#include "./embeds.h"
+//#include "gl_or_gles.h"
+//#include "path.h"
 
 #include <GLFW/glfw3.h>
 //#incude <EGL/egl.h>
@@ -13,12 +13,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 //#include <sys/ioctl.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <string.h>
-#include <iostream>
-#include <fstream>
+//#include <iostream>
+//#include <fstream>
 //#include <sstream>
-#include <libgen.h>
+//#include <libgen.h>
 
 #define RESOLUTION_X 800
 #define RESOLUTION_Y 600
@@ -67,79 +67,79 @@ void dump(uint8_t *data, int size)
   printf("\n");
 }
 
-GLuint load_shader_from_file(const char* path, int type) {
-  GLuint result = glCreateShader(type);
-  std::filesystem::path full_path(root_path());
-  full_path /= "assets";
-  full_path /= "glsl";
-  full_path /= path;
-  std::ifstream ifs(full_path.string(), std::ios::in);
-  std::ostringstream oss;
-  oss << ifs.rdbuf();
-  std::string shader_source(oss.str());
-  const char* shader_source_c = shader_source.c_str();
-  glShaderSource(result, 1, &shader_source_c, nullptr);
-  //CHECK_GL();
-  glCompileShader(result);
-  //CHECK_GL();
-  GLint param;
-  glGetShaderiv(result, GL_COMPILE_STATUS, &param);
-  /*CHECK_GL();
-  if (param != GL_TRUE) {
-    std::cerr << "glCompileShader(" << full_path << ") failed." << std::endl;
-  }*/
-  return result;
-}
+//GLuint load_shader_from_file(const char* path, int type) {
+//  GLuint result = glCreateShader(type);
+//  std::filesystem::path full_path(root_path());
+//  full_path /= "assets";
+//  full_path /= "glsl";
+//  full_path /= path;
+//  std::ifstream ifs(full_path.string(), std::ios::in);
+//  std::ostringstream oss;
+//  oss << ifs.rdbuf();
+//  std::string shader_source(oss.str());
+//  const char* shader_source_c = shader_source.c_str();
+//  glShaderSource(result, 1, &shader_source_c, nullptr);
+//  //CHECK_GL();
+//  glCompileShader(result);
+//  //CHECK_GL();
+//  GLint param;
+//  glGetShaderiv(result, GL_COMPILE_STATUS, &param);
+//  /*CHECK_GL();
+//  if (param != GL_TRUE) {
+//    std::cerr << "glCompileShader(" << full_path << ") failed." << std::endl;
+//  }*/
+//  return result;
+//}
 
 void set_texture_params(int base_level, int max_level) {
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, base_level);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, base_level);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
 }
 
-GLuint load_texture_from_file(const char* path) {
-  GLuint result;
-  std::filesystem::path full_path(root_path());
-  full_path /= "assets";
-  full_path /= "textures";
-  full_path /= path;
-  std::cout << "loading tex " << full_path.string() << std::endl;
-  FILE* tex_file =fopen(full_path.c_str(), "rb");
-  int width = 32;
-  int height = 32;
-  int mip_count = 3;
-  int buffer_size = width * height * 2;
-  void* data = malloc(buffer_size);
-  //note to self: the total size of the file should be 2/3 the # of pixels
-  fread(data, 1, width * height * 4 / 3, tex_file);
-  glGenTextures(1, &result);
-  glBindTexture(GL_TEXTURE_2D, result);
-  set_texture_params(0, mip_count);
-  //CHECK_GL();
-  void* mip_pointer = data;
-  for( int mip_level = 0; mip_level <= mip_count; mip_level++){
-    int mip_size = width * height >> (mip_level * 2);
-    glCompressedTexImage2D(
-      GL_TEXTURE_2D,
-      mip_level,
-      GL_COMPRESSED_RGBA8_ETC2_EAC,
-      width >> mip_level,
-      height >> mip_level,
-      0,
-      mip_size,
-      mip_pointer
-    );
-    mip_pointer = (void*)((char*) mip_pointer + mip_size);
-  }
-  //CHECK_GL();
-  fclose(tex_file);
-  free(data);
-  //glGenerateMipmap(GL_TEXTURE_2D);
-  return result;
-}
+//GLuint load_texture_from_file(const char* path) {
+//GLuint result;
+//std::filesystem::path full_path(root_path());
+//full_path /= "assets";
+//full_path /= "textures";
+//full_path /= path;
+//std::cout << "loading tex " << full_path.string() << std::endl;
+//FILE* tex_file =fopen(full_path.c_str(), "rb");
+//int width = 32;
+//int height = 32;
+//int mip_count = 3;
+//int buffer_size = width * height * 2;
+//void* data = malloc(buffer_size);
+////note to self: the total size of the file should be 2/3 the # of pixels
+//fread(data, 1, width * height * 4 / 3, tex_file);
+//glGenTextures(1, &result);
+//glBindTexture(GL_TEXTURE_2D, result);
+//set_texture_params(0, mip_count);
+////CHECK_GL();
+//void* mip_pointer = data;
+//for( int mip_level = 0; mip_level <= mip_count; mip_level++){
+//  int mip_size = width * height >> (mip_level * 2);
+//  glCompressedTexImage2D(
+//    GL_TEXTURE_2D,
+//    mip_level,
+//    GL_COMPRESSED_RGBA8_ETC2_EAC,
+//    width >> mip_level,
+//    height >> mip_level,
+//    0,
+//    mip_size,
+//    mip_pointer
+//  );
+//  mip_pointer = (void*)((char*) mip_pointer + mip_size);
+//}
+////CHECK_GL();
+//fclose(tex_file);
+//free(data);
+////glGenerateMipmap(GL_TEXTURE_2D);
+//return result;
+//}
 
 } // namespace
 
@@ -208,82 +208,82 @@ void game::run()
   glfwMakeContextCurrent(window);
 
   
-  vertshader_basic    = load_shader_from_file("vert_basic.glsl", GL_VERTEX_SHADER);
-  vertshader_gazo     = load_shader_from_file("vert_gazo.glsl", GL_VERTEX_SHADER);
-  vertshader_3d       = load_shader_from_file("vert_3d.glsl", GL_VERTEX_SHADER);
-  vertshader_no_uv_map= load_shader_from_file("vert_no_uv_map.glsl", GL_VERTEX_SHADER);
-  fragshader_basic    = load_shader_from_file("frag_basic.glsl", GL_FRAGMENT_SHADER);
-  fragshader_gamma    = load_shader_from_file("frag_gamma.glsl", GL_FRAGMENT_SHADER);
-  fragshader_gui      = load_shader_from_file("frag_gui.glsl", GL_FRAGMENT_SHADER);
-  gazo_shader_info.link(
-    vertshader_gazo, fragshader_basic,
-    "view", "projection", "the_texture",
-    "pos", "vert_uv"
-  );
-  terrain_shader_info.link(
-    vertshader_3d, fragshader_basic,
-    "view_pos", "projection_matrix", "the_texture",
-    "pos", "vertex_uv"
-  );
-  polygon_fill_shader_info.link(
-    vertshader_no_uv_map, fragshader_basic,
-    "view_pos", "projection_matrix", "the_texture",
-    "vertex_pos", nullptr
-  );
-  gui_shader_info.link(
-    vertshader_basic, fragshader_gui,
-    nullptr, nullptr, "the_ui",
-    "pos", nullptr
-  );
+  //vertshader_basic    = load_shader_from_file("vert_basic.glsl", GL_VERTEX_SHADER);
+  //vertshader_gazo     = load_shader_from_file("vert_gazo.glsl", GL_VERTEX_SHADER);
+  //vertshader_3d       = load_shader_from_file("vert_3d.glsl", GL_VERTEX_SHADER);
+  //vertshader_no_uv_map= load_shader_from_file("vert_no_uv_map.glsl", GL_VERTEX_SHADER);
+  //fragshader_basic    = load_shader_from_file("frag_basic.glsl", GL_FRAGMENT_SHADER);
+  //fragshader_gamma    = load_shader_from_file("frag_gamma.glsl", GL_FRAGMENT_SHADER);
+  //fragshader_gui      = load_shader_from_file("frag_gui.glsl", GL_FRAGMENT_SHADER);
+  //gazo_shader_info.link(
+  //  vertshader_gazo, fragshader_basic,
+  //  "view", "projection", "the_texture",
+  //  "pos", "vert_uv"
+  //);
+  //terrain_shader_info.link(
+  //  vertshader_3d, fragshader_basic,
+  //  "view_pos", "projection_matrix", "the_texture",
+  //  "pos", "vertex_uv"
+  //);
+  //polygon_fill_shader_info.link(
+  //  vertshader_no_uv_map, fragshader_basic,
+  //  "view_pos", "projection_matrix", "the_texture",
+  //  "vertex_pos", nullptr
+  //);
+  //gui_shader_info.link(
+  //  vertshader_basic, fragshader_gui,
+  //  nullptr, nullptr, "the_ui",
+  //  "pos", nullptr
+  //);
 
-  gamma_shader_info.link(
-    vertshader_basic, fragshader_gamma,
-    nullptr, nullptr, nullptr, nullptr, nullptr);
-
-  {
-    float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
-                          -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
-    glGenBuffers(1, &square_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
-    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), the_square,
-                 GL_STATIC_DRAW);
-  };
-
-  glGenFramebuffers(1, &framebuffer);
-  glGenTextures(3, &framebuffer_texture);
-  glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R11F_G11F_B10F, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,GL_UNSIGNED_INT_10F_11F_11F_REV, nullptr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         framebuffer_texture, 0);
-
-  //glEnable(GL_DITHER);
-  glBindTexture(GL_TEXTURE_2D, depth_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, RESOLUTION_X, RESOLUTION_Y, 0,
-               GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
+  //gamma_shader_info.link(
+  //  vertshader_basic, fragshader_gamma,
+  //  nullptr, nullptr, nullptr, nullptr, nullptr);
+//
+  //{
+  //  float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
+  //                        -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
+  //  glGenBuffers(1, &square_buffer);
+  //  glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+  //  glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), the_square,
+  //               GL_STATIC_DRAW);
+  //};
+//
+  //glGenFramebuffers(1, &framebuffer);
+  //glGenTextures(3, &framebuffer_texture);
+  //glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+  //glTexImage2D(GL_TEXTURE_2D, 0, GL_R11F_G11F_B10F, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,GL_UNSIGNED_INT_10F_11F_11F_REV, nullptr);
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-  depth_texture, 0);
-  #define preffered_filter GL_LINEAR
-  #define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
-
-  glBindTexture(GL_TEXTURE_2D, gui_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, UI_WIDTH * 16, UI_HEIGHT, 0,
-               GL_RED, GL_UNSIGNED_BYTE, lettering);
+  //glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+  //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+  //                       framebuffer_texture, 0);
+//
+  ////glEnable(GL_DITHER);
+  //glBindTexture(GL_TEXTURE_2D, depth_texture);
+  //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, RESOLUTION_X, RESOLUTION_Y, 0,
+  //             GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
+  ////glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  ////glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+  //depth_texture, 0);
+  //#define preffered_filter GL_LINEAR
+  //#define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
+//
+  //glBindTexture(GL_TEXTURE_2D, gui_texture);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  //glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, UI_WIDTH * 16, UI_HEIGHT, 0,
+  //             GL_RED, GL_UNSIGNED_BYTE, lettering);
 
   the_level.construct("test_level.mechanism");
   
   
-  gazo_spritesheet_texture = load_texture_from_file("hd_blond_hair_surface.png");
-  stone_tile_texture = load_texture_from_file("potato_tiles.xcf");
-  bailey_truss_texture = load_texture_from_file("bill_and_ted.jpg");
+  //gazo_spritesheet_texture = load_texture_from_file("hd_blond_hair_surface.png");
+  //stone_tile_texture = load_texture_from_file("potato_tiles.xcf");
+  //bailey_truss_texture = load_texture_from_file("bill_and_ted.jpg");
   while (is_playing && !glfwWindowShouldClose(window))
   {
     the_monitor_has_refreshed_again();
@@ -294,23 +294,23 @@ void game::stop()
 {
   the_level.demolish();
 
-  glDeleteFramebuffers(1, &framebuffer);
-  glDeleteBuffers(1, &square_buffer);
-
-  glDeleteShader(vertshader_basic);
-  glDeleteShader(vertshader_gazo);
-  glDeleteShader(vertshader_3d);
-  glDeleteShader(vertshader_no_uv_map);
-  glDeleteShader(fragshader_basic);
-  glDeleteShader(fragshader_gui);
-  glDeleteShader(fragshader_gamma);
-
-  glDeleteTextures(3, &gazo_spritesheet_texture);
-  glDeleteTextures(3, &framebuffer_texture);
-
+  //glDeleteFramebuffers(1, &framebuffer);
+  //glDeleteBuffers(1, &square_buffer);
+//
+  //glDeleteShader(vertshader_basic);
+  //glDeleteShader(vertshader_gazo);
+  //glDeleteShader(vertshader_3d);
+  //glDeleteShader(vertshader_no_uv_map);
+  //glDeleteShader(fragshader_basic);
+  //glDeleteShader(fragshader_gui);
+  //glDeleteShader(fragshader_gamma);
+//
+  //glDeleteTextures(3, &gazo_spritesheet_texture);
+  //glDeleteTextures(3, &framebuffer_texture);
+//
   free(lettering);
-  glfwDestroyWindow(window);
-  glfwTerminate();
+  //glfwDestroyWindow(window);
+  //glfwTerminate();
 }
 
 void game::the_monitor_has_refreshed_again()
@@ -322,10 +322,10 @@ void game::the_monitor_has_refreshed_again()
   }
   glfwGetWindowSize(window, &window_width, &window_height);
   int joystick_axis_count;
-  vec2 cursor_pos;
+  glm::dvec2 cursor_pos;
   const float *joystick_axes = glfwGetJoystickAxes(0, &joystick_axis_count);
   glfwGetCursorPos(window, &cursor_pos.x, &cursor_pos.y);
-  vec2 cursor_pos_mapped = {
+  glm::dvec2 cursor_pos_mapped = {
     (cursor_pos.x - window_width / 2.0) * 8.0 / window_height,
     -8.0*((cursor_pos.y / window_height)-0.5)
   };
@@ -351,42 +351,40 @@ void game::the_monitor_has_refreshed_again()
   }
 
 
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glViewport(0, 0, RESOLUTION_X, RESOLUTION_Y);
+  //glEnable(GL_DEPTH_TEST);
+  //glDepthFunc(GL_LEQUAL);
+  //glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+  //glViewport(0, 0, RESOLUTION_X, RESOLUTION_Y);
   the_level.draw(
-    &gazo_shader_info, &terrain_shader_info, &polygon_fill_shader_info,
-    gazo_spritesheet_texture, stone_tile_texture
+    //&gazo_shader_info, &terrain_shader_info, &polygon_fill_shader_info,
+    //gazo_spritesheet_texture, stone_tile_texture
   );
-  {
-    glViewport(0, 0, window_width, window_height);
-  }
-  glDisable(GL_BLEND);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glClearDepthf(1.0f);
-  glClear(GL_DEPTH_BUFFER_BIT);
-  glUseProgram(gamma_shader_info.program);
-  glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
-  glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(0);
-  glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  glDrawArrays(GL_TRIANGLES, 0, 6);
+  //glViewport(0, 0, window_width, window_height);
+  //glDisable(GL_BLEND);
+  //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  //glClearDepthf(1.0f);
+  //glClear(GL_DEPTH_BUFFER_BIT);
+  //glUseProgram(gamma_shader_info.program);
+  //glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+  //glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, nullptr);
+  //glEnableVertexAttribArray(0);
+  //glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+  //glDrawArrays(GL_TRIANGLES, 0, 6);
 
-  glUseProgram(gui_shader_info.program);
-  glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
-  glVertexAttribPointer(gui_shader_info.v_pos, 2, GL_FLOAT, false, 0, nullptr);
-  glEnableVertexAttribArray(gui_shader_info.v_pos);
-  glUniform1i(gui_shader_info.u_texture, 0);
-  glBindTexture(GL_TEXTURE_2D, gui_texture);
-  glDrawArrays(GL_TRIANGLES, 0, 6);
+  //glUseProgram(gui_shader_info.program);
+  //glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+  //glVertexAttribPointer(gui_shader_info.v_pos, 2, GL_FLOAT, false, 0, nullptr);
+  //glEnableVertexAttribArray(gui_shader_info.v_pos);
+  //glUniform1i(gui_shader_info.u_texture, 0);
+  //glBindTexture(GL_TEXTURE_2D, gui_texture);
+  //glDrawArrays(GL_TRIANGLES, 0, 6);
 
   // rumble_effect.u.periodic.magnitude = the_gazo.get_rumble() * 0x1000;
   // ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
   // rumbleinator.code = rumble_effect.id;
   // write(rumbly_file_descriptor, (const void*) &rumbleinator,
   // sizeof(rumbleinator));
-  glfwSwapBuffers(window);
+  //glfwSwapBuffers(window);
   frame_counter++;
 }
 

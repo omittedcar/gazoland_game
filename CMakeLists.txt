@@ -60,8 +60,12 @@ add_custom_target(spirv_shaders
 add_executable(TheMechanism)
 target_sources(TheMechanism
   PRIVATE
-#    src/embeds.c
+    src/embeds.c
+    src/game.cpp
+    src/gazo.cpp
+    src/level.cpp
     src/path.cpp
+    src/platform.cpp
     src/vulkan_app.cpp
     src/vulkan_main.cpp
 )
