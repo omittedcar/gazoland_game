@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.23)
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_CXX_STANDARD 23)
-project(GazolandGame
+project(TheMechanismProject
   VERSION 1.0.0
 )
 
@@ -57,55 +57,31 @@ add_custom_target(spirv_shaders
     "${CMAKE_CURRENT_BINARY_DIR}/assets/spirv/vulkan_demo_vert.spv"
 )
 
-#add_executable(GazolandGame)
-#add_dependencies(GazolandGame spirv_shaders)
-#target_sources(GazolandGame
-#  PRIVATE
-#    src/embeds.c
-#    src/gazo.cpp
-#    src/gazoland_vulkan.cpp
-#    src/level.cpp
-#    src/main.cpp
-#    src/path.cpp
-#    src/platform.cpp
-#)
-#target_compile_definitions(GazolandGame PUBLIC GAZOLAND_VULKAN)
-#target_link_libraries(GazolandGame PRIVATE
-#  glm
-#  GLFW
-#  Vulkan::Vulkan
-#  $<$<PLATFORM_ID:Windows>:pathcch.lib>
-#)
-
-add_executable(VulkanDemo)
-target_sources(VulkanDemo
+add_executable(TheMechanism)
+target_sources(TheMechanism
   PRIVATE
-    src/embeds.c
+#    src/embeds.c
     src/path.cpp
     src/vulkan_app.cpp
-    src/vulkan_game.cpp
-    src/vulkan_gazo.cpp
-    src/vulkan_level.cpp
     src/vulkan_main.cpp
-    src/vulkan_platform.cpp
 )
-target_link_libraries(VulkanDemo
+target_link_libraries(TheMechanism
   PRIVATE
     glfw
     Vulkan::Vulkan
     $<$<PLATFORM_ID:Windows>:pathcch.lib>
 )
-add_dependencies(VulkanDemo spirv_shaders)
+add_dependencies(TheMechanism spirv_shaders)
 
 set(TEXTURE_SOURCES
   statue.jpg
 )
 foreach(src IN LISTS TEXTURE_SOURCES)
 add_custom_command(
-  TARGET VulkanDemo POST_BUILD
+  TARGET TheMechanism POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/${src}"
-      "$<TARGET_FILE_DIR:VulkanDemo>/assets/textures/${src}"
+      "$<TARGET_FILE_DIR:TheMechanism>/assets/textures/${src}"
   COMMENT "Copying ${src} to the textures directory."
 )
 endforeach()

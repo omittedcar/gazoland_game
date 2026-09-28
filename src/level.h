@@ -1,35 +1,23 @@
-#ifndef _GAZOLAND_SRC_LEVEL_H_
-#define _GAZOLAND_SRC_LEVEL_H_
-
+#include "gazo.h"
 #include "platform.h"
-
-#include "gles_or_vulkan.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-
-class gazo;
+//#include "gl_program_info.h"
 
 class level {
 public:
-  level(
-      const char* file_name,
-      std::shared_ptr<gazo>& gazo_arg,
-      std::shared_ptr<program>& terrain_prog_arg,
-      std::shared_ptr<program>& polygon_fill_prog_arg,
-      std::shared_ptr<texture>& stone_tile_tex_arg);
-
-  ~level() = default;
-  
+  void construct(const char* file_name);
+  void demolish();
   void time_step();
   void control_gazo(float left_stick_x, float left_stick_y, float right_stick_x,
                     float right_stick_y);
-  void draw(const std::vector<float>& projection, const fvec2& view);
+  void draw(
+    //gl_program_info* gazo_shader, gl_program_info* terrain_shader,
+    //gl_program_info* polygon_fill_shader,
+    //GLuint gazo_texture, GLuint stone_tile_texture
+  );
 
 private:
-  std::shared_ptr<gazo> the_gazo;
+  //FILE* the_file;
+  gazo the_gazo;
   platform the_platform;
+  glm::vec2 view = {0.0, 0.0};
 };
-
-#endif  // #ifndef _GAZOLAND_SRC_LEVEL_H_
-

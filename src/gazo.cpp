@@ -1,9 +1,12 @@
-#include "gazo.h"
 
-#include <cassert>
+#include "gl_or_gles.h"
+#include <cstdio>
+#include <cstring>
+#include <stdlib.h>
 #include <math.h>
+#include <GL/gl.h>
 
-namespace {
+#include "./gazo.h"
 
 //esta es el caunto de lados del gazo
 //por ejemplo, si fuera seis, el gazo es un hexagono
@@ -37,12 +40,17 @@ double inner_mass = 0x8;
 //the combined masses of all of the other nodes. (㎏)
 double outer_mass = 0xA;
 
+//the stiffness of the gazo's outer edges. (N/m)
+double outer_stiffness = 0x1800;
+
+//the damping of the gazo's outer edges. (㎏/s)
+double outer_damping = 0x60;
+
 //the power of each of the gazo's muscles. (W)
-double muscle_power = 0x1000;
+double muscle_power = 0x100;
 
-
-double stiffness = 0x400;
-double damping = 0x8;
+double inner_stiffness = 0x800; //0x600
+double inner_damping = 0x10;
 
 //N
 double internal_pressure_area = 0x3400;
@@ -59,47 +67,28 @@ double radius = 0.2;
 
 double arc_distance = hypot(cos(angle) - 1, sin(angle));
 
-template<class T>
-void add_thing_to_other_thing(
-    const std::vector<T>& thing,
-    std::vector<T>& other_thing,
-    double koaficant) {
-  assert(thing.size() == other_thing.size());
-  for(int i = 0; i < other_thing.size(); i++) {
-    other_thing[i] += thing[i] * koaficant;
-  }
-}
 
-template<class T>
-void add_thing_to_other_thing_into_another_thing(
-    const std::vector<T>& thing,
-    const std::vector<T>& other_thing,
-    double koaficant,
-    std::vector<T>& another_thing) {
-  assert(thing.size() == other_thing.size());
-  assert(thing.size() == another_thing.size());
-  for(int i = 0; i < thing.size(); i++) {
-    another_thing[i] = other_thing[i] + thing[i] * koaficant;
-  }
-}
+void gazo::init() {
+  glGenBuffers(1, &gl_vertex_buffer);
+  glGenBuffers(1, &gl_element_index_buffer);
+  glGenBuffers(1, &gl_uv_buffer);
 
-}  // namespace {
+  mapping = (vec2*) malloc(n_verts * sizeof(vec2));
+  pos20 = (float*) malloc(n_verts * 2 * sizeof(float));
 
-gazo::gazo(std::shared_ptr<program> prog_arg,
-           std::shared_ptr<texture> spritesheet_tex_arg)
-    : prog(prog_arg),
-      spritesheet_tex(spritesheet_tex_arg),
-      mapping(n_verts),
-      pos20(n_verts * 2),
-      pos(n_verts),
-      vel(n_verts),
-      sample_pos(n_verts),
-      sample_vel(n_verts),
-      acc(n_verts, vec2{0,0}),
-      delta_pos(n_verts),
-      delta_vel(n_verts) {
 
-  std::vector<unsigned short> elements{
+  pos                           = (vec2*) malloc(n_verts * sizeof(vec2));
+  vel                           = (vec2*) malloc(n_verts * sizeof(vec2));
+  sample_pos                    = (vec2*) malloc(n_verts * sizeof(vec2));
+  sample_vel                    = (vec2*) malloc(n_verts * sizeof(vec2));
+  acc                           = (vec2*) malloc(n_verts * sizeof(vec2));
+  memset(acc, 0, n_verts * sizeof(vec2)); // 0x0000000000000000 is equal to 0.0
+  delta_pos                     = (vec2*) malloc(n_verts * sizeof(vec2));
+  delta_vel                     = (vec2*) malloc(n_verts * sizeof(vec2));
+
+
+
+  ushort elements[45] = {
     0, 1, 2,
     0, 2, 3,
     0, 3, 4,
@@ -119,12 +108,12 @@ gazo::gazo(std::shared_ptr<program> prog_arg,
 
   mapping[0] = {0.0,0.0};
 
-  for(unsigned int i = 0u; i < n_sides; i++) {
+  for(uint i = 0u; i < n_sides; i++) {
     mapping[i+1].x = cos(angle * double(i));
     mapping[i+1].y = sin(angle * double(i));
   }
 
-  std::vector<fvec2> uv_map(n_verts * 9);
+  fvec2* uv_map = (fvec2*) malloc(n_verts * 9 * sizeof(fvec2));
   for(int i = 0; i < 9; i++) {
     uv_map[i * n_verts] = {
       float((i%3-1)*(i%3-1)) * (i/3==1?0.7f:0.64f) + 0.25f,
@@ -139,29 +128,26 @@ gazo::gazo(std::shared_ptr<program> prog_arg,
       uv_map[i * n_verts + j + 1] = uv_value;
     }
   }
+  glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
+  glBufferData(GL_ARRAY_BUFFER, n_verts * 9 * sizeof(fvec2), (float*)uv_map, GL_STATIC_DRAW);
+  free(uv_map);
 
-  for(unsigned int i = 0u; i < n_verts; i++) {
-    pos[i].x = mapping[i].x * radius;
-    pos[i].y = mapping[i].y * radius;
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, n_sides * 3 * sizeof(ushort), elements, GL_STATIC_DRAW);
+
+  for(uint i = 0u; i < n_verts * 2u; i++) {
+    ((double*)pos)[i] = ((double*)mapping)[i] * radius;
   }
-  for(unsigned int i = 0u; i < n_verts; i++) {
+  for(uint i = 0u; i < n_verts; i++) {
     pos[i].y++;
     vel[i].x = 0.0;
     vel[i].y = 0.0;
   }
-
-  vertex_buffer = buffer::create(
-      "vertex", std::vector<float>(), buffer_type::k_array);
-  
-  uv_buffer = buffer::create("uv", uv_map, buffer_type::k_array);  
-
-  element_index_buffer = buffer::create(
-      "element_index", elements, buffer_type::k_array);
 }
 
 bool gazo::advance_forward(double time_step) {
 
-  double timestep_divided_by_six = time_step / 6.0;
+  double timestep_divided_by_sixe = time_step / 6.0;
 
   for (int i = 0; i < n_verts; i++) {
     delta_pos[i] = {0,0};
@@ -169,22 +155,33 @@ bool gazo::advance_forward(double time_step) {
     sample_pos[i] = {0,0};
     sample_vel[i] = {0,0};
   }
-  add_thing_to_other_thing_into_another_thing(sample_vel, pos, time_step * 0.5, sample_pos);
-  add_thing_to_other_thing_into_another_thing(acc, vel, time_step * 0.5, sample_vel);
+  calculate_acc(pos, vel, acc);
+  add_thing_to_other_thing((double*)vel, (double*)delta_pos, timestep_divided_by_sixe);
+  add_thing_to_other_thing((double*)acc, (double*)delta_vel, timestep_divided_by_sixe);
+
+  add_thing_to_other_thing_into_another_thing((double*)vel, (double*)pos, time_step * 0.5, (double*)sample_pos);
+  add_thing_to_other_thing_into_another_thing((double*)acc, (double*)vel, time_step * 0.5, (double*)sample_vel);
   calculate_acc(sample_pos, sample_vel, acc);
-  add_thing_to_other_thing(sample_vel, delta_pos, timestep_divided_by_six * 2);
-  add_thing_to_other_thing(acc, delta_vel, timestep_divided_by_six * 2);
+  add_thing_to_other_thing((double*)sample_vel, (double*)delta_pos, timestep_divided_by_sixe * 2);
+  add_thing_to_other_thing((double*)acc, (double*)delta_vel, timestep_divided_by_sixe * 2);
 
 
-  add_thing_to_other_thing_into_another_thing(sample_vel, pos, time_step, sample_pos);
-  add_thing_to_other_thing_into_another_thing(acc, vel, time_step, sample_vel);
+  add_thing_to_other_thing_into_another_thing((double*)sample_vel, (double*)pos, time_step * 0.5, (double*)sample_pos);
+  add_thing_to_other_thing_into_another_thing((double*)acc, (double*)vel, time_step * 0.5, (double*)sample_vel);
   calculate_acc(sample_pos, sample_vel, acc);
-  add_thing_to_other_thing(sample_vel, delta_pos, timestep_divided_by_six);
-  add_thing_to_other_thing(acc, delta_vel, timestep_divided_by_six);
+  add_thing_to_other_thing((double*)sample_vel, (double*)delta_pos, timestep_divided_by_sixe * 2);
+  add_thing_to_other_thing((double*)acc, (double*)delta_vel, timestep_divided_by_sixe * 2);
 
-  add_thing_to_other_thing(delta_pos, pos, 1.0);
 
-  add_thing_to_other_thing(delta_vel, vel, 1.0);
+  add_thing_to_other_thing_into_another_thing((double*)sample_vel, (double*)pos, time_step, (double*)sample_pos);
+  add_thing_to_other_thing_into_another_thing((double*)acc, (double*)vel, time_step, (double*)sample_vel);
+  calculate_acc(sample_pos, sample_vel, acc);
+  add_thing_to_other_thing((double*)sample_vel, (double*)delta_pos, timestep_divided_by_sixe);
+  add_thing_to_other_thing((double*)acc, (double*)delta_vel, timestep_divided_by_sixe);
+
+  add_thing_to_other_thing((double*)delta_pos, (double*)pos, 1.0);
+
+  add_thing_to_other_thing((double*)delta_vel, (double*)vel, 1.0);
 
   return false;
 }
@@ -200,7 +197,7 @@ fvec2 gazo::get_center_of_mass_medium_precision() {
   }
   output.x /= inner_mass + outer_mass;
   output.y /= inner_mass + outer_mass;
-  return {output.x, output.y};
+  return output;
 }
 
 void gazo::point_joystick(float x, float y) {
@@ -219,20 +216,57 @@ void gazo::point_other_joystick(float x, float y) {
   previous_joystick = {x,y};
 }
 
-void gazo::update_vertex_buffer()  {
-  for(unsigned int i = 0u; i < n_verts; i++) {
+void gazo::update_gl_vertex_buffer()  {
+  for(uint i = 0u; i < n_verts; i++) {
     pos20[i*2u] = float(pos[i].x);
     pos20[i*2u+1u] = float(pos[i].y);
   }
-  vertex_buffer->update(pos20, buffer_type::k_array);
+  glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER, n_verts * 2 * sizeof(float), pos20, GL_DYNAMIC_DRAW);
 }
 
-void gazo::update_uv_buffer()  {
+void gazo::update_gl_uv_buffer()  {
+}
+
+GLuint gazo::get_gl_vertex_buffer() {
+  return gl_vertex_buffer;
+}
+
+double* gazo::get_mapping_pointer() {
+  return (double*)mapping;
 }
 
 int gazo::get_vertex_buffer_size()  {
   return n_verts * 2 * sizeof(float);
 }
+
+void gazo::kill_to_death() {
+  glDeleteBuffers(1, &gl_vertex_buffer);
+  glDeleteBuffers(1, &gl_uv_buffer);
+  glDeleteBuffers(1, &gl_element_index_buffer);
+  free(mapping);
+  free(pos);
+  free(pos20);
+  free(vel);
+  free(delta_pos);
+  free(delta_vel);
+  free(sample_pos);
+  free(sample_vel);
+  free(acc);
+
+}
+
+void gazo::add_thing_to_other_thing(
+  double* thing,
+  double* other_thing,
+  double koaficant
+) {
+  for(int i = 0; i < n_verts * 2; i++) {
+    other_thing[i] += thing[i] * koaficant;
+  }
+}
+
+
 
 /*function correct_collisions(time_step) {
   
@@ -262,13 +296,13 @@ int gazo::get_vertex_buffer_size()  {
   }
 }*/
 
-void gazo::push_out_from_platform(double interval, platform& pltfm) {
+void gazo::push_out_from_platform(double interval, platform* pltfm) {
   for(int i = 0; i < n_verts; i++) {
     vec2 p = pos[i];
     
     //printf("  %f", p.y);
-    if (pltfm.can_we_like_can_we_please_like_put_stuff_here_at_this_location_x_and_y_please_or_is_that_like_a_not_good_place_to_put_stuff_because_like_you_cant_put_stuff_there(p)) {
-      vec2 displacement = pltfm.shortest_path(p);
+    if(pltfm->can_we_like_can_we_please_like_put_stuff_here_at_this_location_x_and_y_please_or_is_that_like_a_not_good_place_to_put_stuff_because_like_you_cant_put_stuff_there(p)) {
+      vec2 displacement = pltfm->shortest_path(p);
       pos[i].x += displacement.x;
       pos[i].y += displacement.y;
       vec2 velocity_change = vec2{displacement.x / interval, displacement.y / interval};
@@ -293,10 +327,21 @@ void gazo::push_out_from_platform(double interval, platform& pltfm) {
   //printf("\n");
 }
 
-void gazo::calculate_acc(
-    const std::vector<vec2>& pos_in,
-    const std::vector<vec2>& vel_in,
-    std::vector<vec2>& acc_out) {
+void gazo::add_thing_to_other_thing_into_another_thing(
+  double* thing,
+  double* other_thing,
+  double coefficient,
+  double* another_thing
+) {
+  for(int i = 0; i < n_verts * 2; i++) {
+    another_thing[i] = other_thing[i] + thing[i] * coefficient;
+  }
+}
+
+
+
+
+void gazo::calculate_acc(vec2* pos_in, vec2* vel_in, vec2* acc_out) {
   for(int i = 0; i < n_verts; i++) {
     acc_out[i] = {0.0, -gravity};
   }
@@ -352,7 +397,7 @@ void gazo::calculate_acc(
     double target_muscle_force = (hypot(
       mapping[i + 1].x - rotated_joystick.x * 0.7,
       mapping[i + 1].y - rotated_joystick.y * 0.7
-    ) - 1) * stiffness * radius * 1;
+    ) - 1) * inner_stiffness * radius * 1;
 
     if(target_muscle_force * deformation_rate > muscle_power) {
       target_muscle_force = (muscle_power / deformation_rate) || 0;
@@ -361,8 +406,8 @@ void gazo::calculate_acc(
 
     double length_difference = current_length - radius;
     double force_quotient = (
-      - length_difference * stiffness
-      - deformation_rate * damping + target_muscle_force
+      - length_difference * inner_stiffness
+      - deformation_rate * inner_damping + target_muscle_force
     ) / (current_length);
 
     acc_out[0].x -= v.x * force_quotient / inner_mass;
@@ -388,33 +433,8 @@ void gazo::calculate_acc(
 
     double length_difference = current_length - arc_distance * radius;
     double force_quotient = (
-      - length_difference * stiffness
-      - deformation_rate * damping
-    ) / (current_length);
-
-    acc_out[i + 1].x -= v.x * force_quotient / outer_vertex_mass;
-    acc_out[i + 1].y -= v.y * force_quotient / outer_vertex_mass;
-
-    acc_out[j +1].x += v.x * force_quotient / outer_vertex_mass;
-    acc_out[j +1].y += v.y * force_quotient / outer_vertex_mass;
-  }
-  for(int i = 0; i < n_sides; i++) {
-    int j = (i + 2) % n_sides;
-    vec2 v = {
-      pos_in[j+1].x - pos_in[i+1].x,
-      pos_in[j+1].y - pos_in[i+1].y
-    };
-    double current_length = hypot(v.x, v.y); 
-    double deformation_rate = (
-      (vel_in[j+1].x - vel_in[i+1].x) * v.x +
-      (vel_in[j+1].y - vel_in[i+1].y) * v.y
-    ) / current_length;
-
-
-    double length_difference = current_length - arc_distance * radius;
-    double force_quotient = (
-      - length_difference * stiffness
-      - deformation_rate * damping
+      - length_difference * outer_stiffness
+      - deformation_rate * outer_damping
     ) / (current_length);
 
     acc_out[i + 1].x -= v.x * force_quotient / outer_vertex_mass;
@@ -458,6 +478,17 @@ void gazo::calculate_acc(
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
 float gazo::get_rumble() {
   /*
   float rumble_out = 0.0;
@@ -494,11 +525,42 @@ float gazo::get_rumble() {
   return 0;
 }
 
-void gazo::draw(const std::vector<float>& projection, fvec2 view) {
-  update_vertex_buffer();
-  update_uv_buffer();
+void gazo::render(
+  gl_program_info* shader
+) {
+  blink_timer++;
+  glDisable(GL_CULL_FACE);
+
+  update_gl_vertex_buffer();
+  update_gl_uv_buffer();
+  glUseProgram(shader->program);
+
+  glBindBuffer(GL_ARRAY_BUFFER, gl_vertex_buffer);
+  glVertexAttribPointer(shader->v_pos, 2, GL_FLOAT, false, 0, nullptr);
+  glEnableVertexAttribArray(shader->v_pos);
+
+
   choose_sprite();
-  draw_gazo(*this, projection, view);
+  glBindBuffer(GL_ARRAY_BUFFER, gl_uv_buffer);
+  glVertexAttribPointer(shader->v_uv, 2, GL_FLOAT, false, 0, (void*) (long long int) (uv_map_offset * 0x80));
+  glEnableVertexAttribArray(shader->v_uv);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_element_index_buffer);
+  glLineWidth(2);
+
+  glDrawElements(GL_TRIANGLES, n_sides * 3, GL_UNSIGNED_SHORT, nullptr);
+  glEnable(GL_BLEND);
+  glBlendColor(0.0, 0.0, 0.0, 0.5);
+  glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  glDrawArrays(GL_LINE_LOOP, 1, n_sides);
+  glDisable(GL_BLEND);
+  glLineWidth(1);
+  glDrawArrays(GL_LINE_LOOP, 1, n_sides);
+
+  glDisableVertexAttribArray(shader->v_uv);
+  glDisableVertexAttribArray(shader->v_pos);
 }
 
 void gazo::choose_sprite() {

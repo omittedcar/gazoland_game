@@ -1,70 +1,73 @@
-#ifndef _GAZOLAND_SRC_GAZO_H_
-#define _GAZOLAND_SRC_GAZO_H_
-
 #include "platform.h"
-
-#include "gles_or_vulkan.h"
+//#include "vec2.h"
+//#include "gl_program_info.h"
 
 class gazo {
  public:
-  gazo(std::shared_ptr<program> prog_arg,
-       std::shared_ptr<texture> spritesheet_tex_arg);
-
-  const std::shared_ptr<program>& get_prog() const { return prog; }
-  const std::shared_ptr<texture>& get_tex() const { return spritesheet_tex; }
-  const std::shared_ptr<buffer>& get_vertex_buf() const {
-    return vertex_buffer;
-  }
-  const std::shared_ptr<buffer>& get_uv_buf() const { return uv_buffer; }
-  const std::shared_ptr<buffer>& get_element_index_buf() const {
-    return element_index_buffer;
-  }
-  int get_uv_map_offset() const { return uv_map_offset; }
-  int get_n_sides() const { return 15; }
-
+  void init();
   bool advance_forward(double time_step);
   void point_joystick(float x, float y);
   void point_other_joystick(float x, float y);
+  void update_gl_vertex_buffer();
+  //GLuint get_gl_vertex_buffer();
+  double* get_mapping_pointer();
   int get_vertex_buffer_size();
+  void kill_to_death();
   float get_rumble();
-  fvec2 get_center_of_mass_medium_precision();
-  void push_out_from_platform(double interval, platform& p);
-
-  void update_vertex_buffer();
-  void update_uv_buffer();
-  void choose_sprite();
-
-  void draw(const std::vector<float>& projection, fvec2 view);
-  
+  glm::vec2 get_center_of_mass_medium_precision();
+  void render(
+    //gl_program_info* shader
+  );
+  void push_out_from_platform(double interval, platform* p);
  private:
-  std::shared_ptr<program> prog;
-  std::shared_ptr<texture> spritesheet_tex;
+  glm::dvec2 pointing = {
+    0.0f,
+    0.0f
+  };
+  glm::dvec2 previous_joystick = {
+    0.0,
+    0.0
+  };
+  int blink_timer = 0.0;
 
-  vec2 pointing{0.0f, 0.0f};
-  vec2 previous_joystick{0.0, 0.0};
+  glm::dvec2* mapping;
+  glm::dvec2* pos;
+  glm::dvec2* vel;
 
-  std::vector<vec2> mapping;
-  std::vector<vec2> pos;
-  std::vector<vec2> vel;
+  glm::dvec2* delta_pos;
+  glm::dvec2* delta_vel;
+  glm::dvec2* sample_vel;
+  glm::dvec2* sample_pos;
+  glm::dvec2* acc;
 
-  std::vector<vec2> delta_pos;
-  std::vector<vec2> delta_vel;
-  std::vector<vec2> sample_vel;
-  std::vector<vec2> sample_pos;
-  std::vector<vec2> acc;
 
-  std::vector<float> pos20;
+  float* pos20;
   int uv_map_offset;
 
-  std::shared_ptr<buffer> vertex_buffer;
-  std::shared_ptr<buffer> uv_buffer;
-  std::shared_ptr<buffer> element_index_buffer;
+  //GLuint gl_vertex_buffer;
+  //GLuint gl_uv_buffer;
+  //GLuint gl_element_index_buffer;
+
+  void add_thing_to_other_thing(
+    double* thing,
+    double* other_thing,
+    double coefficient
+  );
+
+  void add_thing_to_other_thing_into_another_thing(
+    double* thing,
+    double* other_thing,
+    double coefficient,
+    double* another_thing
+  );
+
+  void update_gl_uv_buffer();
 
   void calculate_acc(
-    const std::vector<vec2>& pos_in,
-    const std::vector<vec2>& vel_in,
-    std::vector<vec2>& acc_out
+    glm::dvec2* pos_in,
+    glm::dvec2* vel_in,
+    glm::dvec2* acc_out
   );
-};
 
-#endif  // #ifndef _GAZOLAND_SRC_GAZO_H_
+  void choose_sprite();
+};

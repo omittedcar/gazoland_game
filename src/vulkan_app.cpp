@@ -3,6 +3,9 @@
 #endif
 
 #include "vulkan_app.h"
+
+#include "game.h"
+
 #include <cstdint>
 #include <string>
 
