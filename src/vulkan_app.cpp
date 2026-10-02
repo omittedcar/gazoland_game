@@ -1086,10 +1086,13 @@ void VulkanApp::initVulkan() {
   createSyncObjects();
 }
 
+
 void VulkanApp::mainLoop() {
   startTicks = getTime();
+  game the_game(window);
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
+    the_game.the_monitor_has_refreshed_again();
     drawFrame();
   }
   vkDeviceWaitIdle(vi->device);

@@ -1,21 +1,21 @@
-
 #include "level.h"
 //#include <linux/input.h>
 //#include "gl_program_info.h"
 //#include <dirent.h>
 
-class GLFWwindow;
+struct GLFWwindow;
 
 class game {
  public:
-  game() = default;
-  void run();
+  game(GLFWwindow *window_);
+  void the_monitor_has_refreshed_again();
+
+  //void run();
   void stop();
   //DIR *game_directory;
 
  private:
   
-  void the_monitor_has_refreshed_again();
   void function_which_is_called_480hz();
 
   void write_text(const char* the_text_which_we_are_writing, int pos);
@@ -29,8 +29,8 @@ class game {
   level the_level;
   bool is_playing = false;
   GLFWwindow *window = nullptr;
-  int window_width = 0;
-  int window_height = 0;
+  //int window_width = 0;
+  //int window_height = 0;
   char* info_log = nullptr;
 
   unsigned char* lettering;

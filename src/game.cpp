@@ -147,148 +147,150 @@ void set_texture_params(int base_level, int max_level) {
 void dont_free() {
   __asm__("nop;");
 };
-void game::run()
-{
-  info_log = (char*) malloc(69420);
-  is_playing = true;
 
-  /*
-  rumble_effect.type = FF_PERIODIC;
-  rumble_effect.id = -1;
-  rumble_effect.u.periodic.waveform = FF_SQUARE;
-  rumble_effect.u.periodic.period = 0x100;
-        rumble_effect.u.periodic.magnitude = 0x7fff;
-        rumble_effect.u.periodic.offset = 0;
-        rumble_effect.u.periodic.phase = 0;
-        rumble_effect.direction = 0x4000;
-        rumble_effect.u.periodic.envelope.attack_length = 0x000;
-        rumble_effect.u.periodic.envelope.fade_length = 0x80;
-  rumble_effect.u.periodic.envelope.attack_level = 0x0000;
-        rumble_effect.u.periodic.envelope.fade_level = 0x0000;
-        rumble_effect.trigger.button = 0;
-        rumble_effect.trigger.interval = 0;
-        rumble_effect.replay.length = 0x100;
-        rumble_effect.replay.delay = 0;
-  rumbly_file_descriptor = open("/dev/input/event24", O_RDWR);  //  ǁ📂ǁ
-  ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
-  rumbleinator.type = EV_FF;
-        rumbleinator.code = rumble_effect.id;
-  rumbleinator.value = 1;
-  write(
-    rumbly_file_descriptor,
-    (const void*) &rumbleinator,
-    sizeof(rumbleinator)
-  );
-  */
-
-  glfwInit();
-  glfwSwapInterval(1);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-  //glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_FALSE);
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  lettering = (unsigned char*) malloc(UI_BYTES + 1);
-  for(int i = 0; i < UI_BYTES; i++) {
-    lettering[i] = 0;
-  }
-  write_text(
-    //"The Mechanism is a hazardous ride located in Gazoland, built over the course of five years by Gazolandic Tesseract Engineering Incorporated. It is the largest ride in Gazo Square and, like many other rides in Gazoland, carries an extreme risk of death for both those riding it and those working to maintain it. The Mechanism is only ridden by expert ride-goers as it is infamous for inflicting at least a dozen severe injuries in poorly maintained parts of the ride. It is estimated that the average ride time of The Mechanism is three days, give or take several hours, meaning riders will have to pack provisions and be prepared to make stops on ledges or at Gazolander housing complexes located sparsely throughout the body. Do not bring children to the Mechanism unless you plan to get back down when you're in the beginning of the upper parts.\n"
-    "THE MECHANISM\n",
-    0
-  );
-  
-  //memcpy(lettering, font + 1, 2048);
-  window = glfwCreateWindow(
-    RESOLUTION_X, RESOLUTION_Y,
-    "Dat, the first glaggle to ride the mechanism 2 electric boogaloo",
-    nullptr, nullptr
-  );
-  glfwSetKeyCallback(window, key_handler);
-  glfwMakeContextCurrent(window);
-
-  
-  //vertshader_basic    = load_shader_from_file("vert_basic.glsl", GL_VERTEX_SHADER);
-  //vertshader_gazo     = load_shader_from_file("vert_gazo.glsl", GL_VERTEX_SHADER);
-  //vertshader_3d       = load_shader_from_file("vert_3d.glsl", GL_VERTEX_SHADER);
-  //vertshader_no_uv_map= load_shader_from_file("vert_no_uv_map.glsl", GL_VERTEX_SHADER);
-  //fragshader_basic    = load_shader_from_file("frag_basic.glsl", GL_FRAGMENT_SHADER);
-  //fragshader_gamma    = load_shader_from_file("frag_gamma.glsl", GL_FRAGMENT_SHADER);
-  //fragshader_gui      = load_shader_from_file("frag_gui.glsl", GL_FRAGMENT_SHADER);
-  //gazo_shader_info.link(
-  //  vertshader_gazo, fragshader_basic,
-  //  "view", "projection", "the_texture",
-  //  "pos", "vert_uv"
-  //);
-  //terrain_shader_info.link(
-  //  vertshader_3d, fragshader_basic,
-  //  "view_pos", "projection_matrix", "the_texture",
-  //  "pos", "vertex_uv"
-  //);
-  //polygon_fill_shader_info.link(
-  //  vertshader_no_uv_map, fragshader_basic,
-  //  "view_pos", "projection_matrix", "the_texture",
-  //  "vertex_pos", nullptr
-  //);
-  //gui_shader_info.link(
-  //  vertshader_basic, fragshader_gui,
-  //  nullptr, nullptr, "the_ui",
-  //  "pos", nullptr
-  //);
-
-  //gamma_shader_info.link(
-  //  vertshader_basic, fragshader_gamma,
-  //  nullptr, nullptr, nullptr, nullptr, nullptr);
-//
-  //{
-  //  float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
-  //                        -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
-  //  glGenBuffers(1, &square_buffer);
-  //  glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
-  //  glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), the_square,
-  //               GL_STATIC_DRAW);
-  //};
-//
-  //glGenFramebuffers(1, &framebuffer);
-  //glGenTextures(3, &framebuffer_texture);
-  //glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
-  //glTexImage2D(GL_TEXTURE_2D, 0, GL_R11F_G11F_B10F, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,GL_UNSIGNED_INT_10F_11F_11F_REV, nullptr);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-  //                       framebuffer_texture, 0);
-//
-  ////glEnable(GL_DITHER);
-  //glBindTexture(GL_TEXTURE_2D, depth_texture);
-  //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, RESOLUTION_X, RESOLUTION_Y, 0,
-  //             GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
-  ////glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  ////glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-  //depth_texture, 0);
-  //#define preffered_filter GL_LINEAR
-  //#define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
-//
-  //glBindTexture(GL_TEXTURE_2D, gui_texture);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  //glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, UI_WIDTH * 16, UI_HEIGHT, 0,
-  //             GL_RED, GL_UNSIGNED_BYTE, lettering);
-
+game::game(GLFWwindow* window_)
+    : window(window_) {
   the_level.construct("test_level.mechanism");
-  
-  
-  //gazo_spritesheet_texture = load_texture_from_file("hd_blond_hair_surface.png");
-  //stone_tile_texture = load_texture_from_file("potato_tiles.xcf");
-  //bailey_truss_texture = load_texture_from_file("bill_and_ted.jpg");
-  while (is_playing && !glfwWindowShouldClose(window))
-  {
-    the_monitor_has_refreshed_again();
-  }
 }
+
+//void game::run()
+//{
+//  info_log = (char*) malloc(69420);
+//  is_playing = true;
+//
+//  /*
+//  rumble_effect.type = FF_PERIODIC;
+//  rumble_effect.id = -1;
+//  rumble_effect.u.periodic.waveform = FF_SQUARE;
+//  rumble_effect.u.periodic.period = 0x100;
+//        rumble_effect.u.periodic.magnitude = 0x7fff;
+//        rumble_effect.u.periodic.offset = 0;
+//        rumble_effect.u.periodic.phase = 0;
+//        rumble_effect.direction = 0x4000;
+//        rumble_effect.u.periodic.envelope.attack_length = 0x000;
+//        rumble_effect.u.periodic.envelope.fade_length = 0x80;
+//  rumble_effect.u.periodic.envelope.attack_level = 0x0000;
+//        rumble_effect.u.periodic.envelope.fade_level = 0x0000;
+//        rumble_effect.trigger.button = 0;
+//        rumble_effect.trigger.interval = 0;
+//        rumble_effect.replay.length = 0x100;
+//        rumble_effect.replay.delay = 0;
+//  rumbly_file_descriptor = open("/dev/input/event24", O_RDWR);  //  ǁ📂ǁ
+//  ioctl(rumbly_file_descriptor, EVIOCSFF, &rumble_effect);
+//  rumbleinator.type = EV_FF;
+//        rumbleinator.code = rumble_effect.id;
+//  rumbleinator.value = 1;
+//  write(
+//    rumbly_file_descriptor,
+//    (const void*) &rumbleinator,
+//    sizeof(rumbleinator)
+//  );
+//  */
+//
+//  glfwInit();
+//  glfwSwapInterval(1);
+//  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+//  //glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_FALSE);
+//  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+//  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+//  lettering = (unsigned char*) malloc(UI_BYTES + 1);
+//  for(int i = 0; i < UI_BYTES; i++) {
+//    lettering[i] = 0;
+//  }
+//  write_text(
+//    //"The Mechanism is a hazardous ride located in Gazoland, built over the course of five years by Gazolandic Tesseract Engineering Incorporated. It is the largest ride in Gazo Square and, like many other rides in Gazoland, carries an extreme risk of death for both those riding it and those working to maintain it. The Mechanism is only ridden by expert ride-goers as it is infamous for inflicting at least a dozen severe injuries in poorly maintained parts of the ride. It is estimated that the average ride time of The Mechanism is three days, give or take several hours, meaning riders will have to pack provisions and be prepared to make stops on ledges or at Gazolander housing complexes located sparsely throughout the body. Do not bring children to the Mechanism unless you plan to get back down when you're in the beginning of the upper parts.\n"
+//    "THE MECHANISM\n",
+//    0
+//  );
+//  
+//  //memcpy(lettering, font + 1, 2048);
+//  window = glfwCreateWindow(
+//    RESOLUTION_X, RESOLUTION_Y,
+//    "Dat, the first glaggle to ride the mechanism 2 electric boogaloo",
+//    nullptr, nullptr
+//  );
+//  glfwSetKeyCallback(window, key_handler);
+//  glfwMakeContextCurrent(window);
+//
+//  
+//  vertshader_basic    = load_shader_from_file("vert_basic.glsl", GL_VERTEX_SHADER);
+//  vertshader_gazo     = load_shader_from_file("vert_gazo.glsl", GL_VERTEX_SHADER);
+//  vertshader_3d       = load_shader_from_file("vert_3d.glsl", GL_VERTEX_SHADER);
+//  vertshader_no_uv_map= load_shader_from_file("vert_no_uv_map.glsl", GL_VERTEX_SHADER);
+//  fragshader_basic    = load_shader_from_file("frag_basic.glsl", GL_FRAGMENT_SHADER);
+//  fragshader_gamma    = load_shader_from_file("frag_gamma.glsl", GL_FRAGMENT_SHADER);
+//  fragshader_gui      = load_shader_from_file("frag_gui.glsl", GL_FRAGMENT_SHADER);
+//  gazo_shader_info.link(
+//    vertshader_gazo, fragshader_basic,
+//    "view", "projection", "the_texture",
+//    "pos", "vert_uv"
+//  );
+//  terrain_shader_info.link(
+//    vertshader_3d, fragshader_basic,
+//    "view_pos", "projection_matrix", "the_texture",
+//    "pos", "vertex_uv"
+//  );
+//  polygon_fill_shader_info.link(
+//    vertshader_no_uv_map, fragshader_basic,
+//    "view_pos", "projection_matrix", "the_texture",
+//    "vertex_pos", nullptr
+//  );
+//  gui_shader_info.link(
+//    vertshader_basic, fragshader_gui,
+//    nullptr, nullptr, "the_ui",
+//    "pos", nullptr
+//  )
+//  gamma_shader_info.link(
+//    vertshader_basic, fragshader_gamma,
+//    nullptr, nullptr, nullptr, nullptr, nullptr);
+//
+//  {
+//    float the_square[] = {-1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
+//                          -1.0, -1.0, 1.0, -1.0, 1.0, 1.0};
+//    glGenBuffers(1, &square_buffer);
+//    glBindBuffer(GL_ARRAY_BUFFER, square_buffer);
+//    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), the_square,
+//                 GL_STATIC_DRAW);
+//  };
+//
+//  glGenFramebuffers(1, &framebuffer);
+//  glGenTextures(3, &framebuffer_texture);
+//  glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+//  glTexImage2D(GL_TEXTURE_2D, 0, GL_R11F_G11F_B10F, RESOLUTION_X, RESOLUTION_Y, 0, GL_RGB,GL_UNSIGNED_INT_10F_11F_11F_REV, nullptr);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+//  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+//                         framebuffer_texture, 0);
+//
+//  //glEnable(GL_DITHER);
+//  glBindTexture(GL_TEXTURE_2D, depth_texture);
+//  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, RESOLUTION_X, RESOLUTION_Y, 0,
+//               GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
+//  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+//                         depth_texture, 0);
+//  #define preffered_filter GL_LINEAR
+//  #define preffered_min_filter GL_LINEAR_MIPMAP_LINEAR
+//
+//  glBindTexture(GL_TEXTURE_2D, gui_texture);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, UI_WIDTH * 16, UI_HEIGHT, 0,
+//               GL_RED, GL_UNSIGNED_BYTE, lettering)
+//  the_level.construct("test_level.mechanism");
+//  gazo_spritesheet_texture = load_texture_from_file("hd_blond_hair_surface.png");
+//  stone_tile_texture = load_texture_from_file("potato_tiles.xcf");
+//  bailey_truss_texture = load_texture_from_file("bill_and_ted.jpg");
+//  while (is_playing && !glfwWindowShouldClose(window))
+//  {
+//    the_monitor_has_refreshed_again();
+//  }
+//}
 
 void game::stop()
 {
@@ -315,11 +317,10 @@ void game::stop()
 
 void game::the_monitor_has_refreshed_again()
 {
-  // if(frame_counter % 30 == 0) {
-  glfwPollEvents();
   for (int i = 0; i < 6; i++) {
     function_which_is_called_480hz();
   }
+  int window_width, window_height;
   glfwGetWindowSize(window, &window_width, &window_height);
   int joystick_axis_count;
   glm::dvec2 cursor_pos;
@@ -349,7 +350,6 @@ void game::the_monitor_has_refreshed_again()
       cursor_pos_mapped.x, cursor_pos_mapped.y
     );
   }
-
 
   //glEnable(GL_DEPTH_TEST);
   //glDepthFunc(GL_LEQUAL);

@@ -80,6 +80,9 @@ add_dependencies(TheMechanism spirv_shaders)
 set(TEXTURE_SOURCES
   statue.jpg
 )
+set(LEVEL_SOURCES
+  test_level.mechanism
+)
 foreach(src IN LISTS TEXTURE_SOURCES)
 add_custom_command(
   TARGET TheMechanism POST_BUILD
@@ -87,5 +90,14 @@ add_custom_command(
       "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/${src}"
       "$<TARGET_FILE_DIR:TheMechanism>/assets/textures/${src}"
   COMMENT "Copying ${src} to the textures directory."
+)
+endforeach()
+foreach(src IN LISTS LEVEL_SOURCES)
+add_custom_command(
+  TARGET TheMechanism POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy
+      "${CMAKE_CURRENT_SOURCE_DIR}/assets/levels/${src}"
+      "$<TARGET_FILE_DIR:TheMechanism>/assets/levels/${src}"
+  COMMENT "Copying ${src} to the levels directory."
 )
 endforeach()
